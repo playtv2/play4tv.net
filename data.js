@@ -5,7 +5,7 @@ const seriesData = [
         category: "דרמה",
         title: "אל עצמי",
         description: "סיפורו המרגש של ציון, ילד המנסה למצוא את מקומו בעולם ועובר לגור עם משפחה אומנת בחיפה.",
-        image: "https://images.maariv.co.il/image/upload/f_auto,q_auto/586339", // פוסטר הסדרה
+        image: "https://www.yes.co.il/media/ux0f43ln/vp004414285.jpg?quality=80", // פוסטר הסדרה
         episodes: [
             { name: "פרק 1", desc: "תקציר הפרק", driveId: "1-TJDR-bjqha_x-DHndKd-uvGIuQU3Lz0" },
             { name: "פרק 2", desc: "תקציר הפרק", driveId: "10Flj4VBaJ4ANqWfy8Lt0BRTPwsrITPHZ" },
