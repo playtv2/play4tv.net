@@ -9,41 +9,42 @@
         :root { --red: #ff0055; --bg: #0b0b0b; --sidebar-w: 260px; }
         body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
-        /* תפריט צדדי */
-        .sidebar { width: var(--sidebar-w); background: #000; display: flex; flex-direction: column; padding: 20px; border-left: 1px solid #222; transition: 0.3s; z-index: 10; }
-        
-        /* עיצוב הלוגו */
+        /* תפריט צדדי קבוע */
+        .sidebar { width: var(--sidebar-w); background: #000; display: flex; flex-direction: column; padding: 20px; border-left: 1px solid #222; z-index: 100; height: 100vh; }
         .logo { width: 100%; height: 100px; background-size: contain; background-repeat: no-repeat; background-position: center; margin-bottom: 30px; }
-        
         .search-box { background: #1a1a1a; border: 1px solid #333; padding: 12px; color: white; border-radius: 5px; margin-bottom: 25px; outline: none; font-size: 16px; }
         .nav-item { padding: 15px; font-size: 20px; cursor: pointer; border-radius: 8px; margin-bottom: 8px; outline: none; transition: 0.2s; }
-        .nav-item:focus { background: var(--red); transform: scale(1.05); }
+        .nav-item:focus, .nav-item:hover { background: var(--red); transform: scale(1.05); }
 
-        /* תוכן ראשי */
-        .main-content { flex: 1; overflow-y: auto; position: relative; scroll-behavior: smooth; }
-        .category-title { font-size: 24px; margin: 30px 40px 10px; font-weight: bold; color: #fff; }
-        .row { display: flex; gap: 18px; padding: 10px 40px 30px; overflow-x: auto; }
-        .row::-webkit-scrollbar { display: none; }
+        /* תוכן ראשי - גלילה למעלה/למטה */
+        .main-content { flex: 1; overflow-y: auto; height: 100vh; position: relative; scroll-behavior: smooth; }
+        .category-title { font-size: 24px; margin: 30px 40px 10px; font-weight: bold; color: #fff; text-align: right; }
         
-        .card { min-width: 230px; max-width: 230px; cursor: pointer; transition: 0.3s; outline: none; }
-        .card img { width: 100%; height: 130px; border-radius: 6px; object-fit: cover; background: #1a1a1a; }
-        .card:focus { transform: scale(1.1); border: 3px solid white; z-index: 5; }
+        /* שורות תוכן - גלילה ימינה/שמאלה */
+        .row { display: flex; gap: 18px; padding: 10px 40px 40px; overflow-x: auto; scroll-behavior: smooth; white-space: nowrap; }
+        .row::-webkit-scrollbar { display: none; } /* מסתיר את פס הגלילה למראה נקי */
+        
+        /* כרטיס סדרה */
+        .card { min-width: 230px; max-width: 230px; cursor: pointer; transition: 0.3s; outline: none; display: inline-block; vertical-align: top; }
+        .card img { width: 100%; height: 130px; border-radius: 6px; object-fit: cover; background: #1a1a1a; border: 2px solid transparent; }
+        .card:focus { transform: scale(1.1); z-index: 5; }
+        .card:focus img { border-color: white; }
+        .card-info { text-align: center; padding: 8px; font-size: 16px; overflow: hidden; text-overflow: ellipsis; }
 
-        /* דף סרט - רקע מלא */
-        .movie-page { position: absolute; inset: 0; background-size: cover; background-position: center; display: flex; flex-direction: column; justify-content: flex-end; padding: 80px; background-color: rgba(0,0,0,0.5); background-blend-mode: darken; }
+        /* דפי סרט וסדרה */
+        .movie-page { position: absolute; inset: 0; background-size: cover; background-position: center; display: flex; flex-direction: column; justify-content: flex-end; padding: 80px; background-color: rgba(0,0,0,0.5); background-blend-mode: darken; z-index: 200; }
         .movie-content { max-width: 650px; text-shadow: 2px 2px 15px rgba(0,0,0,0.9); }
-        .watch-btn { background: var(--red); color: white; border: none; padding: 15px 45px; font-size: 24px; font-weight: bold; cursor: pointer; border-radius: 8px; margin-top: 25px; }
-        .watch-btn:focus { background: white; color: black; outline: none; transform: scale(1.1); }
+        .watch-btn { background: var(--red); color: white; border: none; padding: 15px 45px; font-size: 24px; font-weight: bold; cursor: pointer; border-radius: 8px; margin-top: 25px; outline: none; }
+        .watch-btn:focus { background: white; color: black; transform: scale(1.1); }
 
-        /* דף סדרה */
-        .series-page { padding: 40px; }
-        .ep-item { display: flex; gap: 20px; padding: 15px; border-radius: 10px; cursor: pointer; outline: none; margin-bottom: 12px; background: rgba(255,255,255,0.03); align-items: center; }
-        .ep-item:focus { background: rgba(255,255,255,0.1); border: 2px solid white; }
+        .series-page { padding: 40px; position: relative; z-index: 200; background: var(--bg); min-height: 100vh; }
+        .ep-item { display: flex; gap: 20px; padding: 15px; border-radius: 10px; cursor: pointer; outline: none; margin-bottom: 12px; background: rgba(255,255,255,0.03); align-items: center; transition: 0.2s; }
+        .ep-item:focus { background: rgba(255,255,255,0.1); border: 2px solid white; transform: scale(1.02); }
         .ep-img { width: 220px; height: 125px; border-radius: 5px; object-fit: cover; }
 
         .hidden { display: none !important; }
         #profile-screen { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .profile-box { text-align: center; cursor: pointer; outline: none; transition: 0.3s; }
+        .profile-box { text-align: center; cursor: pointer; outline: none; transition: 0.3s; padding: 10px; border-radius: 10px; }
         .profile-img { width: 130px; height: 130px; border-radius: 50%; background: #222; margin-bottom: 10px; border: 4px solid transparent; background-size: cover; }
         .profile-box:focus .profile-img { border-color: var(--red); transform: scale(1.1); }
     </style>
@@ -56,11 +57,8 @@
     </div>
 
     <div class="sidebar hidden" id="sidebar">
-        
         <div class="logo" style="background-image: url('https://play-lh.googleusercontent.com/LU2EwCsrMFa8Cr8efvsH2epEOmrX_QwYLDWlWaAVSjPiZ0LeXy5kc7TYQPzGi0bm5zYd');"></div>
-        
         <input type="text" class="search-box" placeholder="🔍 חיפוש..." oninput="search(this.value)">
-        
         <div class="nav-item" tabindex="0" onclick="renderHome('all')">🏠 דף הבית</div>
         <div class="nav-item" tabindex="0" onclick="navTo('סדרות')">HOT VOD</div>
         <div class="nav-item" tabindex="0" onclick="navTo('סרטים')">VOD cinema</div>
@@ -132,7 +130,7 @@
                         ${filtered.map(s => `
                             <div class="card" tabindex="0" onclick="openContent('${s.id}')">
                                 <img src="${s.image}" onerror="this.src='https://via.placeholder.com/230x130?text=HOT+Play'">
-                                <div style="text-align:center; padding:8px;">${s.title}</div>
+                                <div class="card-info">${s.title}</div>
                             </div>
                         `).join('')}
                     </div>`;
@@ -140,9 +138,7 @@
             });
         }
 
-        function navTo(cat) {
-            renderHome(cat);
-        }
+        function navTo(cat) { renderHome(cat); }
 
         function openContent(id) {
             const item = seriesData.find(x => x.id === id);
@@ -156,7 +152,7 @@
                     <div class="movie-page" style="background-image: linear-gradient(to right, black 40%, transparent), url('${item.image}')">
                         <div class="movie-content">
                             <button onclick="renderHome()" style="background:none; color:white; border:1px solid white; padding:5px 15px; cursor:pointer; margin-bottom:20px;">← חזור</button>
-                            <h1 style="font-size:65px; margin:0;">${item.title}</h1>
+                            <h1>${item.title}</h1>
                             <p style="font-size:22px; margin-top:20px; line-height:1.6;">${item.description}</p>
                             <button class="watch-btn" tabindex="0" onclick="playHD('${item.driveId}')">▶ צפה עכשיו</button>
                         </div>
@@ -173,6 +169,7 @@
                             </div>
                         </div>
                         <h2>פרקים</h2>
+                        <div style="max-height: 60vh; overflow-y: auto;">
                         ${item.episodes.map(ep => `
                             <div class="ep-item" tabindex="0" onclick="playHD('${ep.driveId}')">
                                 <img src="${ep.image}" class="ep-img" onerror="this.src='https://via.placeholder.com/220x125?text=פרק+${ep.number}'">
@@ -181,12 +178,12 @@
                                     <p>${ep.desc}</p>
                                 </div>
                             </div>`).join('')}
+                        </div>
                     </div>`;
             }
         }
 
         function playHD(id) {
-            // שימוש ב-preview למסך נקי ללא תפריטים
             const url = `https://drive.google.com/file/d/${id}/preview`;
             window.location.href = url;
         }
