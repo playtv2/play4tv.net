@@ -2,40 +2,38 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>HOT Play</title>
+    <title>HOT play</title>
     <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth-compat.js"></script>
     <style>
         :root { --red: #ff0055; --bg: #000; }
         body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; overflow-x: hidden; }
         
-        /* מסך פרופילים - לפי תמונה 1 */
+        /* מסך פרופילים עגולים */
         #profile-screen { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
-        .profile-container { display: flex; gap: 40px; margin-top: 50px; }
-        .profile-box { text-align: center; cursor: pointer; transition: 0.3s; width: 140px; outline: none; }
-        .profile-avatar { width: 140px; height: 140px; border-radius: 50%; border: 4px solid transparent; margin-bottom: 15px; background-size: cover; background-position: center; }
-        .profile-box:focus .profile-avatar, .profile-box:hover .profile-avatar { border-color: #ff007f; transform: scale(1.1); }
-        .profile-box span { font-size: 20px; font-weight: bold; }
+        .profile-container { display: flex; gap: 30px; margin-top: 40px; }
+        .profile-box { text-align: center; cursor: pointer; transition: 0.3s; width: 120px; outline: none; }
+        .profile-avatar { width: 120px; height: 120px; border-radius: 50%; border: 3px solid transparent; margin-bottom: 10px; background-size: cover; background-position: center; }
+        .profile-box:focus .profile-avatar, .profile-box:hover .profile-avatar { border-color: white; transform: scale(1.1); }
 
-        /* דף בית - לפי תמונה 2 */
-        .category-title { font-size: 24px; margin: 40px 40px 10px; font-weight: bold; }
-        .row { display: flex; gap: 20px; padding: 0 40px 40px; overflow-x: auto; }
+        /* שורות דפדוף (סגנון נטפליקס) */
+        .category-title { font-size: 20px; margin: 30px 40px 10px; font-weight: bold; color: #e5e5e5; }
+        .row { display: flex; gap: 15px; padding: 0 40px 20px; overflow-x: auto; scroll-behavior: smooth; }
         .row::-webkit-scrollbar { display: none; }
-        .card { min-width: 280px; cursor: pointer; transition: 0.3s; outline: none; }
-        .card img { width: 100%; border-radius: 8px; }
-        .card:focus { transform: scale(1.05); }
-        .card-title { margin-top: 10px; font-size: 16px; text-align: right; }
+        
+        .card { min-width: 220px; max-width: 220px; cursor: pointer; transition: 0.3s; outline: none; }
+        .card img { width: 100%; height: 125px; border-radius: 4px; object-fit: cover; }
+        .card:focus { transform: scale(1.1); z-index: 10; }
+        .card-title { margin-top: 8px; font-size: 14px; text-align: center; }
 
-        /* דף סדרה - לפי תמונה 3 */
+        /* דף סדרה עם תקציר */
         .series-page { padding: 40px; }
-        .series-header { display: flex; gap: 40px; margin-bottom: 50px; align-items: flex-start; }
-        .series-header img { width: 450px; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
-        .episode-item { display: flex; gap: 30px; padding: 20px; border-radius: 10px; cursor: pointer; transition: 0.2s; align-items: center; outline: none; border-bottom: 1px solid #333; }
-        .episode-item:focus { background: rgba(255,255,255,0.1); }
-        .episode-img { width: 300px; height: 170px; border-radius: 5px; object-fit: cover; }
-        .episode-info { flex: 1; text-align: right; }
-        .episode-info h3 { margin: 0 0 10px 0; font-size: 22px; }
-        .episode-info p { margin: 0; color: #aaa; line-height: 1.6; font-size: 16px; }
+        .episode-item { display: flex; gap: 20px; padding: 15px; border-radius: 8px; cursor: pointer; align-items: center; outline: none; border-bottom: 1px solid #222; }
+        .episode-item:focus { background: #333; }
+        .episode-img { width: 200px; height: 110px; border-radius: 4px; object-fit: cover; }
+        .episode-info { flex: 1; }
+        .episode-info h3 { margin: 0 0 5px 0; font-size: 18px; color: var(--red); }
+        .episode-info p { margin: 0; color: #aaa; font-size: 14px; }
 
         .hidden { display: none !important; }
     </style>
@@ -43,12 +41,12 @@
 <body>
 
     <div id="login-screen" style="width:100%; text-align:center; padding-top:20vh;">
-        <h1 style="color:var(--red); font-size:80px;">HOT Play</h1>
-        <button onclick="login()" style="padding:15px 30px; background:var(--red); color:white; border:none; border-radius:5px; cursor:pointer; font-size:20px;">התחבר עם Google</button>
+        <h1 style="color:var(--red); font-size:60px;">HOT play</h1>
+        <button onclick="login()" style="padding:15px 30px; background:var(--red); color:white; border:none; border-radius:5px; cursor:pointer;">התחבר עם Google</button>
     </div>
 
     <div id="profile-screen" class="hidden">
-        <h1 style="font-size: 45px;">מי צופה היום ב-HOT play?</h1>
+        <h1>מי צופה היום ב-HOT play?</h1>
         <div class="profile-container" id="profile-list"></div>
     </div>
 
@@ -83,14 +81,7 @@
         });
 
         function loadProfiles() {
-            // הוספתי את הפרופילים לפי התמונה שלך
-            const profiles = [
-                { name: 'אבא', img: 'https://i.ibb.co/pWv6GZ7/avatar1.png' },
-                { name: 'אימוש', img: 'https://i.ibb.co/pWv6GZ7/avatar2.png' },
-                { name: 'נועה', img: 'https://i.ibb.co/pWv6GZ7/avatar3.png' },
-                { name: 'ניתאי', img: 'https://i.ibb.co/pWv6GZ7/avatar4.png' },
-                { name: 'אורי', img: 'https://i.ibb.co/pWv6GZ7/avatar5.png' }
-            ];
+            const profiles = [{name:'אבא',img:'https://i.ibb.co/pWv6GZ7/av1.png'}, {name:'אימוש',img:'https://i.ibb.co/pWv6GZ7/av2.png'}, {name:'נועה',img:'https://i.ibb.co/pWv6GZ7/av3.png'}, {name:'ניתאי',img:'https://i.ibb.co/pWv6GZ7/av4.png'}, {name:'אורי',img:'https://i.ibb.co/pWv6GZ7/av5.png'}];
             document.getElementById('profile-list').innerHTML = profiles.map(p => `
                 <div class="profile-box" tabindex="0" onclick="selectProfile('${p.name}')">
                     <div class="profile-avatar" style="background-image: url('${p.img}')"></div>
@@ -110,9 +101,7 @@
             home.classList.remove('hidden');
             document.getElementById('series-view').classList.add('hidden');
             
-            const cats = ["המשך הצפייה של " + userName, "חדשים ומומלצים"];
-            home.innerHTML = cats.map(cat => `
-                <div class="category-title">${cat}</div>
+            home.innerHTML = `<div class="category-title">המשך הצפייה של ${userName}</div>
                 <div class="row">
                     ${seriesData.map(s => `
                         <div class="card" tabindex="0" onclick="showSeries('${s.id}')">
@@ -120,8 +109,7 @@
                             <div class="card-title">${s.title}</div>
                         </div>
                     `).join('')}
-                </div>
-            `).join('');
+                </div>`;
         }
 
         function showSeries(id) {
@@ -132,17 +120,14 @@
             
             view.innerHTML = `
                 <div class="series-page">
-                    <button onclick="location.reload()" style="background:none; color:white; border:1px solid white; padding:10px; cursor:pointer; margin-bottom:20px;">← חזור</button>
-                    <div class="series-header">
-                        <img src="${s.image}">
-                        <div>
-                            <h1>${s.title}</h1>
-                            <p style="max-width:600px; color:#ccc;">${s.description}</p>
-                        </div>
+                    <button onclick="renderHome()" style="background:none; color:white; border:1px solid white; padding:8px; cursor:pointer; margin-bottom:20px;">← חזור</button>
+                    <div style="display:flex; gap:30px; margin-bottom:40px;">
+                        <img src="${s.image}" style="width:300px; border-radius:8px;">
+                        <div><h1>${s.title}</h1><p style="color:#aaa; max-width:500px;">${s.description}</p></div>
                     </div>
-                    <hr style="border:0; border-top:1px solid #333; margin:40px 0;">
+                    <h2>פרקים</h2>
                     ${s.episodes.map(ep => `
-                        <div class="episode-item" tabindex="0" onclick="playVideo('${ep.driveId}')">
+                        <div class="episode-item" tabindex="0" onclick="window.open('https://drive.google.com/file/d/${ep.driveId}/view?authuser=0', '_blank')">
                             <img src="${ep.image}" class="episode-img">
                             <div class="episode-info">
                                 <h3>פרק ${ep.number}</h3>
@@ -150,14 +135,7 @@
                             </div>
                         </div>
                     `).join('')}
-                </div>
-            `;
-        }
-
-        function playVideo(id) {
-            // התיקון הקריטי לנגן של גוגל דרייב
-            const url = `https://drive.google.com/file/d/${id}/preview`;
-            window.open(url, '_blank'); 
+                </div>`;
         }
     </script>
 </body>
