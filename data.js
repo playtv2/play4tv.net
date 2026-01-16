@@ -3,7 +3,7 @@ const seriesData = [
         id: "al-atzmi",
         title: "אל עצמי",
         description: "סיפורו של ציון...",
-        image: "hhttps://www.yes.co.il/media/ux0f43ln/vp004414285.jpg?quality=80",
+        image: "https://i.ibb.co/pWv6GZ7/al-atzmi.jpg",
         episodes: [
             {
                 number: "1",
