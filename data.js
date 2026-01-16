@@ -1,21 +1,12 @@
-// רשימת הסדרות והסרטים שלך
 const seriesData = [
     {
+        id: "zaguri", // מזהה ייחודי לסדרה
         category: "חדשים ומומלצים",
-        title: "זגורי אימפריה - פרק 1",
-        image: "https://img.youtube.com/vi/bID_1D7KqYc/0.jpg", // תמונה זמנית
-        driveUrl: "https://drive.google.com/your-video-link-1"
-    },
-    {
-        category: "הפקות מקור",
-        title: "אבא מטפלת - פרק 1",
-        image: "https://img.youtube.com/vi/bID_1D7KqYc/1.jpg", // תמונה זמנית
-        driveUrl: "https://drive.google.com/your-video-link-2"
-    },
-    {
-        category: "סדרות דרמה",
-        title: "צייר המערות - פרק 1",
-        image: "https://img.youtube.com/vi/bID_1D7KqYc/2.jpg",
-        driveUrl: "https://drive.google.com/your-video-link-3"
+        title: "זגורי אימפריה",
+        image: "https://link-to-main-poster.jpg",
+        episodes: [
+            { name: "פרק 1", image: "https://link-to-ep1-thumb.jpg", url: "https://drive.google.com/link1" },
+            { name: "פרק 2", image: "https://link-to-ep2-thumb.jpg", url: "https://drive.google.com/link2" }
+        ]
     }
 ];
