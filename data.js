@@ -24,5 +24,24 @@ const seriesData = [
             { name: "פרק 15", desc: "תקציר הפרק", driveId: "1vljlNJ-49LiQgdGFS_Yt6YPptlhxt5q_" },
             { name: "פרק 16", desc: "תקציר הפרק", driveId: "1w9AXhr23xKRme5GxiWgFUkU5qVqAbLX3" }
         ]
+
+        const seriesData = [
+    {
+        id: "kupa-rashit",
+        title: "קופה ראשית - העונה החדשה",
+        description: "סדרת הקאלט המוקומנטרית המתקתחת בסניף של רשת סופרים ביבנה. הדמויות נשלפו היישר מהסופר הישראלי...",
+        image: "https://link-to-kupa-rashit-banner.jpg", // התמונה הגדולה מלמעלה
+        category: "קומדיה",
+        episodes: [
+            { 
+                number: "1",
+                name: "פרק 1", 
+                desc: "פרק פתיחת העונה! שנה חדשה נפתחת בסופר. שירה מבקשת מאנטולי לקחת את המתנה שלו לחג אבל העניינים מסתבכים...", 
+                image: "https://link-to-ep1-image.jpg", // התמונה של הפרק עצמו
+                driveId: "ID_של_הפרק_מהדרייב" 
+            }
+        ]
+    }
+];
     }
 ];
