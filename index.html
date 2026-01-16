@@ -10,63 +10,74 @@
         body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
         /* תפריט צדדי */
-        .sidebar { width: 250px; background: #000; display: flex; flex-direction: column; padding: 20px; border-left: 1px solid #222; }
+        .sidebar { width: 260px; background: #000; display: flex; flex-direction: column; padding: 20px; border-left: 1px solid #222; z-index: 10; }
         
-        /* כאן הלוגו שלך */
-        .logo { width: 100%; height: 100px; background-size: contain; background-repeat: no-repeat; background-position: center; margin-bottom: 30px; }
+        /* --- כאן הלוגו שלך --- */
+        .logo { width: 100%; height: 120px; background-size: contain; background-repeat: no-repeat; background-position: center; margin-bottom: 30px; }
         
-        .search-box { background: #1a1a1a; border: 1px solid #333; padding: 12px; color: white; border-radius: 5px; margin-bottom: 20px; outline: none; }
-        .nav-item { padding: 15px; font-size: 20px; cursor: pointer; border-radius: 8px; margin-bottom: 5px; outline: none; transition: 0.2s; }
+        .search-box { background: #1a1a1a; border: 1px solid #333; padding: 12px; color: white; border-radius: 5px; margin-bottom: 25px; outline: none; font-size: 16px; }
+        .nav-item { padding: 15px; font-size: 22px; cursor: pointer; border-radius: 8px; margin-bottom: 8px; outline: none; transition: 0.2s; display: flex; align-items: center; gap: 10px; }
         .nav-item:focus { background: var(--red); transform: scale(1.05); }
 
         /* תוכן ראשי */
-        .main-content { flex: 1; overflow-y: auto; position: relative; }
+        .main-content { flex: 1; overflow-y: auto; position: relative; scroll-behavior: smooth; }
         .row-container { padding: 20px 40px; }
-        .category-title { font-size: 22px; font-weight: bold; margin-bottom: 15px; }
-        .row { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 20px; }
+        .category-title { font-size: 26px; font-weight: bold; margin-bottom: 20px; color: #fff; }
+        .row { display: flex; gap: 20px; overflow-x: auto; padding-bottom: 20px; }
         .row::-webkit-scrollbar { display: none; }
         
-        .card { min-width: 220px; cursor: pointer; transition: 0.3s; outline: none; }
-        .card img { width: 100%; height: 125px; border-radius: 6px; object-fit: cover; }
-        .card:focus { transform: scale(1.1); border: 2px solid white; }
+        /* כרטיס סדרה/סרט (סגנון נטפליקס) */
+        .card { min-width: 240px; cursor: pointer; transition: 0.3s; outline: none; position: relative; }
+        .card img { width: 100%; height: 135px; border-radius: 6px; object-fit: cover; background: #111; }
+        .card:focus { transform: scale(1.1); z-index: 5; border: 3px solid white; border-radius: 10px; }
+        .card-title { margin-top: 10px; font-size: 16px; text-align: center; font-weight: 500; }
 
-        /* דף סרט - רקע תמונה מלא */
-        .movie-page { position: absolute; inset: 0; background-size: cover; background-position: center; display: flex; flex-direction: column; justify-content: flex-end; padding: 80px; background-color: rgba(0,0,0,0.6); background-blend-mode: multiply; }
-        .movie-content { max-width: 600px; }
-        .watch-btn { background: var(--red); color: white; border: none; padding: 15px 40px; font-size: 22px; font-weight: bold; cursor: pointer; border-radius: 5px; margin-top: 20px; }
-        .watch-btn:focus { background: white; color: black; outline: none; }
+        /* דף סרט - רקע מלא */
+        .movie-page { position: absolute; inset: 0; background-size: cover; background-position: center; display: flex; flex-direction: column; justify-content: flex-end; padding: 100px; background-color: rgba(0,0,0,0.5); background-blend-mode: darken; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        .movie-content { max-width: 700px; text-shadow: 2px 2px 10px rgba(0,0,0,0.8); }
+        .watch-btn { background: var(--red); color: white; border: none; padding: 18px 50px; font-size: 24px; font-weight: bold; cursor: pointer; border-radius: 8px; margin-top: 25px; transition: 0.2s; }
+        .watch-btn:focus { background: white; color: black; transform: scale(1.1); outline: none; }
 
-        /* דף סדרה עם פרקים */
-        .episode-list { padding: 40px; }
-        .ep-card { display: flex; gap: 20px; padding: 15px; background: #111; margin-bottom: 10px; border-radius: 8px; cursor: pointer; outline: none; }
-        .ep-card:focus { background: #333; }
-        .ep-thumb { width: 200px; height: 110px; border-radius: 4px; object-fit: cover; }
+        /* דף סדרה עם רשימת פרקים ותקציר */
+        .episode-list { padding: 50px; animation: fadeIn 0.3s; }
+        .ep-card { display: flex; gap: 25px; padding: 20px; background: rgba(255,255,255,0.03); margin-bottom: 15px; border-radius: 12px; cursor: pointer; outline: none; align-items: center; border: 2px solid transparent; }
+        .ep-card:focus { background: rgba(255,255,255,0.1); border-color: white; transform: scale(1.02); }
+        .ep-thumb { width: 240px; height: 135px; border-radius: 6px; object-fit: cover; background: #111; }
+        .ep-info h3 { margin: 0 0 8px 0; font-size: 22px; color: var(--red); }
+        .ep-info p { margin: 0; color: #ccc; font-size: 16px; line-height: 1.5; }
+
+        /* מסך פרופילים */
+        #profile-screen { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .profile-item { text-align: center; cursor: pointer; outline: none; transition: 0.3s; }
+        .profile-img { width: 150px; height: 150px; border-radius: 50%; background: #222; border: 4px solid transparent; margin-bottom: 15px; background-size: cover; }
+        .profile-item:focus .profile-img { border-color: #ff007f; transform: scale(1.1); }
 
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <div id="profile-screen" style="position:fixed; inset:0; background:#000; z-index:999; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-        <h1>מי צופה היום?</h1>
-        <div style="display:flex; gap:30px;" id="p-list"></div>
+    <div id="profile-screen">
+        <h1 style="font-size: 50px; margin-bottom: 50px;">מי צופה היום ב-HOT Play?</h1>
+        <div style="display:flex; gap:40px;" id="p-list"></div>
     </div>
 
-    <div class="sidebar">
+    <div class="sidebar hidden" id="sidebar-menu">
         <div class="logo" style="background-image: url('הדבק_כאן_קישור_ללוגו');"></div>
         
-        <input type="text" class="search-box" placeholder="חיפוש..." oninput="search(this.value)">
+        <input type="text" class="search-box" placeholder="🔍 חיפוש..." oninput="search(this.value)">
         <div class="nav-item" tabindex="0" onclick="renderHome('all')">🏠 דף הבית</div>
-        <div class="nav-item" tabindex="0" onclick="renderHome('דרמה')">📺 סדרות</div>
+        <div class="nav-item" tabindex="0" onclick="renderHome('סדרות')">📺 סדרות</div>
         <div class="nav-item" tabindex="0" onclick="renderHome('סרטים')">🎬 סרטים</div>
         <div class="nav-item" tabindex="0" onclick="renderHome('ילדים')">🧸 ילדים</div>
     </div>
 
-    <div class="main-content" id="main-view"></div>
+    <div class="main-content hidden" id="app-view"></div>
 
     <script src="data.js"></script>
     <script>
-        // קונפיגורציה (Firebase) - נשארת כפי שהייתה
         const firebaseConfig = {
             apiKey: "AIzaSyAuJlFyTuYypCVdJrZCrQGOEZZS5WDH6pI",
             authDomain: "app-c71dd.firebaseapp.com",
@@ -79,29 +90,38 @@
 
         firebase.auth().onAuthStateChanged(user => {
             if (user && user.email === "nitaylayish298@gmail.com") {
-                loadProfiles();
+                setupProfiles();
             }
         });
 
-        function loadProfiles() {
-            const names = ['ניתאי', 'אבא', 'אימוש', 'נועה', 'אורי'];
-            document.getElementById('p-list').innerHTML = names.map(n => `
-                <div onclick="enterApp()" style="text-align:center; cursor:pointer;">
-                    <div style="width:120px; height:120px; border-radius:50%; background:#333; border:3px solid transparent;" tabindex="0" onfocus="this.style.borderColor='white'"></div>
-                    <p>${n}</p>
+        function setupProfiles() {
+            const users = [
+                {n:'ניתאי', i:'https://i.ibb.co/pWv6GZ7/av4.png'},
+                {n:'אבא', i:'https://i.ibb.co/pWv6GZ7/av1.png'},
+                {n:'אימוש', i:'https://i.ibb.co/pWv6GZ7/av2.png'},
+                {n:'נועה', i:'https://i.ibb.co/pWv6GZ7/av3.png'},
+                {n:'אורי', i:'https://i.ibb.co/pWv6GZ7/av5.png'}
+            ];
+            document.getElementById('p-list').innerHTML = users.map(u => `
+                <div class="profile-item" tabindex="0" onclick="startApp('${u.n}')">
+                    <div class="profile-img" style="background-image: url('${u.i}')"></div>
+                    <span style="font-size:22px; font-weight:bold;">${u.n}</span>
                 </div>
             `).join('');
         }
 
-        function enterApp() {
+        function startApp(name) {
             document.getElementById('profile-screen').classList.add('hidden');
+            document.getElementById('sidebar-menu').classList.remove('hidden');
+            document.getElementById('app-view').classList.remove('hidden');
             renderHome('all');
         }
 
         function renderHome(category) {
-            const view = document.getElementById('main-view');
+            const view = document.getElementById('app-view');
             view.innerHTML = '';
             
+            // יצירת קטגוריות אוטומטית לפי ה-data.js
             const cats = category === 'all' ? [...new Set(seriesData.map(s => s.category))] : [category];
             
             cats.forEach(cat => {
@@ -110,46 +130,73 @@
                 
                 const section = document.createElement('div');
                 section.className = 'row-container';
-                section.innerHTML = `<div class="category-title">${cat}</div><div class="row">
-                    ${items.map(s => `
-                        <div class="card" tabindex="0" onclick="openItem('${s.id}')">
-                            <img src="${s.image}">
-                            <div style="text-align:center; padding:5px;">${s.title}</div>
-                        </div>
-                    `).join('')}
-                </div>`;
+                section.innerHTML = `
+                    <div class="category-title">${cat}</div>
+                    <div class="row">
+                        ${items.map(s => `
+                            <div class="card" tabindex="0" onclick="openContent('${s.id}')">
+                                <img src="${s.image}" onerror="this.src='https://via.placeholder.com/240x135?text=HOT+Play'">
+                                <div class="card-title">${s.title}</div>
+                            </div>
+                        `).join('')}
+                    </div>`;
                 view.appendChild(section);
             });
         }
 
-        function openItem(id) {
+        function openContent(id) {
             const item = seriesData.find(s => s.id === id);
-            const view = document.getElementById('main-view');
+            const view = document.getElementById('app-view');
             
-            if (item.category === 'סרטים') {
-                // דף סרט (תמונה מלאה ברקע)
+            if (item.type === 'movie' || item.category === 'סרטים') {
+                // דף סרט - עיצוב יוקרתי עם תמונת רקע מלאה
                 view.innerHTML = `
-                    <div class="movie-page" style="background-image: url('${item.image}')">
+                    <div class="movie-page" style="background-image: linear-gradient(to right, black 30%, transparent), url('${item.image}')">
                         <div class="movie-content">
-                            <h1 style="font-size:60px; margin:0;">${item.title}</h1>
-                            <p style="font-size:20px; margin-top:20px;">${item.description}</p>
-                            <button class="watch-btn" onclick="window.location.href='https://drive.google.com/file/d/${item.driveId}/preview'">צפה עכשיו</button>
-                            <br><button onclick="renderHome('all')" style="background:none; color:white; border:none; cursor:pointer; margin-top:20px;">← חזור</button>
+                            <button onclick="renderHome('all')" style="background:none; color:white; border:1px solid white; padding:5px 15px; cursor:pointer; margin-bottom:20px;">← חזור</button>
+                            <h1 style="font-size:70px; margin:0;">${item.title}</h1>
+                            <p style="font-size:22px; margin-top:20px; line-height:1.6;">${item.description}</p>
+                            <button class="watch-btn" tabindex="0" onclick="playHD('${item.driveId}')">▶ צפה עכשיו</button>
                         </div>
                     </div>`;
             } else {
-                // דף סדרה (רשימת פרקים)
-                view.innerHTML = `<div class="episode-list">
-                    <button onclick="renderHome('all')" style="background:none; color:white; border:1px solid white; padding:10px; cursor:pointer; margin-bottom:30px;">← חזור</button>
-                    <h1>${item.title}</h1>
-                    ${item.episodes.map(ep => `
-                        <div class="ep-card" tabindex="0" onclick="window.location.href='https://drive.google.com/file/d/${ep.driveId}/preview'">
-                            <img src="${ep.image}" class="ep-thumb">
-                            <div><h3>פרק ${ep.number}</h3><p>${ep.desc}</p></div>
+                // דף סדרה - רשימת פרקים עם תקצירים
+                view.innerHTML = `
+                    <div class="episode-list">
+                        <button onclick="renderHome('all')" style="background:none; color:white; border:1px solid white; padding:10px 20px; cursor:pointer; margin-bottom:30px;">← חזור לדף הבית</button>
+                        <div style="display:flex; gap:40px; margin-bottom:50px; align-items:center;">
+                            <img src="${item.image}" style="width:350px; border-radius:10px; box-shadow: 0 0 30px rgba(0,0,0,0.5);">
+                            <div>
+                                <h1 style="font-size:50px; margin:0;">${item.title}</h1>
+                                <p style="font-size:20px; color:#aaa; max-width:600px;">${item.description}</p>
+                            </div>
                         </div>
-                    `).join('')}
-                </div>`;
+                        <h2 style="border-bottom: 2px solid var(--red); display:inline-block; padding-bottom:10px;">פרקי הסדרה</h2>
+                        <div style="margin-top:30px;">
+                            ${item.episodes.map(ep => `
+                                <div class="ep-card" tabindex="0" onclick="playHD('${ep.driveId}')">
+                                    <img src="${ep.image}" class="ep-thumb" onerror="this.src='https://via.placeholder.com/240x135?text=פרק+${ep.number}'">
+                                    <div class="ep-info">
+                                        <h3>פרק ${ep.number}</h3>
+                                        <p>${ep.desc}</p>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>`;
             }
+        }
+
+        function playHD(id) {
+            // החזרת הקישור ל-view כדי לקבל איכות HD מקסימלית מההתחלה
+            // הוספת authuser=0 עוזרת לגשת ישירות עם החשבון המחובר
+            const hdUrl = `https://drive.google.com/file/d/${id}/view?authuser=0`;
+            window.location.href = hdUrl;
+        }
+
+        function search(term) {
+            const filtered = seriesData.filter(s => s.title.includes(term));
+            // כאן אפשר להוסיף הצגה של תוצאות החיפוש בזמן אמת
         }
     </script>
 </body>
