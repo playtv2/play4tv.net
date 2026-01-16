@@ -9,10 +9,10 @@
         :root { --red: #ff0055; --bg: #0b0b0b; --sidebar-w: 260px; }
         body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
-        /* מסך כניסה ראשונה / התחברות */
+        /* מסך כניסה */
         #auth-screen { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        .login-btn { background: var(--red); color: white; border: none; padding: 15px 40px; font-size: 22px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.3s; margin-top: 30px; }
-        .login-btn:hover { transform: scale(1.1); background: white; color: black; }
+        .login-btn { background: var(--red); color: white; border: none; padding: 15px 40px; font-size: 22px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.3s; margin-top: 30px; outline: none; }
+        .login-btn:focus { background: white; color: black; transform: scale(1.1); }
 
         /* מסך פרופילים */
         #profile-screen { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
@@ -21,13 +21,13 @@
         .profile-img { width: 130px; height: 130px; border-radius: 50%; border: 4px solid transparent; background-size: cover; background-color: #222; margin-bottom: 10px; }
         .profile-box:focus .profile-img { border-color: var(--red); transform: scale(1.1); }
 
-        /* תפריט וצדדים */
+        /* ממשק ראשי */
         .sidebar { width: var(--sidebar-w); background: #000; display: flex; flex-direction: column; padding: 20px; border-left: 1px solid #222; z-index: 100; height: 100vh; }
         .logo { width: 100%; height: 100px; background-size: contain; background-repeat: no-repeat; background-position: center; margin-bottom: 30px; }
         .nav-item { padding: 15px; font-size: 20px; cursor: pointer; border-radius: 8px; margin-bottom: 8px; outline: none; }
         .nav-item:focus { background: var(--red); }
 
-        /* גלילה אופקית (נטפליקס) */
+        /* שורות נטפליקס */
         .main-content { flex: 1; overflow-y: auto; height: 100vh; scroll-behavior: smooth; }
         .row { display: flex; gap: 18px; padding: 10px 40px 40px; overflow-x: auto; scroll-behavior: smooth; }
         .row::-webkit-scrollbar { display: none; }
@@ -40,15 +40,15 @@
 </head>
 <body>
 
-    <div id="auth-screen" class="hidden">
-        <h1 style="font-size: 60px; color: var(--red);">HOT Play</h1>
-        <h2 style="font-size: 30px;">ברוכים הבאים</h2>
-        <p style="color: #aaa; font-size: 18px;">התחברו כדי להתחיל לצפות בתכנים האהובים עליכם</p>
-        <button class="login-btn" onclick="login()">התחברות עם Google</button>
+    <div id="auth-screen">
+        <h1 style="font-size: 70px; color: var(--red); margin: 0;">HOT Play</h1>
+        <h2 style="font-size: 30px; margin-top: 10px;">ברוכים הבאים</h2>
+        <p style="color: #aaa; font-size: 18px;">אנא התחברו כדי לצפות בתכנים</p>
+        <button class="login-btn" tabindex="1" onclick="login()">התחברות עם Google</button>
     </div>
 
     <div id="profile-screen" class="hidden">
-        <h1 id="profile-greeting" style="font-size: 45px; margin-bottom: 40px;">מי צופה היום?</h1>
+        <h1 style="font-size: 45px; margin-bottom: 40px;">מי צופה היום?</h1>
         <div class="profile-container" id="profile-list"></div>
     </div>
 
@@ -66,6 +66,7 @@
     </div>
 
     <script>
+        // טעינת דאטה עם מניעת Cache
         const script = document.createElement('script');
         script.src = 'data.js?v=' + Date.now();
         document.head.appendChild(script);
@@ -88,24 +89,21 @@
         }
 
         firebase.auth().onAuthStateChanged(user => {
+            const authScreen = document.getElementById('auth-screen');
+            const profileScreen = document.getElementById('profile-screen');
+
             if (user && user.email === "nitaylayish298@gmail.com") {
-                document.getElementById('auth-screen').classList.add('hidden');
-                document.getElementById('profile-screen').classList.remove('hidden');
+                authScreen.classList.add('hidden');
+                profileScreen.classList.remove('hidden');
                 loadProfiles();
             } else {
-                document.getElementById('auth-screen').classList.remove('hidden');
-                document.getElementById('profile-screen').classList.add('hidden');
+                authScreen.classList.remove('hidden');
+                profileScreen.classList.add('hidden');
             }
         });
 
         function loadProfiles() {
-            const profiles = [
-                {n:'ניתאי', i:'https://i.ibb.co/pWv6GZ7/av4.png'},
-                {n:'אבא', i:'https://i.ibb.co/pWv6GZ7/av1.png'},
-                {n:'אימוש', i:'https://i.ibb.co/pWv6GZ7/av2.png'},
-                {n:'נועה', i:'https://i.ibb.co/pWv6GZ7/av3.png'},
-                {n:'אורי', i:'https://i.ibb.co/pWv6GZ7/av5.png'}
-            ];
+            const profiles = [{n:'ניתאי', i:'https://i.ibb.co/pWv6GZ7/av4.png'},{n:'אבא', i:'https://i.ibb.co/pWv6GZ7/av1.png'},{n:'אימוש', i:'https://i.ibb.co/pWv6GZ7/av2.png'},{n:'נועה', i:'https://i.ibb.co/pWv6GZ7/av3.png'},{n:'אורי', i:'https://i.ibb.co/pWv6GZ7/av5.png'}];
             document.getElementById('profile-list').innerHTML = profiles.map(p => `
                 <div class="profile-box" tabindex="0" onclick="enterApp()">
                     <div class="profile-img" style="background-image: url('${p.i}')"></div>
@@ -125,12 +123,12 @@
             document.getElementById('content-view').classList.add('hidden');
             home.classList.remove('hidden');
             home.innerHTML = '';
-            const categories = filter === 'all' ? [...new Set(seriesData.map(s => s.category))] : [filter];
-            categories.forEach(cat => {
+            const cats = filter === 'all' ? [...new Set(seriesData.map(s => s.category))] : [filter];
+            cats.forEach(cat => {
                 const filtered = seriesData.filter(s => s.category === cat);
                 if(filtered.length === 0) return;
                 const section = document.createElement('div');
-                section.innerHTML = `<div class="category-title">${cat}</div>
+                section.innerHTML = `<div style="font-size:24px; margin:30px 40px 10px; font-weight:bold;">${cat}</div>
                     <div class="row">${filtered.map(s => `
                         <div class="card" tabindex="0" onclick="openContent('${s.id}')">
                             <img src="${s.image}" onerror="this.src='https://via.placeholder.com/230x130?text=HOT+Play'">
