@@ -8,25 +8,32 @@
     <style>
         :root { --red: #ff0055; --bg: #000; }
         body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; overflow-x: hidden; }
+        
+        /* מסך פרופילים */
         #profile-screen { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
         .profile-container { display: flex; gap: 30px; margin-top: 40px; }
         .profile-box { text-align: center; cursor: pointer; transition: 0.3s; width: 120px; outline: none; }
-        .profile-avatar { width: 120px; height: 120px; border-radius: 50%; border: 3px solid transparent; margin-bottom: 10px; background-size: cover; background-position: center; background-color: #333; }
-        .profile-box:focus .profile-avatar, .profile-box:hover .profile-avatar { border-color: white; transform: scale(1.1); }
+        .profile-avatar { width: 120px; height: 120px; border-radius: 50%; border: 3px solid transparent; margin-bottom: 10px; background-size: cover; background-position: center; background-color: #222; }
+        .profile-box:focus .profile-avatar { border-color: white; transform: scale(1.1); }
+
+        /* שורות נטפליקס - גדלים מסודרים */
         .category-title { font-size: 20px; margin: 30px 40px 10px; font-weight: bold; color: #e5e5e5; }
-        .row { display: flex; gap: 15px; padding: 0 40px 20px; overflow-x: auto; scroll-behavior: smooth; min-height: 150px; }
+        .row { display: flex; gap: 15px; padding: 0 40px 20px; overflow-x: auto; scroll-behavior: smooth; }
         .row::-webkit-scrollbar { display: none; }
+        
         .card { min-width: 220px; max-width: 220px; cursor: pointer; transition: 0.3s; outline: none; }
-        .card img { width: 100%; height: 125px; border-radius: 4px; object-fit: cover; background: #222; }
+        .card img { width: 100%; height: 125px; border-radius: 4px; object-fit: cover; background: #1a1a1a; }
         .card:focus { transform: scale(1.1); z-index: 10; }
         .card-title { margin-top: 8px; font-size: 14px; text-align: center; }
+
+        /* דף סדרה ותקצירים */
         .series-page { padding: 40px; }
         .episode-item { display: flex; gap: 20px; padding: 15px; border-radius: 8px; cursor: pointer; align-items: center; outline: none; border-bottom: 1px solid #222; }
         .episode-item:focus { background: #333; }
-        .episode-img { width: 200px; height: 110px; border-radius: 4px; object-fit: cover; background: #222; }
-        .episode-info { flex: 1; }
+        .episode-img { width: 220px; height: 125px; border-radius: 4px; object-fit: cover; background: #1a1a1a; }
         .episode-info h3 { margin: 0 0 5px 0; font-size: 18px; color: var(--red); }
-        .episode-info p { margin: 0; color: #aaa; font-size: 14px; }
+        .episode-info p { margin: 0; color: #aaa; font-size: 14px; line-height: 1.4; }
+
         .hidden { display: none !important; }
     </style>
 </head>
@@ -73,7 +80,13 @@
         });
 
         function loadProfiles() {
-            const profiles = [{name:'אבא',img:''}, {name:'אימוש',img:''}, {name:'נועה',img:''}, {name:'ניתאי',img:''}, {name:'אורי',img:''}];
+            const profiles = [
+                {name:'אבא', img:'https://i.ibb.co/pWv6GZ7/av1.png'},
+                {name:'אימוש', img:'https://i.ibb.co/pWv6GZ7/av2.png'},
+                {name:'נועה', img:'https://i.ibb.co/pWv6GZ7/av3.png'},
+                {name:'ניתאי', img:'https://i.ibb.co/pWv6GZ7/av4.png'},
+                {name:'אורי', img:'https://i.ibb.co/pWv6GZ7/av5.png'}
+            ];
             document.getElementById('profile-list').innerHTML = profiles.map(p => `
                 <div class="profile-box" tabindex="0" onclick="selectProfile('${p.name}')">
                     <div class="profile-avatar" style="background-image: url('${p.img}')"></div>
@@ -93,16 +106,11 @@
             home.classList.remove('hidden');
             document.getElementById('series-view').classList.add('hidden');
             
-            if (typeof seriesData === 'undefined' || seriesData.length === 0) {
-                home.innerHTML = `<h2 style="padding:40px;">לא נמצאו סדרות ב-data.js. וודא שהקובץ תקין!</h2>`;
-                return;
-            }
-
             home.innerHTML = `<div class="category-title">המשך הצפייה של ${userName}</div>
                 <div class="row">
                     ${seriesData.map(s => `
                         <div class="card" tabindex="0" onclick="showSeries('${s.id}')">
-                            <img src="${s.image || ''}" onerror="this.src='https://via.placeholder.com/220x125?text=No+Image'">
+                            <img src="${s.image}" onerror="this.src='https://via.placeholder.com/220x125?text=HOT+Play'">
                             <div class="card-title">${s.title}</div>
                         </div>
                     `).join('')}
@@ -119,13 +127,13 @@
                 <div class="series-page">
                     <button onclick="renderHome()" style="background:none; color:white; border:1px solid white; padding:8px; cursor:pointer; margin-bottom:20px;">← חזור</button>
                     <div style="display:flex; gap:30px; margin-bottom:40px;">
-                        <img src="${s.image}" style="width:300px; border-radius:8px;">
+                        <img src="${s.image}" style="width:280px; border-radius:8px;">
                         <div><h1>${s.title}</h1><p style="color:#aaa; max-width:500px;">${s.description}</p></div>
                     </div>
                     <h2>פרקים</h2>
                     ${s.episodes.map(ep => `
-                        <div class="episode-item" tabindex="0" onclick="window.open('https://drive.google.com/file/d/${ep.driveId}/view?authuser=0', '_blank')">
-                            <img src="${ep.image || ''}" class="episode-img" onerror="this.src='https://via.placeholder.com/200x110?text=No+Image'">
+                        <div class="episode-item" tabindex="0" onclick="playVideo('${ep.driveId}')">
+                            <img src="${ep.image}" class="episode-img" onerror="this.src='https://via.placeholder.com/220x125?text=פרק+${ep.number}'">
                             <div class="episode-info">
                                 <h3>פרק ${ep.number}</h3>
                                 <p>${ep.desc}</p>
@@ -133,6 +141,12 @@
                         </div>
                     `).join('')}
                 </div>`;
+        }
+
+        function playVideo(id) {
+            // התיקון למסך מלא: preview במקום view
+            const fullUrl = `https://drive.google.com/file/d/${id}/preview`;
+            window.location.href = fullUrl;
         }
     </script>
 </body>
