@@ -10,7 +10,8 @@
         body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
         *:focus { outline: none; }
         
-        .screen { display: none; }
+        .screen { display: none; } /* כל המסכים מוסתרים כברירת מחדל */
+        
         #auth-screen { position: fixed; inset: 0; background: #000; z-index: 10000; flex-direction: column; align-items: center; justify-content: center; }
         .login-btn { background: var(--red); color: white; border: none; padding: 15px 40px; font-size: 22px; font-weight: bold; border-radius: 8px; margin-top: 30px; cursor: pointer; }
         .login-btn:focus { background: white; color: black; transform: scale(1.1); }
@@ -29,10 +30,10 @@
 
         .main-content { flex: 1; overflow-y: auto; height: 100vh; scroll-behavior: smooth; padding-bottom: 50px; }
         
-        /* גלילה חלקה ומגנטית */
-        .row { display: flex; gap: 20px; padding: 20px 40px; overflow-x: auto; scroll-behavior: smooth; white-space: nowrap; scroll-snap-type: x mandatory; }
+        .row { display: flex; gap: 20px; padding: 20px 40px; overflow-x: auto; scroll-behavior: smooth; white-space: nowrap; }
         .row::-webkit-scrollbar { display: none; }
-        .card { min-width: 230px; display: inline-block; position: relative; scroll-snap-align: center; transition: transform 0.3s; cursor: pointer; }
+        
+        .card { min-width: 230px; display: inline-block; position: relative; transition: transform 0.3s; cursor: pointer; }
         .card img { width: 100%; height: 130px; border-radius: 6px; object-fit: cover; border: 3px solid transparent; }
         .card:focus { transform: scale(1.15); z-index: 10; }
         .card:focus img { border-color: white; }
@@ -42,6 +43,7 @@
     </style>
 </head>
 <body>
+
     <div id="auth-screen" class="screen" style="display: flex;">
         <h1 style="font-size: 70px; color: var(--red); margin: 0;">HOT Play</h1>
         <h2 style="font-size: 30px; margin-top: 10px;">ברוכים הבאים</h2>
@@ -80,6 +82,14 @@
         };
         firebase.initializeApp(firebaseConfig);
 
+        // --- מירכוז אוטומטי בטלוויזיה ---
+        // ברגע שאלמנט מקבל פוקוס, המסך גולל אליו למרכז
+        document.addEventListener('focus', function(e) {
+            if (e.target && e.target.scrollIntoView) {
+                e.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+            }
+        }, true);
+
         function login() {
             const provider = new firebase.auth.GoogleAuthProvider();
             firebase.auth().signInWithRedirect(provider);
@@ -96,9 +106,36 @@
             }
         });
 
+        // --- ניהול חכם של כפתור החזור ---
+        function handleBackPress() {
+            // אם אנחנו בנגן - נסגור אותו
+            if(document.getElementById('video-container').innerHTML !== '') {
+                closeVideo();
+                return;
+            }
+            
+            // אם אנחנו בדף פרטים - נחזור לבית (הסתרה/חשיפה)
+            const detailView = document.getElementById('content-view');
+            const homeView = document.getElementById('home-view');
+            
+            if (detailView.style.display !== 'none') {
+                detailView.style.display = 'none';
+                homeView.style.display = 'block';
+                // מחזיר פוקוס לאלמנט האחרון שהיה עליו פוקוס (אם הדפדפן שמר)
+                // או לכרטיס הראשון
+                const firstCard = homeView.querySelector('.card');
+                if(firstCard) firstCard.focus();
+                return;
+            }
+            
+            // אם אנחנו בבית - נצא מהאפליקציה
+            if (window.AndroidControl) AndroidControl.exitApp();
+        }
+
         function switchScreen(name) {
             document.querySelectorAll('.screen').forEach(el => el.style.display = 'none');
             document.getElementById('video-container').style.display = 'none';
+
             if (name === 'auth') document.getElementById('auth-screen').style.display = 'flex';
             if (name === 'profiles') document.getElementById('profile-screen').style.display = 'flex';
             if (name === 'home') {
@@ -107,12 +144,6 @@
                 document.getElementById('home-view').style.display = 'block';
                 document.getElementById('content-view').style.display = 'none';
                 setTimeout(() => { const c=document.querySelector('.card'); if(c)c.focus(); }, 200);
-            }
-            if (name === 'details') {
-                document.getElementById('sidebar').style.display = 'flex';
-                document.getElementById('app').style.display = 'block';
-                document.getElementById('home-view').style.display = 'none';
-                document.getElementById('content-view').style.display = 'block';
             }
             if (name === 'video') document.getElementById('video-container').style.display = 'block';
         }
@@ -137,6 +168,9 @@
 
         function renderHome(filter = 'all') {
             const home = document.getElementById('home-view');
+            // בדיקה אם כבר יש תוכן כדי לא למחוק את המיקום
+            if(home.innerHTML.trim() !== '' && filter === 'all') return; 
+            
             home.innerHTML = '';
             const cats = filter === 'all' ? [...new Set(seriesData.map(s => s.category))] : [filter];
             cats.forEach(cat => {
@@ -151,13 +185,22 @@
             });
         }
 
-        function navTo(cat) { renderHome(cat); }
+        function navTo(cat) { 
+            const home = document.getElementById('home-view');
+            home.innerHTML = ''; // כאן כן מרעננים כי זה פילטר חדש
+            renderHome(cat); 
+        }
 
         function openContent(id) {
             const item = seriesData.find(x => x.id === id);
-            const view = document.getElementById('content-view');
-            let html = '';
+            const homeView = document.getElementById('home-view');
+            const detailView = document.getElementById('content-view');
             
+            // במקום למחוק, אנחנו מסתירים. המיקום נשמר.
+            homeView.style.display = 'none';
+            detailView.style.display = 'block';
+            
+            let html = '';
             if (item.type === 'movie' || item.category === 'סרטים') {
                 html = `<div style="height:100vh; background: linear-gradient(to right, black, transparent), url('${item.image}') no-repeat center/cover; padding:80px; display:flex; flex-direction:column; justify-content:center;">
                     <h1 style="font-size:50px;">${item.title}</h1>
@@ -176,16 +219,21 @@
                     </div>
                 </div>`;
             }
-            view.innerHTML = html;
-            switchScreen('details');
-            setTimeout(() => { const b=view.querySelector('.login-btn')||view.querySelector('.card'); if(b)b.focus(); }, 100);
+            detailView.innerHTML = html;
+            setTimeout(() => { const b=detailView.querySelector('.login-btn')||detailView.querySelector('.card'); if(b)b.focus(); }, 100);
         }
 
         function playHD(id) {
             const container = document.getElementById('video-container');
             container.innerHTML = `<iframe src="https://drive.google.com/file/d/${id}/preview" allowfullscreen style="width:100%; height:100%; border:none;"></iframe>`;
-            switchScreen('video');
+            document.getElementById('video-container').style.display = 'block';
             if (typeof AndroidControl !== 'undefined') AndroidControl.setVideoMode(true);
+        }
+
+        function closeVideo() {
+            document.getElementById('video-container').innerHTML = '';
+            document.getElementById('video-container').style.display = 'none';
+            if (typeof AndroidControl !== 'undefined') AndroidControl.setVideoMode(false);
         }
     </script>
 </body>
