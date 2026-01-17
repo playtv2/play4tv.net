@@ -42,7 +42,7 @@ const seriesData = [
     {
     id: "zootopia2",  // מזהה ייחודי באנגלית (שלא יחזור על עצמו)
     type: "movie",             // סוג התוכן
-    category: "ילדים", "סרטים", 
+    category: "ילדים" 
     title: "זוטרופוליס 2",
     description: "כאן יופיע תקציר הסרט.",
     image: "https://m.media-amazon.com/images/M/MV5BYjg1Mjc3MjQtMTZjNy00YWVlLWFhMWEtMWI3ZTgxYjJmNmRlXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg", // תמונה לאורך (Poster)
