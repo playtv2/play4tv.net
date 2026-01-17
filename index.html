@@ -23,7 +23,7 @@
         }
         *:focus { outline: none; }
         
-        /* --- Sidebar מקובע (לא זז!) --- */
+        /* --- Sidebar --- */
         .sidebar { 
             width: var(--sidebar-collapsed); 
             background: #050505; 
@@ -46,7 +46,7 @@
         .sidebar:focus-within .nav-text, .sidebar:hover .nav-text { opacity: 1; }
         .nav-item:focus { background: var(--red); color: white; transform: scale(1.05); }
 
-        /* --- אזור התוכן (גולל בצורה חכמה) --- */
+        /* --- אזור תוכן --- */
         .main-content { 
             flex: 1; 
             height: 100vh; 
@@ -55,16 +55,13 @@
             scroll-behavior: smooth; 
             display: flex; 
             flex-direction: column;
-            
-            /* --- התיקון לגלילה אנכית חלקה --- */
-            scroll-snap-type: y mandatory; /* מגנט אנכי */
+            scroll-snap-type: y mandatory; /* גלילה מגנטית אנכית */
             padding-bottom: 50px;
         }
 
-        /* --- בלוק של קטגוריה (כותרת + שורה) --- */
         .category-block {
-            scroll-snap-align: start; /* המגנט ננעל על תחילת הבלוק */
-            scroll-margin-top: 20px;  /* מרווח קטן מלמעלה כדי שהכותרת לא תידבק */
+            scroll-snap-align: start; 
+            scroll-margin-top: 20px;
             padding-bottom: 20px;
         }
 
@@ -74,8 +71,6 @@
             background-size: cover; background-position: top center;
             position: relative; transition: background-image 0.4s ease-out;
             flex-shrink: 0;
-            
-            /* גם ההירו הוא נקודת עצירה */
             scroll-snap-align: start;
         }
         .hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, var(--bg) 5%, transparent 90%), linear-gradient(to right, var(--bg) 0%, transparent 60%); }
@@ -88,7 +83,7 @@
         .row { 
             display: flex; gap: 12px; padding: 10px 40px 20px; 
             overflow-x: auto; scroll-behavior: smooth; white-space: nowrap; 
-            scroll-snap-type: x mandatory; /* מגנט אופקי */
+            scroll-snap-type: x mandatory; /* גלילה מגנטית אופקית */
         }
         .row::-webkit-scrollbar { display: none; }
         
@@ -103,7 +98,6 @@
         .card.series { min-width: 200px; width: 200px; height: 112px; }
         .card img { width: 100%; height: 100%; object-fit: cover; }
         
-        /* פוקוס */
         .card:focus { transform: scale(1.15); z-index: 100; outline: 3px solid white; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
         .card-title-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); padding: 5px; text-align: center; font-size: 11px; opacity: 0; transition: 0.2s; color: white; }
         .card:focus .card-title-overlay { opacity: 1; }
@@ -210,7 +204,6 @@
             nav.innerHTML = html;
         }
 
-        // --- היסטוריה ---
         function addToHistory(item) {
             if (!currentProfile) return;
             const key = `history_${currentProfile.n}`;
@@ -226,7 +219,6 @@
             return JSON.parse(localStorage.getItem(`history_${currentProfile.n}`) || "[]");
         }
 
-        // --- ניווט ואירועים ---
         document.addEventListener('keydown', function(e) {
             const active = document.activeElement;
             if (e.key === 'ArrowRight') {
@@ -239,7 +231,6 @@
         });
 
         document.addEventListener('focus', function(e) {
-            // מירכוז אוטומטי - פועל גם אופקית וגם אנכית
             if (e.target && e.target.scrollIntoView) {
                 e.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
             }
@@ -292,27 +283,21 @@
 
         function enterApp() { switchScreen('home'); renderHome(); }
 
-        // --- הלוגיקה החדשה של השורות והז'אנרים ---
         function renderHome() {
             const home = document.getElementById('home-view');
             home.innerHTML = '';
             
-            // 1. המשך צפייה
+            // 1. המשך צפייה (עכשיו עם פרמטר true לאחידות)
             const history = getHistory();
             if (history.length > 0) {
-                home.innerHTML += renderRow("המשך צפייה", history);
+                // הפרמטר השלישי 'true' מכריח את כל הכרטיסיות להיות רחבות
+                home.innerHTML += renderRow("המשך צפייה", history, true);
             }
 
-            // 2. סינון לפי פרופיל (ילדים/מבוגרים)
-            const allowedCats = currentProfile.type === 'kids' ? ['ילדים'] : ['סדרות', 'סרטים'];
-            
-            // 3. איסוף כל הפריטים המותרים
+            const allowedCats = currentProfile.type === 'kids' ? ['ילדים'] : ['סדרות', 'סרטים', 'ילדים'];
             const allAllowedItems = seriesData.filter(s => allowedCats.includes(s.category));
-
-            // 4. מציאת כל הז'אנרים הקיימים בפריטים האלו
             const uniqueGenres = [...new Set(allAllowedItems.map(s => s.genre || s.category))];
 
-            // 5. יצירת בלוק נפרד לכל ז'אנר
             uniqueGenres.forEach(genreName => {
                 const itemsInRow = allAllowedItems.filter(s => (s.genre || s.category) === genreName);
                 if(itemsInRow.length > 0) {
@@ -321,10 +306,12 @@
             });
         }
 
-        function renderRow(title, items) {
+        // --- הפונקציה המעודכנת: תומכת ב-forceUniform ---
+        function renderRow(title, items, forceUniform = false) {
             const cardsHtml = items.map(s => {
-                const isMovie = s.category === 'סרטים' || s.type === 'movie';
-                const shapeClass = isMovie ? 'movie' : 'series';
+                // אם forceUniform הוא אמת, כולנו 'series' (רחב). אם לא, בודקים אם סרט או סדרה.
+                let shapeClass = forceUniform ? 'series' : (s.category === 'סרטים' || s.type === 'movie' ? 'movie' : 'series');
+                
                 return `
                     <div class="card ${shapeClass}" tabindex="0" data-id="${s.id}" onclick="openContent('${s.id}')">
                         <img src="${s.image}" loading="lazy">
@@ -332,7 +319,6 @@
                     </div>`;
             }).join('');
             
-            // עוטף ב-div של category-block בשביל הגלילה החכמה
             return `
             <div class="category-block">
                 <div class="category-title">${title}</div>
@@ -343,8 +329,6 @@
         function navTo(cat) { 
             const home = document.getElementById('home-view');
             home.innerHTML = ''; 
-            
-            // בתוך תפריט צד, אנחנו מראים רק את הקטגוריה שנבחרה
             const filtered = seriesData.filter(s => s.category === cat);
             const uniqueGenres = [...new Set(filtered.map(s => s.genre || s.category))];
             
@@ -404,7 +388,7 @@
             switchScreen('video');
             if (typeof AndroidControl !== 'undefined') {
                 AndroidControl.setVideoMode(true);
-                automateDrive(); // הפעלה אוטומטית גם בצפייה שנייה!
+                automateDrive();
             }
         }
 
