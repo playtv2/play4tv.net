@@ -21,32 +21,16 @@
 
         .sidebar { width: var(--sidebar-w); background: #000; display: flex; flex-direction: column; padding: 20px; border-left: 1px solid #222; z-index: 100; height: 100vh; }
         
-        /* לוגו מקורי */
+        /* --- שנה את הקישור ללוגו כאן בתוך ה-url --- */
         .logo { width: 100%; height: 100px; background-size: contain; background-repeat: no-repeat; background-position: center; margin-bottom: 30px; background-image: url('https://i.ibb.co/pWv6GZ7/av4.png'); }
         
         .nav-item { padding: 15px; font-size: 20px; cursor: pointer; border-radius: 8px; margin-bottom: 8px; outline: none; }
         .nav-item:focus { background: var(--red); }
 
         .main-content { flex: 1; overflow-y: auto; height: 100vh; scroll-behavior: smooth; }
-        
-        /* גלילה מגנטית חלקה */
-        .row { 
-            display: flex; 
-            gap: 18px; 
-            padding: 10px 40px 40px; 
-            overflow-x: auto; 
-            scroll-behavior: smooth;
-            scroll-snap-type: x mandatory; 
-        }
+        .row { display: flex; gap: 18px; padding: 10px 40px 40px; overflow-x: auto; scroll-behavior: smooth; }
         .row::-webkit-scrollbar { display: none; }
-        
-        .card { 
-            min-width: 230px; 
-            cursor: pointer; 
-            transition: 0.3s; 
-            outline: none;
-            scroll-snap-align: center;
-        }
+        .card { min-width: 230px; cursor: pointer; transition: 0.3s; outline: none; }
         .card img { width: 100%; height: 130px; border-radius: 6px; object-fit: cover; border: 2px solid transparent; }
         .card:focus img { border-color: white; transform: scale(1.1); }
 
@@ -54,6 +38,7 @@
     </style>
 </head>
 <body>
+
     <div id="auth-screen">
         <h1 style="font-size: 70px; color: var(--red); margin: 0;">HOT Play</h1>
         <h2 style="font-size: 30px; margin-top: 10px;">ברוכים הבאים</h2>
@@ -92,6 +77,7 @@
 
         function login() {
             const provider = new firebase.auth.GoogleAuthProvider();
+            // חזרנו ל-Popup שעבד לך בהתחלה
             firebase.auth().signInWithPopup(provider);
         }
 
@@ -124,16 +110,6 @@
             renderHome('all');
         }
 
-        // פונקציית חזור שנקראת מהאנדרואיד
-        function handleBackPress() {
-            const detailView = document.getElementById('content-view');
-            if(!detailView.classList.contains('hidden')) {
-                renderHome('all');
-            } else {
-                if(window.AndroidControl) AndroidControl.exitApp();
-            }
-        }
-
         function renderHome(filter = 'all') {
             const home = document.getElementById('home-view');
             document.getElementById('content-view').classList.add('hidden');
@@ -159,9 +135,6 @@
             const view = document.getElementById('content-view');
             document.getElementById('home-view').classList.add('hidden');
             view.classList.remove('hidden');
-            
-            // הגדרת איכות 1080p בדרייב מתבצעת אוטומטית ע"י גוגל לפי רוחב פס, 
-            // אבל הזרקנו סקריפט באנדרואיד שמוודא שזה רץ נקי.
             if (item.type === 'movie' || item.category === 'סרטים') {
                 view.innerHTML = `<div style="height:100vh; background: linear-gradient(to right, black, transparent), url('${item.image}') center/cover; padding:80px; display:flex; flex-direction:column; justify-content:center;">
                     <h1>${item.title}</h1><p style="max-width:500px;">${item.description}</p>
@@ -179,17 +152,9 @@
                         </div>`).join('')}</div>
                 </div>`;
             }
-            // פוקוס על הכפתור הראשון בדף הפרטים
-            setTimeout(() => {
-                const firstBtn = view.querySelector('button, .card');
-                if(firstBtn) firstBtn.focus();
-            }, 100);
         }
 
-        function playHD(id) { 
-            // שימוש ב-/view הוא קריטי כדי שגוגל יזהה את ההתחברות שלך
-            window.location.href = `https://drive.google.com/file/d/${id}/view`; 
-        }
+        function playHD(id) { window.location.href = `https://drive.google.com/file/d/${id}/view`; }
     </script>
 </body>
 </html>
