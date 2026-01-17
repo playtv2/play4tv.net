@@ -9,55 +9,57 @@
         :root { --red: #ff0055; --bg: #0b0b0b; --sidebar-w: 260px; }
         body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
-        /* עיצוב פוקוס דמוי נטפליקס */
-        *:focus { outline: none; } /* ביטול המסגרת המכוערת הרגילה */
+        *:focus { outline: none; }
         
-        /* מסך כניסה */
-        #auth-screen { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        .login-btn { background: var(--red); color: white; border: none; padding: 15px 40px; font-size: 22px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.3s; margin-top: 30px; }
-        .login-btn:focus { background: white; color: black; transform: scale(1.1); box-shadow: 0 0 30px rgba(255,255,255,0.4); }
+        /* מסכים */
+        #auth-screen, #profile-screen { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .login-btn { background: var(--red); color: white; border: none; padding: 15px 40px; font-size: 22px; font-weight: bold; border-radius: 8px; margin-top: 30px; }
+        .login-btn:focus { background: white; color: black; transform: scale(1.1); }
 
-        /* מסך פרופילים */
-        #profile-screen { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .profile-container { display: flex; gap: 35px; }
-        .profile-box { text-align: center; cursor: pointer; transition: 0.3s; padding: 10px; border-radius: 10px; }
-        .profile-img { width: 130px; height: 130px; border-radius: 50%; border: 4px solid transparent; background-size: cover; background-color: #222; margin-bottom: 10px; }
+        .profile-box { text-align: center; padding: 10px; border-radius: 10px; }
+        .profile-img { width: 130px; height: 130px; border-radius: 50%; background-size: cover; background-color: #222; margin-bottom: 10px; border: 4px solid transparent; }
         .profile-box:focus { background: #222; transform: scale(1.15); }
         .profile-box:focus .profile-img { border-color: var(--red); }
 
-        /* ממשק ראשי */
-        .sidebar { width: var(--sidebar-w); background: #000; display: flex; flex-direction: column; padding: 20px; border-left: 1px solid #222; z-index: 100; height: 100vh; }
+        .sidebar { width: var(--sidebar-w); background: #000; display: flex; flex-direction: column; padding: 20px; border-left: 1px solid #222; height: 100vh; }
         .logo { width: 100%; height: 100px; background-size: contain; background-repeat: no-repeat; background-position: center; margin-bottom: 30px; }
-        .nav-item { padding: 15px; font-size: 20px; cursor: pointer; border-radius: 8px; margin-bottom: 8px; transition: 0.2s; }
-        .nav-item:focus { background: var(--red); transform: translateX(-10px); font-weight: bold; box-shadow: 0 0 15px var(--red); }
+        .nav-item { padding: 15px; font-size: 20px; border-radius: 8px; margin-bottom: 8px; }
+        .nav-item:focus { background: var(--red); transform: translateX(-10px); font-weight: bold; }
 
-        /* שורות תוכן */
         .main-content { flex: 1; overflow-y: auto; height: 100vh; scroll-behavior: smooth; padding-bottom: 50px; }
-        .row { display: flex; gap: 18px; padding: 20px 40px; overflow-x: auto; scroll-behavior: smooth; white-space: nowrap; }
+        
+        /* --- תיקון הגלילה (Netflix Style) --- */
+        .row { 
+            display: flex; 
+            gap: 20px; 
+            padding: 20px 40px; 
+            overflow-x: auto; 
+            scroll-behavior: smooth; 
+            white-space: nowrap;
+            /* נועל את הגלילה על האלמנטים */
+            scroll-snap-type: x mandatory; 
+        }
         .row::-webkit-scrollbar { display: none; }
         
         .card { 
             min-width: 230px; 
-            cursor: pointer; 
-            transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); 
             display: inline-block;
             position: relative;
+            /* יישור הכרטיס למרכז או להתחלה בעת גלילה */
+            scroll-snap-align: center; 
+            transition: transform 0.3s;
         }
         .card img { width: 100%; height: 130px; border-radius: 6px; object-fit: cover; border: 3px solid transparent; }
-        
-        /* אפקט הגדלה איכותי */
-        .card:focus { transform: scale(1.15); z-index: 10; position: relative; }
-        .card:focus img { border-color: white; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        .card:focus { transform: scale(1.15); z-index: 10; }
+        .card:focus img { border-color: white; }
 
         .hidden { display: none !important; }
-        
-        /* אזור הנגן */
         #video-container { position: fixed; inset: 0; background: #000; z-index: 20000; display: none; }
         iframe { width: 100%; height: 100%; border: none; }
     </style>
 </head>
 <body>
-
     <div id="auth-screen">
         <h1 style="font-size: 70px; color: var(--red); margin: 0;">HOT Play</h1>
         <h2 style="font-size: 30px; margin-top: 10px;">ברוכים הבאים</h2>
@@ -86,8 +88,7 @@
 
     <script src="data.js"></script>
     <script>
-        // ניהול מצבי מסך
-        let currentScreen = 'auth'; // auth, profiles, home, details, video
+        let currentScreen = 'auth';
 
         const firebaseConfig = {
             apiKey: "AIzaSyAuJlFyTuYypCVdJrZCrQGOEZZS5WDH6pI",
@@ -105,7 +106,6 @@
         }
 
         firebase.auth().getRedirectResult().catch(console.error);
-
         firebase.auth().onAuthStateChanged(user => {
             if (user && user.email === "nitaylayish298@gmail.com") {
                 switchScreen('profiles');
@@ -115,54 +115,40 @@
             }
         });
 
-        // פונקציית החזור החכמה שהאנדרואיד קורא לה
+        // פונקציית החזור שמופעלת ע"י אנדרואיד
         function handleBackPress() {
             if (currentScreen === 'video') {
                 closeVideo();
             } else if (currentScreen === 'details') {
-                renderHome('all'); // או חזרה לקטגוריה האחרונה
-            } else if (currentScreen === 'home') {
-                // אם אנחנו בבית ולוחצים חזור - יציאה מהאפליקציה
-                if (typeof AndroidControl !== 'undefined') {
-                    AndroidControl.exitApp();
-                }
-            } else if (currentScreen === 'profiles') {
-                if (typeof AndroidControl !== 'undefined') {
-                    AndroidControl.exitApp();
-                }
+                renderHome('all');
+            } else {
+                if(typeof AndroidControl !== 'undefined') AndroidControl.exitApp();
             }
         }
 
-        function switchScreen(screenName) {
-            currentScreen = screenName;
-            document.getElementById('auth-screen').classList.add('hidden');
-            document.getElementById('profile-screen').classList.add('hidden');
-            document.getElementById('sidebar').classList.add('hidden');
-            document.getElementById('app').classList.add('hidden');
+        function switchScreen(name) {
+            currentScreen = name;
+            document.querySelectorAll('#auth-screen, #profile-screen, #sidebar, #app').forEach(el => el.classList.add('hidden'));
             document.getElementById('video-container').style.display = 'none';
 
-            if (screenName === 'auth') document.getElementById('auth-screen').classList.remove('hidden');
-            if (screenName === 'profiles') document.getElementById('profile-screen').classList.remove('hidden');
-            if (screenName === 'home') {
+            if (name === 'auth') document.getElementById('auth-screen').classList.remove('hidden');
+            if (name === 'profiles') document.getElementById('profile-screen').classList.remove('hidden');
+            if (name === 'home') {
                 document.getElementById('sidebar').classList.remove('hidden');
                 document.getElementById('app').classList.remove('hidden');
                 document.getElementById('home-view').classList.remove('hidden');
                 document.getElementById('content-view').classList.add('hidden');
-                
-                // פוקוס אוטומטי על הפריט הראשון בבית
-                setTimeout(() => {
-                    const firstCard = document.querySelector('.card');
-                    if(firstCard) firstCard.focus();
-                    else document.querySelector('.nav-item').focus();
-                }, 100);
+                setTimeout(() => { 
+                    const card = document.querySelector('.card');
+                    if(card) card.focus(); 
+                }, 200);
             }
-            if (screenName === 'details') {
+            if (name === 'details') {
                 document.getElementById('sidebar').classList.remove('hidden');
                 document.getElementById('app').classList.remove('hidden');
-                document.getElementById('home-view').classList.add('hidden');
                 document.getElementById('content-view').classList.remove('hidden');
             }
-            if (screenName === 'video') {
+            if (name === 'video') {
                 document.getElementById('video-container').style.display = 'block';
             }
         }
@@ -174,8 +160,6 @@
                     <div class="profile-img" style="background-image: url('${p.i}')"></div>
                     <span>${p.n}</span>
                 </div>`).join('');
-                
-            // פוקוס על הפרופיל הראשון
             setTimeout(() => document.querySelector('.profile-box').focus(), 500);
         }
 
@@ -184,23 +168,17 @@
         function renderHome(filter = 'all') {
             const home = document.getElementById('home-view');
             home.innerHTML = '';
-            
             const cats = filter === 'all' ? [...new Set(seriesData.map(s => s.category))] : [filter];
             cats.forEach(cat => {
                 const filtered = seriesData.filter(s => s.category === cat);
                 if(filtered.length === 0) return;
-                
-                home.innerHTML += `
-                    <div style="font-size:24px; margin:30px 40px 10px; font-weight:bold;">${cat}</div>
-                    <div class="row">
-                        ${filtered.map(s => `
+                home.innerHTML += `<div style="font-size:24px; margin:30px 40px 10px; font-weight:bold;">${cat}</div>
+                    <div class="row">${filtered.map(s => `
                         <div class="card" tabindex="0" onclick="openContent('${s.id}')">
                             <img src="${s.image}" loading="lazy">
                             <div style="text-align:center; padding:8px; font-size:14px;">${s.title}</div>
-                        </div>`).join('')}
-                    </div>`;
+                        </div>`).join('')}</div>`;
             });
-            switchScreen('home');
         }
 
         function navTo(cat) { renderHome(cat); }
@@ -212,48 +190,4 @@
             let html = '';
             if (item.type === 'movie' || item.category === 'סרטים') {
                 html = `<div style="height:100vh; background: linear-gradient(to right, black, transparent), url('${item.image}') no-repeat center/cover; padding:80px; display:flex; flex-direction:column; justify-content:center;">
-                    <h1 style="font-size:50px; text-shadow: 2px 2px 4px #000;">${item.title}</h1>
-                    <p style="max-width:500px; font-size:18px; text-shadow: 1px 1px 2px #000;">${item.description}</p>
-                    <button class="login-btn" tabindex="0" onclick="playHD('${item.driveId}')" style="width: fit-content;">▶ צפה עכשיו</button>
-                </div>`;
-            } else {
-                html = `<div style="padding:40px;">
-                    <h1 style="font-size:40px;">${item.title}</h1>
-                    <div class="row" style="flex-wrap: wrap; gap: 20px;">
-                        ${item.episodes.map(ep => `
-                        <div class="card" tabindex="0" onclick="playHD('${ep.driveId}')" style="min-width: 280px;">
-                            <img src="${ep.image}" style="height:160px;">
-                            <div style="padding:10px;">
-                                <h3 style="margin:0;">פרק ${ep.number}</h3>
-                                <p style="font-size:12px; color:#aaa; margin-top:5px;">${ep.desc || ''}</p>
-                            </div>
-                        </div>`).join('')}
-                    </div>
-                </div>`;
-            }
-            view.innerHTML = html;
-            switchScreen('details');
-            
-            // פוקוס על הכפתור הראשי או הפרק הראשון
-            setTimeout(() => {
-                const btn = view.querySelector('.login-btn') || view.querySelector('.card');
-                if(btn) btn.focus();
-            }, 100);
-        }
-
-        function playHD(id) {
-            const container = document.getElementById('video-container');
-            // שימוש ב-preview ו-autoplay=1 לניגון אוטומטי ומהיר
-            container.innerHTML = `<iframe src="https://drive.google.com/file/d/${id}/preview?autoplay=1" allow="autoplay; fullscreen"></iframe>`;
-            switchScreen('video');
-            if (typeof AndroidControl !== 'undefined') AndroidControl.setVideoMode(true);
-        }
-
-        function closeVideo() {
-            document.getElementById('video-container').innerHTML = ''; // עצירת הסרטון
-            switchScreen('details'); // חזרה לדף הסדרה
-            if (typeof AndroidControl !== 'undefined') AndroidControl.setVideoMode(false);
-        }
-    </script>
-</body>
-</html>
+                    <h1 style
