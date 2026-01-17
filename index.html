@@ -27,17 +27,13 @@
         .nav-item { padding: 15px; font-size: 20px; cursor: pointer; border-radius: 8px; margin-bottom: 8px; outline: none; }
         .nav-item:focus { background: var(--red); }
 
-        /* שורות סטרימינג */
+        /* שורות תוכן */
         .main-content { flex: 1; overflow-y: auto; height: 100vh; scroll-behavior: smooth; }
         .row { display: flex; gap: 18px; padding: 10px 40px 40px; overflow-x: auto; scroll-behavior: smooth; }
         .row::-webkit-scrollbar { display: none; }
         .card { min-width: 230px; cursor: pointer; transition: 0.3s; outline: none; }
         .card img { width: 100%; height: 130px; border-radius: 6px; object-fit: cover; border: 2px solid transparent; }
         .card:focus img { border-color: white; transform: scale(1.1); }
-
-        /* נגן וידאו נקי */
-        #video-container { position: fixed; inset: 0; background: #000; z-index: 20000; display: none; }
-        iframe { width: 100%; height: 100%; border: none; }
 
         .hidden { display: none !important; }
     </style>
@@ -69,11 +65,8 @@
         <div id="content-view" class="hidden"></div>
     </div>
 
-    <div id="video-container">
-        <div id="player-frame"></div>
-    </div>
-
     <script>
+        // טעינת הנתונים מ-data.js עם מניעת Cache
         const script = document.createElement('script');
         script.src = 'data.js?v=' + Date.now();
         document.head.appendChild(script);
@@ -90,23 +83,24 @@
         };
         firebase.initializeApp(firebaseConfig);
 
-        // שינוי קריטי: מעבר ל-Redirect כדי למנוע קריסה באנדרואיד
+        // שימוש ב-Redirect הכרחי עבור Android WebView כדי לעקוף חסימות אבטחה
         function login() {
             const provider = new firebase.auth.GoogleAuthProvider();
             firebase.auth().signInWithRedirect(provider);
         }
 
-        // טיפול בתוצאת ה-Redirect
-        firebase.auth().getRedirectResult().catch(e => console.error(e));
-
+        // בדיקת מצב התחברות
         firebase.auth().onAuthStateChanged(user => {
+            const authScreen = document.getElementById('auth-screen');
+            const profileScreen = document.getElementById('profile-screen');
+
             if (user && user.email === "nitaylayish298@gmail.com") {
-                document.getElementById('auth-screen').classList.add('hidden');
-                document.getElementById('profile-screen').classList.remove('hidden');
+                authScreen.classList.add('hidden');
+                profileScreen.classList.remove('hidden');
                 loadProfiles();
             } else {
-                document.getElementById('auth-screen').classList.remove('hidden');
-                document.getElementById('profile-screen').classList.add('hidden');
+                authScreen.classList.remove('hidden');
+                profileScreen.classList.add('hidden');
             }
         });
 
@@ -135,12 +129,14 @@
             cats.forEach(cat => {
                 const filtered = seriesData.filter(s => s.category === cat);
                 if(filtered.length === 0) return;
-                home.innerHTML += `<div style="font-size:24px; margin:30px 40px 10px; font-weight:bold;">${cat}</div>
+                const section = document.createElement('div');
+                section.innerHTML = `<div style="font-size:24px; margin:30px 40px 10px; font-weight:bold;">${cat}</div>
                     <div class="row">${filtered.map(s => `
                         <div class="card" tabindex="0" onclick="openContent('${s.id}')">
                             <img src="${s.image}">
                             <div style="text-align:center; padding:8px;">${s.title}</div>
                         </div>`).join('')}</div>`;
+                home.appendChild(section);
             });
         }
 
@@ -153,10 +149,10 @@
             view.classList.remove('hidden');
             
             if (item.type === 'movie' || item.category === 'סרטים') {
-                view.innerHTML = `<div style="height:100vh; background: linear-gradient(to right, black, transparent), url('${item.image}') center/cover; padding:80px; display:flex; flex-direction:column; justify-content:center;">
+                view.innerHTML = `<div style="height:100vh; background: linear-gradient(to right, black, transparent), url('${item.image}') no-repeat center/cover; padding:80px; display:flex; flex-direction:column; justify-content:center;">
                     <h1>${item.title}</h1><p style="max-width:500px;">${item.description}</p>
                     <button class="login-btn" tabindex="0" onclick="playHD('${item.driveId}')">▶ צפה עכשיו</button>
-                    <button onclick="renderHome()" style="background:none; color:white; border:none; margin-top:20px; cursor:pointer;">← חזור</button>
+                    <button onclick="renderHome()" style="background:none; color:white; border:none; cursor:pointer; margin-top:20px; text-align:right;">← חזור</button>
                 </div>`;
             } else {
                 view.innerHTML = `<div style="padding:40px;">
@@ -164,18 +160,16 @@
                     <h1>${item.title}</h1>
                     <div class="row" style="padding:0;">${item.episodes.map(ep => `
                         <div class="card" tabindex="0" onclick="playHD('${ep.driveId}')">
-                            <img src="${ep.image}">
+                            <img src="${ep.image}" onerror="this.src='https://via.placeholder.com/230x130?text=פרק+${ep.number}'">
                             <div style="padding:10px;"><h3>פרק ${ep.number}</h3></div>
                         </div>`).join('')}</div>
                 </div>`;
             }
         }
 
-        // פונקציית הנגן המעודכנת למסך מלא ואיכות מקסימלית
+        // שימוש בגרסת preview לנגן נקי ללא תפריטי הורדה של דרייב
         function playHD(id) {
-            // הפרמטרים rm=minimal ו-autoplay=1 עוזרים לנקות את הממשק
-            const driveUrl = `https://drive.google.com/file/d/${id}/preview?rm=minimal&autoplay=1`;
-            window.location.href = driveUrl;
+            window.location.href = `https://drive.google.com/file/d/${id}/preview`;
         }
     </script>
 </body>
