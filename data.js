@@ -16,7 +16,7 @@ const seriesData = [
         {
         id: "al-atzmi",
         type: "series", 
-        category: "הפקות המקור", 
+        category: "ילדים", 
         title: "אל עצמי",
         description: "סיפורו המרגש של ציון.",
         image: "https://www.yes.co.il/media/ux0f43ln/vp004414285.jpg?quality=80",
