@@ -15,8 +15,6 @@
             --bg: #0f0f0f; 
             --sidebar-width: 70px; 
             --sidebar-expanded: 220px;
-            --hero-height: 55vh; 
-            --rows-height: 45vh; 
         }
         
         body { 
@@ -34,7 +32,13 @@
         }
         .sidebar:focus-within, .sidebar:hover { width: var(--sidebar-expanded); }
         
-        .logo { width: 100%; height: 50px; background-size: contain; background-repeat: no-repeat; background-position: center; margin-bottom: 30px; background-image: url('https://i.ibb.co/pWv6GZ7/av4.png'); }
+        /* --- עיצוב הלוגו --- */
+        .logo { 
+            width: 100%; height: 50px; 
+            background-size: contain; background-repeat: no-repeat; background-position: center; 
+            margin-bottom: 30px; 
+            /* תמונת ברירת מחדל ללוגו - אם תרצה לשנות, שנה את ה-URL למטה בקוד ה-HTML */
+        }
         
         .nav-item { padding: 12px; font-size: 16px; border-radius: 8px; margin-bottom: 5px; cursor: pointer; white-space: nowrap; display: flex; align-items: center; color: #888; transition: 0.2s; }
         .nav-icon { font-size: 22px; min-width: 40px; text-align: center; }
@@ -63,7 +67,7 @@
         .bottom-section::-webkit-scrollbar { display: none; }
 
         /* Rows */
-        .category-block { margin-bottom: 25px; padding-right: 40px; display: block; }
+        .category-block { margin-bottom: 25px; padding-right: 40px; display: block; scroll-margin-top: 20px; }
         .category-title { font-size: 18px; margin-bottom: 8px; font-weight: bold; color: #aaa; }
         .row { display: flex; gap: 15px; padding: 5px 0 10px; overflow-x: auto; scroll-behavior: smooth; white-space: nowrap; scroll-snap-type: x mandatory; }
         .row::-webkit-scrollbar { display: none; }
@@ -95,7 +99,9 @@
 </head>
 <body>
 
-    <div id="loading-screen" style="display: flex;"><div class="logo"></div></div>
+    <div id="loading-screen" style="display: flex;">
+        <div class="logo" style="background-image: url('https://i.ibb.co/pWv6GZ7/av4.png');"></div>
+    </div>
 
     <div id="auth-screen" class="screen">
         <h1 style="font-size: 60px; color: var(--red); margin: 0;">HOT Play</h1>
@@ -109,7 +115,8 @@
     </div>
 
     <div class="sidebar screen" id="sidebar">
-        <div class="logo"></div>
+        <div class="logo" style="background-image: url('https://i.ibb.co/pWv6GZ7/av4.png');"></div>
+        
         <div id="dynamic-nav"></div>
     </div>
 
@@ -140,12 +147,14 @@
         firebase.initializeApp(firebaseConfig);
 
         let currentProfile = null;
+
+        // --- כאן הגדרתי תמונות ברירת מחדל יפות לפרופילים ---
         const profilesData = [
-            { n: 'ניתאי', i: 'https://i.ibb.co/pWv6GZ7/av4.png', type: 'kids' },
-            { n: 'אבא', i: 'https://i.ibb.co/pWv6GZ7/av1.png', type: 'adults' },
-            { n: 'אימוש', i: 'https://i.ibb.co/pWv6GZ7/av2.png', type: 'adults' },
-            { n: 'נועה', i: 'https://i.ibb.co/pWv6GZ7/av3.png', type: 'kids' },
-            { n: 'אורי', i: 'https://i.ibb.co/pWv6GZ7/av5.png', type: 'kids' }
+            { n: 'ניתאי', i: 'https://img.freepik.com/free-psd/3d-illustration-person-with-sunglasses_23-2149436188.jpg', type: 'kids' },
+            { n: 'אבא', i: 'https://img.freepik.com/free-psd/3d-illustration-business-man-with-glasses_23-2149436194.jpg', type: 'adults' },
+            { n: 'אימוש', i: 'https://img.freepik.com/free-psd/3d-illustration-person-with-long-hair_23-2149436197.jpg', type: 'adults' },
+            { n: 'נועה', i: 'https://img.freepik.com/free-psd/3d-illustration-person-with-pink-hair_23-2149436186.jpg', type: 'kids' },
+            { n: 'אורי', i: 'https://img.freepik.com/free-psd/3d-illustration-person-with-glasses_23-2149436185.jpg', type: 'kids' }
         ];
 
         setTimeout(() => { document.getElementById('loading-screen').style.display = 'none'; }, 5000);
@@ -172,11 +181,11 @@
             nav.innerHTML = html;
         }
 
-        // --- התיקון המשמעותי לניווט אנדרואיד ---
+        // --- התיקון הקריטי לפוקוס באנדרואיד TV ---
         document.addEventListener('keydown', function(e) {
             const active = document.activeElement;
             
-            // תפריט
+            // ימינה: פתיחת תפריט
             if (e.key === 'ArrowRight') {
                 if (active.classList.contains('card') && !active.previousElementSibling) {
                     e.preventDefault();
@@ -185,38 +194,40 @@
                 }
             }
 
-            // ירידה למטה (חישוב לפי מערך ולא לפי שכנים)
+            // ירידה למטה (עם השהייה לפוקוס)
             if (e.key === 'ArrowDown') {
                 const currentBlock = active.closest('.category-block');
                 if (currentBlock) {
-                    e.preventDefault(); // עוצר גלילת אנדרואיד קטועה
+                    e.preventDefault();
                     
-                    // אוסף את כל השורות ברשימה נקייה
                     const allBlocks = Array.from(document.querySelectorAll('.category-block'));
                     const currentIndex = allBlocks.indexOf(currentBlock);
                     
-                    // אם יש שורה הבאה
                     if (currentIndex < allBlocks.length - 1) {
                         const nextBlock = allBlocks[currentIndex + 1];
                         
-                        // חישוב המיקום היחסי (כדי להישאר באותו טור)
+                        // חישוב חכם למיקום
                         const currentCard = active.closest('.card');
                         const currentRowCards = Array.from(currentBlock.querySelectorAll('.card'));
                         const cardIndex = currentRowCards.indexOf(currentCard);
                         
                         const nextRowCards = Array.from(nextBlock.querySelectorAll('.card'));
-                        // לוקח את אותו אינדקס או את האחרון אם השורה קצרה
                         const targetCard = nextRowCards[cardIndex] || nextRowCards[nextRowCards.length - 1];
                         
                         if (targetCard) {
-                            targetCard.focus();
+                            // קודם גוללים
                             targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            
+                            // מחכים קצת ואז נותנים פוקוס (זה מה שמתקן את הבעיה ב-TV)
+                            setTimeout(() => {
+                                targetCard.focus();
+                            }, 100); 
                         }
                     }
                 }
             }
 
-            // עלייה למעלה (חישוב לפי מערך)
+            // עלייה למעלה (עם השהייה לפוקוס)
             if (e.key === 'ArrowUp') {
                 const currentBlock = active.closest('.category-block');
                 if (currentBlock) {
@@ -236,20 +247,19 @@
                         const targetCard = prevRowCards[cardIndex] || prevRowCards[prevRowCards.length - 1];
                         
                         if (targetCard) {
-                            targetCard.focus();
                             targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            setTimeout(() => {
+                                targetCard.focus();
+                            }, 100);
                         }
                     }
                 }
             }
         });
 
+        // --- עדכון Hero ---
         document.addEventListener('focus', function(e) {
-            // טיפול למקרה שזה לא היה דרך מקלדת
             if (e.target.classList.contains('card')) {
-                // רק אם זה לא היה דרך הניווט הידני שלנו (כדי למנוע קפיצות כפולות)
-                // אבל לביטחון נשאיר את זה
-                
                 const id = e.target.getAttribute('data-id');
                 let item = seriesData.find(s => s.id === id);
                 if (!item) { 
