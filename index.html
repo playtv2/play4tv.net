@@ -1,340 +1,230 @@
-package com.example.hotplaytv
+    <meta charset="UTF-8">
+    <title>HOT play</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
 
-import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.Color
-import android.net.Uri
-import android.os.Bundle
-import android.os.CountDownTimer
-import android.os.Handler
-import android.os.Looper
-import android.os.SystemClock
-import android.view.KeyEvent
-import android.view.MotionEvent
-import android.view.View
-import android.view.ViewGroup
-import android.view.inputmethod.InputMethodManager
-import android.webkit.*
-import android.widget.Button
-import android.widget.FrameLayout
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.VideoView
-import androidx.appcompat.app.AppCompatActivity
-import com.example.hotplaytv.R
-
-class MainActivity : AppCompatActivity() {
-
-    private lateinit var videoView: VideoView
-    private lateinit var webView: WebView
-    private lateinit var btnSearch: Button
-    private lateinit var logoView: ImageView
-    private lateinit var searchContainer: LinearLayout
-    private var customView: View? = null
-    private lateinit var rootContainer: FrameLayout
-
-    private var isVideoMode = false
-    private var hasStartedOnce = false
-    private var hasAutoFocused = false
-
-    // כתובות
-    private val adUrl = "https://did.li/hotplay-login"
-    private val finalUrl = "https://playtv2.github.io/play-tv/"
-    private val searchUrl = "https://playtv2.github.io/play-tv/"
-
-    // זהויות (User Agents)
-    // זהות מחשב (חובה לניגון אוטומטי מדרייב)
-    private val desktopUA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    // זהות אנדרואיד (חובה להתחברות לחשבון גוגל)
-    private val androidUA = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
-
-    private var timer: CountDownTimer? = null
-
-    // --- ממשק שליטה (JavaScript Interface) ---
-    private val jsInterface = object {
-        @JavascriptInterface
-        fun triggerCenterClick() {
-            runOnUiThread {
-                val width = resources.displayMetrics.widthPixels.toFloat()
-                val height = resources.displayMetrics.heightPixels.toFloat()
-                simulateClickOnWebView(width / 2, height / 2)
-            }
+    <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth-compat.js"></script>
+    <style>
+        :root { 
+            --red: #ff0055; 
+            --bg: #0f0f0f; 
+            --sidebar-width: 70px; 
+            --sidebar-expanded: 220px;
         }
-
-        @JavascriptInterface
-        fun setVideoMode(active: Boolean) {
-            isVideoMode = active
-            runOnUiThread { updateSearchAndLogoVisibility(if (active) View.GONE else View.VISIBLE) }
-        }
-
-        @JavascriptInterface
-        fun exitApp() {
-            finishAffinity()
-        }
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
-        rootContainer = findViewById(R.id.rootContainer)
-        videoView = findViewById(R.id.videoView)
-        webView = findViewById(R.id.webView)
-        btnSearch = findViewById(R.id.btnSearch)
-        logoView = findViewById(R.id.logoView)
-        searchContainer = findViewById(R.id.searchContainer)
-
-        (findViewById<View>(android.R.id.content) as ViewGroup).descendantFocusability = ViewGroup.FOCUS_AFTER_DESCENDANTS
-
-        setupNavButton()
-        setupWebView()
-
-        if (savedInstanceState == null && !hasStartedOnce) {
-            playFullVideo()
-        } else {
-            showFinalSite()
-        }
-    }
-
-    private fun setupNavButton() {
-        btnSearch.isFocusable = true
-        btnSearch.setOnFocusChangeListener { v, hasFocus ->
-            if (hasFocus) {
-                searchContainer.setBackgroundColor(Color.BLACK)
-                v.scaleX = 1.1f; v.scaleY = 1.1f
-                v.setBackgroundColor(Color.WHITE)
-                (v as Button).setTextColor(Color.BLACK)
-                v.text = "חיפוש"
-            } else {
-                searchContainer.setBackgroundColor(Color.TRANSPARENT)
-                v.scaleX = 1.0f; v.scaleY = 1.0f
-                v.setBackgroundColor(Color.parseColor("#80000000"))
-                (v as Button).setTextColor(Color.WHITE)
-                v.text = ""
-            }
-        }
-        btnSearch.setOnClickListener { webView.loadUrl(searchUrl) }
-    }
-
-    private fun setupWebView() {
-        val settings = webView.settings
-        settings.javaScriptEnabled = true
-        settings.domStorageEnabled = true
-        settings.databaseEnabled = true
-        settings.mediaPlaybackRequiresUserGesture = false 
-        settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
         
-        // ברירת מחדל: אנדרואיד (כדי שהלוגין הראשוני יעבוד)
-        settings.userAgentString = androidUA
+        body { 
+            background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; 
+            margin: 0; display: flex; height: 100vh; overflow: hidden; 
+        }
+        :root { --red: #ff0055; --bg: #0f0f0f; --sidebar-width: 70px; --sidebar-expanded: 220px; }
+        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        *:focus { outline: none; }
 
-        settings.setSupportMultipleWindows(false)
-        settings.javaScriptCanOpenWindowsAutomatically = false
+        /* Sidebar */
+        .sidebar { 
+            width: var(--sidebar-width); background: #000; 
+            display: flex; flex-direction: column; padding: 15px 5px; 
+            border-left: 1px solid #222; height: 100%; z-index: 1000; 
+            transition: width 0.3s ease; flex-shrink: 0; 
+        }
+        .sidebar { width: var(--sidebar-width); background: #000; display: flex; flex-direction: column; padding: 15px 5px; border-left: 1px solid #222; height: 100%; z-index: 1000; transition: width 0.3s ease; flex-shrink: 0; }
+        .sidebar:focus-within, .sidebar:hover { width: var(--sidebar-expanded); }
 
-        val cookieManager = CookieManager.getInstance()
-        cookieManager.setAcceptCookie(true)
-        cookieManager.setAcceptThirdPartyCookies(webView, true)
-        cookieManager.flush()
-
-        webView.webChromeClient = object : WebChromeClient() {
-            override fun onShowCustomView(view: View?, callback: CustomViewCallback?) {
-                customView = view
-                rootContainer.addView(view, ViewGroup.LayoutParams(-1, -1))
-                webView.visibility = View.GONE
-                updateSearchAndLogoVisibility(View.GONE)
-            }
-            override fun onHideCustomView() {
-                rootContainer.removeView(customView)
-                customView = null
-                webView.visibility = View.VISIBLE
-                updateSearchAndLogoVisibility(View.VISIBLE)
-            }
+        /* --- עיצוב הלוגו --- */
+        /* 🔴🔴🔴 כאן משנים את הלוגו (השתמשתי בקישור לדוגמה) 🔴🔴🔴 */
+        .logo { 
+            width: 100%; height: 50px; 
+            background-size: contain; background-repeat: no-repeat; background-position: center; 
+            margin-bottom: 30px; 
+            /* תמונת ברירת מחדל ללוגו - אם תרצה לשנות, שנה את ה-URL למטה בקוד ה-HTML */
+            background-image: url('https://play-lh.googleusercontent.com/LU2EwCsrMFa8Cr8efvsH2epEOmrX_QwYLDWlWaAVSjPiZ0LeXy5kc7TYQPzGi0bm5zYd'); 
         }
 
-        webView.addJavascriptInterface(jsInterface, "AndroidControl")
+        .nav-item { padding: 12px; font-size: 16px; border-radius: 8px; margin-bottom: 5px; cursor: pointer; white-space: nowrap; display: flex; align-items: center; color: #888; transition: 0.2s; }
+@@ -48,8 +32,6 @@
 
-        webView.webViewClient = object : WebViewClient() {
-            override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean { return false }
+        /* Layout */
+        .main-content { flex: 1; height: 100vh; display: flex; flex-direction: column; position: relative; background: #000; }
 
-            // --- מנגנון החלפת זהות חכם ---
-            override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-                super.onPageStarted(view, url, favicon)
-                if (url != null) {
-                    // אם זה סרטון דרייב או האתר הראשי שלנו -> תהפוך למחשב (בשביל אוטומציה ועיצוב)
-                    if (url.contains("drive.google.com") || url.contains("playtv2.github.io")) {
-                        if (view?.settings?.userAgentString != desktopUA) {
-                            view?.settings?.userAgentString = desktopUA
+        /* Top Section */
+        .top-section { height: 55%; width: 100%; position: relative; flex-shrink: 0; z-index: 1; }
+        .hero-bg { position: absolute; inset: 0; background-size: cover; background-position: top center; transition: background-image 0.4s ease-out; }
+        .hero-bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, #0f0f0f 5%, rgba(0,0,0,0.6) 50%, transparent 100%); }
+@@ -61,22 +43,24 @@
+        .bottom-section { 
+            height: 45%; flex-grow: 1; width: 100%; background: #0f0f0f; 
+            overflow-y: auto; overflow-x: hidden; 
+            padding-top: 10px; padding-bottom: 40px; box-sizing: border-box; z-index: 2; 
+            padding-top: 10px; padding-bottom: 100px; box-sizing: border-box; z-index: 2; 
+            scroll-behavior: smooth; 
+        }
+        .bottom-section::-webkit-scrollbar { display: none; }
+
+        /* Rows */
+        .category-block { margin-bottom: 25px; padding-right: 40px; display: block; scroll-margin-top: 20px; }
+        .category-block { margin-bottom: 25px; padding-right: 40px; display: block; }
+        .category-title { font-size: 18px; margin-bottom: 8px; font-weight: bold; color: #aaa; }
+        .row { display: flex; gap: 15px; padding: 5px 0 10px; overflow-x: auto; scroll-behavior: smooth; white-space: nowrap; scroll-snap-type: x mandatory; }
+        .row { display: flex; gap: 15px; padding: 5px 0 10px; overflow-x: auto; scroll-behavior: smooth; white-space: nowrap; }
+        .row::-webkit-scrollbar { display: none; }
+
+        .card { display: inline-block; position: relative; scroll-snap-align: start; transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94); cursor: pointer; border-radius: 6px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.5); border: 2px solid transparent; }
+        .card { display: inline-block; position: relative; cursor: pointer; border-radius: 6px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.5); border: 2px solid transparent; transition: transform 0.2s; }
+        .card.movie { min-width: 100px; width: 100px; height: 150px; }
+        .card.series { min-width: 200px; width: 200px; height: 112px; }
+        .card img { width: 100%; height: 100%; object-fit: cover; }
+        .card:focus { transform: scale(1.1); z-index: 100; border-color: white; box-shadow: 0 10px 30px rgba(0,0,0,0.9); }
+        
+        /* פוקוס חזק מאוד כדי שתראה איפה אתה נמצא */
+        .card:focus { transform: scale(1.15); z-index: 100; border-color: #fff; box-shadow: 0 0 25px rgba(255,255,255,0.6); outline: none; }
+        .card-title-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); padding: 5px; text-align: center; font-size: 11px; opacity: 0; transition: 0.2s; color: white; }
+        .card:focus .card-title-overlay { opacity: 1; }
+
+@@ -116,7 +100,6 @@ <h1 style="font-size: 35px; margin-bottom: 30px;">מי צופה?</h1>
+
+    <div class="sidebar screen" id="sidebar">
+        <div class="logo" style="background-image: url('https://i.ibb.co/pWv6GZ7/av4.png');"></div>
+        
+        <div id="dynamic-nav"></div>
+    </div>
+
+@@ -147,8 +130,7 @@ <h1 style="font-size: 35px; margin-bottom: 30px;">מי צופה?</h1>
+        firebase.initializeApp(firebaseConfig);
+
+        let currentProfile = null;
+
+        // --- כאן הגדרתי תמונות ברירת מחדל יפות לפרופילים ---
+        // 🔴🔴🔴 תמונות הפרופיל נמצאות כאן 🔴🔴🔴
+        const profilesData = [
+            { n: 'ניתאי', i: 'https://img.freepik.com/free-psd/3d-illustration-person-with-sunglasses_23-2149436188.jpg', type: 'kids' },
+            { n: 'אבא', i: 'https://img.freepik.com/free-psd/3d-illustration-business-man-with-glasses_23-2149436194.jpg', type: 'adults' },
+@@ -181,57 +163,69 @@ <h1 style="font-size: 35px; margin-bottom: 30px;">מי צופה?</h1>
+            nav.innerHTML = html;
+        }
+
+        // --- התיקון הקריטי לפוקוס באנדרואיד TV ---
+        document.addEventListener('keydown', function(e) {
+        // --- בקר ניווט ידני (Force Navigation) ---
+        // פונקציה זו מחליפה את הניווט הטבעי של הדפדפן כדי למנוע תקיעות
+        window.addEventListener('keydown', function(e) {
+            const active = document.activeElement;
+            
+            // ימינה: פתיחת תפריט
+            if (!active) return;
+
+            // --- חץ ימינה ---
+            if (e.key === 'ArrowRight') {
+                if (active.classList.contains('card') && !active.previousElementSibling) {
+                // אם אנחנו על כרטיס ואין כלום ליד, הולכים לתפריט
+                if (active.classList.contains('card') && !active.nextElementSibling) {
+                    // אבל רק אם זה כרטיס, לא תפריט
+                    e.preventDefault();
+                    const nav = document.querySelector('.nav-item');
+                    if(nav) nav.focus();
+                    // מוצא את הכפתור הראשון בתפריט ומפקס עליו
+                    const firstNav = document.querySelector('.nav-item');
+                    if (firstNav) firstNav.focus();
+                }
+                return; // בשאר המקרים תן לדפדפן לעבוד
+            }
+
+            // ירידה למטה (עם השהייה לפוקוס)
+            // --- חץ למטה (הכי חשוב!) ---
+            if (e.key === 'ArrowDown') {
+                const currentBlock = active.closest('.category-block');
+                
+                // אם אנחנו בתוך שורה של סרטים
+                if (currentBlock) {
+                    e.preventDefault();
+                    e.preventDefault(); // עצור! אל תתן לדפדפן לנחש
+
+                    // מצא את כל השורות
+                    const allBlocks = Array.from(document.querySelectorAll('.category-block'));
+                    const currentIndex = allBlocks.indexOf(currentBlock);
+
+                    // יש שורה הבאה?
+                    if (currentIndex < allBlocks.length - 1) {
+                        const nextBlock = allBlocks[currentIndex + 1];
+
+                        // חישוב חכם למיקום
+                        // נסה למצוא את אותו מיקום בכרטיסייה (למשל סרט שלישי)
+                        const currentCard = active.closest('.card');
+                        const currentRowCards = Array.from(currentBlock.querySelectorAll('.card'));
+                        const cardIndex = currentRowCards.indexOf(currentCard);
+
+                        const nextRowCards = Array.from(nextBlock.querySelectorAll('.card'));
+                        const targetCard = nextRowCards[cardIndex] || nextRowCards[nextRowCards.length - 1];
+                        // אם השורה הבאה קצרה יותר, קח את האחרון
+                        let targetCard = nextRowCards[cardIndex];
+                        if (!targetCard) targetCard = nextRowCards[nextRowCards.length - 1];
+
+                        if (targetCard) {
+                            // קודם גוללים
+                            targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            
+                            // מחכים קצת ואז נותנים פוקוס (זה מה שמתקן את הבעיה ב-TV)
+                            setTimeout(() => {
+                                targetCard.focus();
+                            }, 100); 
+                            // בצע גלילה ואז פוקוס
+                            targetCard.scrollIntoView({ behavior: 'auto', block: 'center' });
+                            targetCard.focus();
                         }
-                    } 
-                    // אם זה מסך התחברות (Google Accounts) -> תהפוך לאנדרואיד (כדי לא להיחסם)
-                    else if (url.contains("accounts.google.com") || url.contains("did.li")) {
-                        if (view?.settings?.userAgentString != androidUA) {
-                            view?.settings?.userAgentString = androidUA
+                    }
+                }
+                // אם אנחנו בתפריט הצד
+                else if (active.classList.contains('nav-item')) {
+                    // תן לדפדפן לעבוד רגיל
+                }
+            }
+
+            // עלייה למעלה (עם השהייה לפוקוס)
+            // --- חץ למעלה ---
+            if (e.key === 'ArrowUp') {
+                const currentBlock = active.closest('.category-block');
+                if (currentBlock) {
+                    e.preventDefault();
+                    e.preventDefault(); 
+
+                    const allBlocks = Array.from(document.querySelectorAll('.category-block'));
+                    const currentIndex = allBlocks.indexOf(currentBlock);
+@@ -244,22 +238,24 @@ <h1 style="font-size: 35px; margin-bottom: 30px;">מי צופה?</h1>
+                        const cardIndex = currentRowCards.indexOf(currentCard);
+
+                        const prevRowCards = Array.from(prevBlock.querySelectorAll('.card'));
+                        const targetCard = prevRowCards[cardIndex] || prevRowCards[prevRowCards.length - 1];
+                        let targetCard = prevRowCards[cardIndex];
+                        if (!targetCard) targetCard = prevRowCards[prevRowCards.length - 1];
+
+                        if (targetCard) {
+                            targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            setTimeout(() => {
+                                targetCard.focus();
+                            }, 100);
+                            targetCard.scrollIntoView({ behavior: 'auto', block: 'center' });
+                            targetCard.focus();
                         }
                     }
                 }
             }
+        });
 
-            override fun onPageFinished(view: WebView?, url: String?) {
-                super.onPageFinished(view, url)
-                injectFocusStyles(view) 
-
-                if (url != null) {
-                    // --- 1. זיהוי מסך התחברות וביטול הפרעות ---
-                    // אם הגענו למסך התחברות של גוגל
-                    if (url.contains("accounts.google.com") || url.contains("ServiceLogin")) {
-                        // עוצרים את הטיימר
-                        timer?.cancel()
-                        timer = null
-                        
-                        // מעלימים את הסרטון הקטן והלוגו
-                        videoView.stopPlayback()
-                        videoView.visibility = View.GONE
-                        updateSearchAndLogoVisibility(View.GONE)
-                        
-                        // מחשיבים כאילו "התחלנו" כדי לא להפעיל את הרצף שוב
-                        hasStartedOnce = true
-                    }
-
-                    // --- 2. מיקוד אוטומטי בכניסה לאתר ---
-                    if (!hasAutoFocused && url.contains("github")) {
-                        hasAutoFocused = true
-                        view?.evaluateJavascript("setTimeout(function(){ var el = document.querySelector('.profile-box, .card'); if(el) el.focus(); }, 1500);", null)
-                    }
+        // --- עדכון Hero ---
+        // --- עדכון Hero בפוקוס ---
+        document.addEventListener('focus', function(e) {
+            if (e.target.classList.contains('card')) {
+                // וידוא שהגלילה קרתה
+                e.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                
+                const id = e.target.getAttribute('data-id');
+                let item = seriesData.find(s => s.id === id);
+                if (!item) { 
+@@ -270,7 +266,6 @@ <h1 style="font-size: 35px; margin-bottom: 30px;">מי צופה?</h1>
+                        }
+                    });
                 }
-
-                // --- 3. אוטומציה אגרסיבית לניגון דרייב ---
-                // זה הקוד שעבד לך מצוין קודם
-                view?.evaluateJavascript("""
-                    (function() {
-                        if (window.hpDone) return;
-                        var det = setInterval(function() {
-                            var f = document.querySelector('iframe[src*="drive.google.com"]');
-                            if (f && f.offsetWidth > 0) {
-                                window.hpDone = true; clearInterval(det);
-                                AndroidControl.setVideoMode(true);
-                                
-                                // ניקוי הפרעות
-                                try {
-                                    var style = document.createElement('style');
-                                    style.innerHTML = '.ndfHFb-c4YZDc-Wr97p { display: none !important; } .ndfHFb-c4YZDc-i6vT6d { display: none !important; }';
-                                    f.contentDocument.head.appendChild(style);
-                                } catch(e) {}
-
-                                // מתיחה למסך מלא
-                                f.style.position = 'fixed'; f.style.top = '0'; f.style.left = '0';
-                                f.style.width = '100vw'; f.style.height = '100vh'; f.style.zIndex = '9999';
-                                f.setAttribute('allowfullscreen', 'true');
-                                if(document.activeElement) document.activeElement.blur();
-                                f.focus();
-                                
-                                // לחיצה אוטומטית במרכז
-                                setTimeout(function() {
-                                    AndroidControl.triggerCenterClick();
-                                }, 1500);
-                            }
-                        }, 1000);
-                    })();
-                """.trimIndent(), null)
-
-                // רק אם זה אתר המעבר ועדיין לא התחלנו - מפעילים טיימר
-                if (url != null && (url.contains("did.li")) && !hasStartedOnce) startTimer()
-            }
-        }
-    }
-
-    private fun injectFocusStyles(view: WebView?) {
-        val css = """
-            html { scroll-behavior: smooth; }
-            *:focus { 
-                outline: 4px solid white !important; 
-                transform: scale(1.1) !important; 
-                z-index: 1000 !important; 
-                box-shadow: 0 0 20px rgba(0,0,0,0.8);
-            }
-            body { overflow-x: hidden; }
-            ::-webkit-scrollbar { display: none; }
-        """.trimIndent()
-        view?.evaluateJavascript("var s=document.createElement('style'); s.innerHTML='$css'; document.head.appendChild(s);", null)
-    }
-
-    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (videoView.visibility == View.VISIBLE) return super.dispatchKeyEvent(event)
-
-        if (event.action == KeyEvent.ACTION_DOWN) {
-            val screenWidth = resources.displayMetrics.widthPixels.toFloat()
-            val screenHeight = resources.displayMetrics.heightPixels.toFloat()
-
-            when (event.keyCode) {
-                KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_NUMPAD_ENTER, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_SPACE -> {
-                    if (isVideoMode) {
-                        simulateClickOnWebView(screenWidth / 2, screenHeight / 2)
-                        return true
-                    }
-                    webView.dispatchKeyEvent(event)
-                    return true
-                }
-                KeyEvent.KEYCODE_BACK, KeyEvent.KEYCODE_ESCAPE, KeyEvent.KEYCODE_DEL -> {
-                    val isDriveUrl = webView.url?.contains("drive.google.com") == true
-                    if (isVideoMode || isDriveUrl) {
-                        isVideoMode = false
-                        updateSearchAndLogoVisibility(View.VISIBLE)
-                        webView.evaluateJavascript("closeVideo()", null)
-                        return true
-                    }
-                    webView.evaluateJavascript("if(typeof handleBackPress === 'function'){ handleBackPress(); } else { AndroidControl.exitApp(); }", null)
-                    return true
-                }
-                KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_DPAD_LEFT -> {
-                    if (isVideoMode) {
-                        webView.dispatchKeyEvent(event)
-                        return true
-                    }
-                }
-            }
-        }
-        return super.dispatchKeyEvent(event)
-    }
-
-    private fun simulateClickOnWebView(x: Float, y: Float) {
-        val dt = SystemClock.uptimeMillis()
-        webView.dispatchTouchEvent(MotionEvent.obtain(dt, dt, MotionEvent.ACTION_DOWN, x, y, 0))
-        webView.dispatchTouchEvent(MotionEvent.obtain(dt, dt + 50, MotionEvent.ACTION_UP, x, y, 0))
-    }
-
-    private fun updateSearchAndLogoVisibility(visibility: Int) { searchContainer.visibility = visibility }
-
-    private fun playFullVideo() {
-        updateSearchAndLogoVisibility(View.GONE)
-        videoView.visibility = View.VISIBLE
-        videoView.setVideoURI(Uri.parse("android.resource://" + packageName + "/" + R.raw.video))
-        videoView.setOnCompletionListener { startAdSequence() }
-        videoView.start()
-    }
-
-    private fun startAdSequence() {
-        webView.visibility = View.VISIBLE
-        webView.loadUrl(adUrl)
-        updateSearchAndLogoVisibility(View.VISIBLE)
-        videoView.setVideoURI(Uri.parse("android.resource://" + packageName + "/" + R.raw.video_small))
-        videoView.scaleX = 0.22f; videoView.scaleY = 0.22f
-        videoView.translationX = -820f; videoView.translationY = 400f
-        videoView.setOnCompletionListener { videoView.start() }
-        videoView.start()
-    }
-
-    private fun showFinalSite() {
-        hasStartedOnce = true
-        videoView.stopPlayback(); videoView.visibility = View.GONE
-        webView.visibility = View.VISIBLE; updateSearchAndLogoVisibility(View.VISIBLE)
-        webView.loadUrl(finalUrl)
-        webView.requestFocus()
-    }
-
-    private fun startTimer() {
-        if (timer != null) return
-        timer = object : CountDownTimer(15000, 1000) {
-            override fun onTick(m: Long) {}
-            override fun onFinish() { hasStartedOnce = true; showFinalSite() }
-        }.start()
-    }
-}
+                
+                if (!item) {
+                    const history = getHistory();
