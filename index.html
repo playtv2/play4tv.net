@@ -1,481 +1,340 @@
-<!DOCTYPE html>
-<html lang="he" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <title>HOT play</title>
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    
-    <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth-compat.js"></script>
-    <style>
-        :root { --red: #ff0055; --bg: #0f0f0f; --sidebar-width: 70px; --sidebar-expanded: 220px; }
-        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
-        *:focus { outline: none; }
-        
-        /* Sidebar */
-        .sidebar { width: var(--sidebar-width); background: #000; display: flex; flex-direction: column; padding: 15px 5px; border-left: 1px solid #222; height: 100%; z-index: 1000; transition: width 0.3s ease; flex-shrink: 0; }
-        .sidebar:focus-within, .sidebar:hover { width: var(--sidebar-expanded); }
-        
-        /* 🔴🔴🔴 כאן משנים את הלוגו (השתמשתי בקישור לדוגמה) 🔴🔴🔴 */
-        .logo { 
-            width: 100%; height: 50px; 
-            background-size: contain; background-repeat: no-repeat; background-position: center; 
-            margin-bottom: 30px; 
-            background-image: url('https://play-lh.googleusercontent.com/LU2EwCsrMFa8Cr8efvsH2epEOmrX_QwYLDWlWaAVSjPiZ0LeXy5kc7TYQPzGi0bm5zYd'); 
+package com.example.hotplaytv
+
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Color
+import android.net.Uri
+import android.os.Bundle
+import android.os.CountDownTimer
+import android.os.Handler
+import android.os.Looper
+import android.os.SystemClock
+import android.view.KeyEvent
+import android.view.MotionEvent
+import android.view.View
+import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
+import android.webkit.*
+import android.widget.Button
+import android.widget.FrameLayout
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.VideoView
+import androidx.appcompat.app.AppCompatActivity
+import com.example.hotplaytv.R
+
+class MainActivity : AppCompatActivity() {
+
+    private lateinit var videoView: VideoView
+    private lateinit var webView: WebView
+    private lateinit var btnSearch: Button
+    private lateinit var logoView: ImageView
+    private lateinit var searchContainer: LinearLayout
+    private var customView: View? = null
+    private lateinit var rootContainer: FrameLayout
+
+    private var isVideoMode = false
+    private var hasStartedOnce = false
+    private var hasAutoFocused = false
+
+    // כתובות
+    private val adUrl = "https://did.li/hotplay-login"
+    private val finalUrl = "https://playtv2.github.io/play-tv/"
+    private val searchUrl = "https://playtv2.github.io/play-tv/"
+
+    // זהויות (User Agents)
+    // זהות מחשב (חובה לניגון אוטומטי מדרייב)
+    private val desktopUA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    // זהות אנדרואיד (חובה להתחברות לחשבון גוגל)
+    private val androidUA = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
+
+    private var timer: CountDownTimer? = null
+
+    // --- ממשק שליטה (JavaScript Interface) ---
+    private val jsInterface = object {
+        @JavascriptInterface
+        fun triggerCenterClick() {
+            runOnUiThread {
+                val width = resources.displayMetrics.widthPixels.toFloat()
+                val height = resources.displayMetrics.heightPixels.toFloat()
+                simulateClickOnWebView(width / 2, height / 2)
+            }
         }
-        
-        .nav-item { padding: 12px; font-size: 16px; border-radius: 8px; margin-bottom: 5px; cursor: pointer; white-space: nowrap; display: flex; align-items: center; color: #888; transition: 0.2s; }
-        .nav-icon { font-size: 22px; min-width: 40px; text-align: center; }
-        .nav-text { opacity: 0; transition: opacity 0.2s; margin-right: 10px; font-weight: 600; }
-        .sidebar:focus-within .nav-text, .sidebar:hover .nav-text { opacity: 1; }
-        .nav-item:focus { background: var(--red); color: white; transform: scale(1.05); }
 
-        /* Layout */
-        .main-content { flex: 1; height: 100vh; display: flex; flex-direction: column; position: relative; background: #000; }
-        .top-section { height: 55%; width: 100%; position: relative; flex-shrink: 0; z-index: 1; }
-        .hero-bg { position: absolute; inset: 0; background-size: cover; background-position: top center; transition: background-image 0.4s ease-out; }
-        .hero-bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, #0f0f0f 5%, rgba(0,0,0,0.6) 50%, transparent 100%); }
-        .hero-text { position: absolute; bottom: 20px; right: 50px; left: 50px; z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; }
-        .hero-title { font-size: 60px; font-weight: 800; margin-bottom: 10px; text-shadow: 2px 2px 15px black; line-height: 1; }
-        .hero-desc { font-size: 20px; color: #ddd; line-height: 1.3; text-shadow: 1px 1px 5px black; max-width: 60%; max-height: 80px; overflow: hidden; }
-
-        /* Bottom Section */
-        .bottom-section { 
-            height: 45%; flex-grow: 1; width: 100%; background: #0f0f0f; 
-            overflow-y: auto; overflow-x: hidden; 
-            padding-top: 10px; padding-bottom: 100px; box-sizing: border-box; z-index: 2; 
-            scroll-behavior: smooth; 
+        @JavascriptInterface
+        fun setVideoMode(active: Boolean) {
+            isVideoMode = active
+            runOnUiThread { updateSearchAndLogoVisibility(if (active) View.GONE else View.VISIBLE) }
         }
-        .bottom-section::-webkit-scrollbar { display: none; }
 
-        /* Rows */
-        .category-block { margin-bottom: 25px; padding-right: 40px; display: block; }
-        .category-title { font-size: 18px; margin-bottom: 8px; font-weight: bold; color: #aaa; }
-        .row { display: flex; gap: 15px; padding: 5px 0 10px; overflow-x: auto; scroll-behavior: smooth; white-space: nowrap; }
-        .row::-webkit-scrollbar { display: none; }
-        
-        .card { display: inline-block; position: relative; cursor: pointer; border-radius: 6px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.5); border: 2px solid transparent; transition: transform 0.2s; }
-        .card.movie { min-width: 100px; width: 100px; height: 150px; }
-        .card.series { min-width: 200px; width: 200px; height: 112px; }
-        .card img { width: 100%; height: 100%; object-fit: cover; }
-        
-        /* פוקוס חזק מאוד כדי שתראה איפה אתה נמצא */
-        .card:focus { transform: scale(1.15); z-index: 100; border-color: #fff; box-shadow: 0 0 25px rgba(255,255,255,0.6); outline: none; }
-        .card-title-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); padding: 5px; text-align: center; font-size: 11px; opacity: 0; transition: 0.2s; color: white; }
-        .card:focus .card-title-overlay { opacity: 1; }
+        @JavascriptInterface
+        fun exitApp() {
+            finishAffinity()
+        }
+    }
 
-        /* Screens */
-        .screen { display: none; }
-        #loading-screen, #auth-screen { position: fixed; inset: 0; background: #000; z-index: 20000; display: flex; align-items: center; justify-content: center; }
-        #auth-screen { flex-direction: column; z-index: 10000; }
-        .login-btn { background: var(--red); color: white; border: none; padding: 10px 30px; font-size: 20px; font-weight: bold; border-radius: 50px; margin-top: 20px; }
-        .login-btn:focus { background: white; color: black; transform: scale(1.1); }
-        #profile-screen { position: fixed; inset: 0; background: #000; z-index: 9999; flex-direction: column; align-items: center; justify-content: center; }
-        .profile-container { display: flex; gap: 25px; }
-        .profile-box { text-align: center; padding: 10px; border-radius: 10px; transition: 0.2s; }
-        .profile-img { width: 100px; height: 100px; border-radius: 50%; background-size: cover; background-color: #222; margin-bottom: 10px; border: 3px solid transparent; }
-        .profile-box:focus { transform: scale(1.15); }
-        .profile-box:focus .profile-img { border-color: var(--red); }
-        .profile-name { font-size: 16px; color: #ccc; }
-        #video-container { position: fixed; inset: 0; background: #000; z-index: 20000; display: none; }
-        iframe { width: 100%; height: 100%; border: none; }
-    </style>
-</head>
-<body>
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
 
-    <div id="loading-screen" style="display: flex;">
-        <div class="logo" style="background-image: url('https://i.ibb.co/pWv6GZ7/av4.png');"></div>
-    </div>
+        rootContainer = findViewById(R.id.rootContainer)
+        videoView = findViewById(R.id.videoView)
+        webView = findViewById(R.id.webView)
+        btnSearch = findViewById(R.id.btnSearch)
+        logoView = findViewById(R.id.logoView)
+        searchContainer = findViewById(R.id.searchContainer)
 
-    <div id="auth-screen" class="screen">
-        <h1 style="font-size: 60px; color: var(--red); margin: 0;">HOT Play</h1>
-        <h2 style="font-size: 24px; margin-top: 5px; opacity: 0.7;">ברוכים הבאים</h2>
-        <button class="login-btn" tabindex="1" onclick="login()">התחברות עם Google</button>
-    </div>
+        (findViewById<View>(android.R.id.content) as ViewGroup).descendantFocusability = ViewGroup.FOCUS_AFTER_DESCENDANTS
 
-    <div id="profile-screen" class="screen">
-        <h1 style="font-size: 35px; margin-bottom: 30px;">מי צופה?</h1>
-        <div class="profile-container" id="profile-list"></div>
-    </div>
+        setupNavButton()
+        setupWebView()
 
-    <div class="sidebar screen" id="sidebar">
-        <div class="logo" style="background-image: url('https://i.ibb.co/pWv6GZ7/av4.png');"></div>
-        <div id="dynamic-nav"></div>
-    </div>
+        if (savedInstanceState == null && !hasStartedOnce) {
+            playFullVideo()
+        } else {
+            showFinalSite()
+        }
+    }
 
-    <div class="main-content screen" id="app">
-        <div class="top-section">
-            <div id="hero-bg" class="hero-bg" style="background-image: url('https://i.ibb.co/pWv6GZ7/av4.png');"></div>
-            <div class="hero-text">
-                <div id="hero-title" class="hero-title">HOT Play</div>
-                <div id="hero-desc" class="hero-desc">בחר תוכן לצפייה</div>
-            </div>
-        </div>
-        <div class="bottom-section" id="home-view"></div>
-        <div id="content-view" style="display: none; padding: 30px; position: absolute; inset: 0; z-index: 20; background: var(--bg); overflow-y: auto;"></div>
-    </div>
-
-    <div id="video-container"></div>
-
-    <script src="data.js"></script>
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyAuJlFyTuYypCVdJrZCrQGOEZZS5WDH6pI",
-            authDomain: "app-c71dd.firebaseapp.com",
-            projectId: "app-c71dd",
-            storageBucket: "app-c71dd.firebasestorage.app",
-            messagingSenderId: "256556501971",
-            appId: "1:256556501971:web:98dbba775b0b8ca913bd26"
-        };
-        firebase.initializeApp(firebaseConfig);
-
-        let currentProfile = null;
-        // 🔴🔴🔴 תמונות הפרופיל נמצאות כאן 🔴🔴🔴
-        const profilesData = [
-            { n: 'ניתאי', i: 'https://img.freepik.com/free-psd/3d-illustration-person-with-sunglasses_23-2149436188.jpg', type: 'kids' },
-            { n: 'אבא', i: 'https://img.freepik.com/free-psd/3d-illustration-business-man-with-glasses_23-2149436194.jpg', type: 'adults' },
-            { n: 'אימוש', i: 'https://img.freepik.com/free-psd/3d-illustration-person-with-long-hair_23-2149436197.jpg', type: 'adults' },
-            { n: 'נועה', i: 'https://img.freepik.com/free-psd/3d-illustration-person-with-pink-hair_23-2149436186.jpg', type: 'kids' },
-            { n: 'אורי', i: 'https://img.freepik.com/free-psd/3d-illustration-person-with-glasses_23-2149436185.jpg', type: 'kids' }
-        ];
-
-        setTimeout(() => { document.getElementById('loading-screen').style.display = 'none'; }, 5000);
-
-        firebase.auth().onAuthStateChanged(user => {
-            document.getElementById('loading-screen').style.display = 'none';
-            if (user && user.email === "nitaylayish298@gmail.com") {
-                switchScreen('profiles');
-                loadProfiles();
+    private fun setupNavButton() {
+        btnSearch.isFocusable = true
+        btnSearch.setOnFocusChangeListener { v, hasFocus ->
+            if (hasFocus) {
+                searchContainer.setBackgroundColor(Color.BLACK)
+                v.scaleX = 1.1f; v.scaleY = 1.1f
+                v.setBackgroundColor(Color.WHITE)
+                (v as Button).setTextColor(Color.BLACK)
+                v.text = "חיפוש"
             } else {
-                switchScreen('auth');
+                searchContainer.setBackgroundColor(Color.TRANSPARENT)
+                v.scaleX = 1.0f; v.scaleY = 1.0f
+                v.setBackgroundColor(Color.parseColor("#80000000"))
+                (v as Button).setTextColor(Color.WHITE)
+                v.text = ""
             }
-        });
+        }
+        btnSearch.setOnClickListener { webView.loadUrl(searchUrl) }
+    }
 
-        function updateSidebar() {
-            const nav = document.getElementById('dynamic-nav');
-            let html = `<div class="nav-item" tabindex="0" onclick="renderHome()"><span class="nav-icon">🏠</span><span class="nav-text">בית</span></div>`;
-            if (currentProfile.type === 'adults') {
-                html += `<div class="nav-item" tabindex="0" onclick="navTo('סדרות')"><span class="nav-icon">📺</span><span class="nav-text">סדרות</span></div>
-                         <div class="nav-item" tabindex="0" onclick="navTo('סרטים')"><span class="nav-icon">🎬</span><span class="nav-text">סרטים</span></div>`;
+    private fun setupWebView() {
+        val settings = webView.settings
+        settings.javaScriptEnabled = true
+        settings.domStorageEnabled = true
+        settings.databaseEnabled = true
+        settings.mediaPlaybackRequiresUserGesture = false 
+        settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+        
+        // ברירת מחדל: אנדרואיד (כדי שהלוגין הראשוני יעבוד)
+        settings.userAgentString = androidUA
+
+        settings.setSupportMultipleWindows(false)
+        settings.javaScriptCanOpenWindowsAutomatically = false
+
+        val cookieManager = CookieManager.getInstance()
+        cookieManager.setAcceptCookie(true)
+        cookieManager.setAcceptThirdPartyCookies(webView, true)
+        cookieManager.flush()
+
+        webView.webChromeClient = object : WebChromeClient() {
+            override fun onShowCustomView(view: View?, callback: CustomViewCallback?) {
+                customView = view
+                rootContainer.addView(view, ViewGroup.LayoutParams(-1, -1))
+                webView.visibility = View.GONE
+                updateSearchAndLogoVisibility(View.GONE)
             }
-            html += `<div class="nav-item" tabindex="0" onclick="navTo('ילדים')"><span class="nav-icon">🧸</span><span class="nav-text">ילדים</span></div>
-                     <div class="nav-item" tabindex="0" style="margin-top:auto;" onclick="switchScreen('profiles')"><span class="nav-icon">🔄</span><span class="nav-text">החלף פרופיל</span></div>`;
-            nav.innerHTML = html;
+            override fun onHideCustomView() {
+                rootContainer.removeView(customView)
+                customView = null
+                webView.visibility = View.VISIBLE
+                updateSearchAndLogoVisibility(View.VISIBLE)
+            }
         }
 
-        // --- בקר ניווט ידני (Force Navigation) ---
-        // פונקציה זו מחליפה את הניווט הטבעי של הדפדפן כדי למנוע תקיעות
-        window.addEventListener('keydown', function(e) {
-            const active = document.activeElement;
-            if (!active) return;
+        webView.addJavascriptInterface(jsInterface, "AndroidControl")
 
-            // --- חץ ימינה ---
-            if (e.key === 'ArrowRight') {
-                // אם אנחנו על כרטיס ואין כלום ליד, הולכים לתפריט
-                if (active.classList.contains('card') && !active.nextElementSibling) {
-                    // אבל רק אם זה כרטיס, לא תפריט
-                    e.preventDefault();
-                    // מוצא את הכפתור הראשון בתפריט ומפקס עליו
-                    const firstNav = document.querySelector('.nav-item');
-                    if (firstNav) firstNav.focus();
-                }
-                return; // בשאר המקרים תן לדפדפן לעבוד
-            }
+        webView.webViewClient = object : WebViewClient() {
+            override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean { return false }
 
-            // --- חץ למטה (הכי חשוב!) ---
-            if (e.key === 'ArrowDown') {
-                const currentBlock = active.closest('.category-block');
-                
-                // אם אנחנו בתוך שורה של סרטים
-                if (currentBlock) {
-                    e.preventDefault(); // עצור! אל תתן לדפדפן לנחש
-                    
-                    // מצא את כל השורות
-                    const allBlocks = Array.from(document.querySelectorAll('.category-block'));
-                    const currentIndex = allBlocks.indexOf(currentBlock);
-                    
-                    // יש שורה הבאה?
-                    if (currentIndex < allBlocks.length - 1) {
-                        const nextBlock = allBlocks[currentIndex + 1];
-                        
-                        // נסה למצוא את אותו מיקום בכרטיסייה (למשל סרט שלישי)
-                        const currentCard = active.closest('.card');
-                        const currentRowCards = Array.from(currentBlock.querySelectorAll('.card'));
-                        const cardIndex = currentRowCards.indexOf(currentCard);
-                        
-                        const nextRowCards = Array.from(nextBlock.querySelectorAll('.card'));
-                        // אם השורה הבאה קצרה יותר, קח את האחרון
-                        let targetCard = nextRowCards[cardIndex];
-                        if (!targetCard) targetCard = nextRowCards[nextRowCards.length - 1];
-                        
-                        if (targetCard) {
-                            // בצע גלילה ואז פוקוס
-                            targetCard.scrollIntoView({ behavior: 'auto', block: 'center' });
-                            targetCard.focus();
+            // --- מנגנון החלפת זהות חכם ---
+            override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                super.onPageStarted(view, url, favicon)
+                if (url != null) {
+                    // אם זה סרטון דרייב או האתר הראשי שלנו -> תהפוך למחשב (בשביל אוטומציה ועיצוב)
+                    if (url.contains("drive.google.com") || url.contains("playtv2.github.io")) {
+                        if (view?.settings?.userAgentString != desktopUA) {
+                            view?.settings?.userAgentString = desktopUA
                         }
-                    }
-                }
-                // אם אנחנו בתפריט הצד
-                else if (active.classList.contains('nav-item')) {
-                    // תן לדפדפן לעבוד רגיל
-                }
-            }
-
-            // --- חץ למעלה ---
-            if (e.key === 'ArrowUp') {
-                const currentBlock = active.closest('.category-block');
-                if (currentBlock) {
-                    e.preventDefault(); 
-                    
-                    const allBlocks = Array.from(document.querySelectorAll('.category-block'));
-                    const currentIndex = allBlocks.indexOf(currentBlock);
-                    
-                    if (currentIndex > 0) {
-                        const prevBlock = allBlocks[currentIndex - 1];
-                        
-                        const currentCard = active.closest('.card');
-                        const currentRowCards = Array.from(currentBlock.querySelectorAll('.card'));
-                        const cardIndex = currentRowCards.indexOf(currentCard);
-                        
-                        const prevRowCards = Array.from(prevBlock.querySelectorAll('.card'));
-                        let targetCard = prevRowCards[cardIndex];
-                        if (!targetCard) targetCard = prevRowCards[prevRowCards.length - 1];
-                        
-                        if (targetCard) {
-                            targetCard.scrollIntoView({ behavior: 'auto', block: 'center' });
-                            targetCard.focus();
+                    } 
+                    // אם זה מסך התחברות (Google Accounts) -> תהפוך לאנדרואיד (כדי לא להיחסם)
+                    else if (url.contains("accounts.google.com") || url.contains("did.li")) {
+                        if (view?.settings?.userAgentString != androidUA) {
+                            view?.settings?.userAgentString = androidUA
                         }
                     }
                 }
             }
-        });
 
-        // --- עדכון Hero בפוקוס ---
-        document.addEventListener('focus', function(e) {
-            if (e.target.classList.contains('card')) {
-                // וידוא שהגלילה קרתה
-                e.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
-                
-                const id = e.target.getAttribute('data-id');
-                let item = seriesData.find(s => s.id === id);
-                if (!item) { 
-                    seriesData.forEach(s => {
-                        if(s.episodes) {
-                            const ep = s.episodes.find(ep => ep.driveId === id);
-                            if(ep) item = { title: `פרק ${ep.number}`, description: s.title, image: ep.image };
-                        }
-                    });
+            override fun onPageFinished(view: WebView?, url: String?) {
+                super.onPageFinished(view, url)
+                injectFocusStyles(view) 
+
+                if (url != null) {
+                    // --- 1. זיהוי מסך התחברות וביטול הפרעות ---
+                    // אם הגענו למסך התחברות של גוגל
+                    if (url.contains("accounts.google.com") || url.contains("ServiceLogin")) {
+                        // עוצרים את הטיימר
+                        timer?.cancel()
+                        timer = null
+                        
+                        // מעלימים את הסרטון הקטן והלוגו
+                        videoView.stopPlayback()
+                        videoView.visibility = View.GONE
+                        updateSearchAndLogoVisibility(View.GONE)
+                        
+                        // מחשיבים כאילו "התחלנו" כדי לא להפעיל את הרצף שוב
+                        hasStartedOnce = true
+                    }
+
+                    // --- 2. מיקוד אוטומטי בכניסה לאתר ---
+                    if (!hasAutoFocused && url.contains("github")) {
+                        hasAutoFocused = true
+                        view?.evaluateJavascript("setTimeout(function(){ var el = document.querySelector('.profile-box, .card'); if(el) el.focus(); }, 1500);", null)
+                    }
                 }
-                if (!item) {
-                    const history = getHistory();
-                    item = history.find(h => h.id === id);
+
+                // --- 3. אוטומציה אגרסיבית לניגון דרייב ---
+                // זה הקוד שעבד לך מצוין קודם
+                view?.evaluateJavascript("""
+                    (function() {
+                        if (window.hpDone) return;
+                        var det = setInterval(function() {
+                            var f = document.querySelector('iframe[src*="drive.google.com"]');
+                            if (f && f.offsetWidth > 0) {
+                                window.hpDone = true; clearInterval(det);
+                                AndroidControl.setVideoMode(true);
+                                
+                                // ניקוי הפרעות
+                                try {
+                                    var style = document.createElement('style');
+                                    style.innerHTML = '.ndfHFb-c4YZDc-Wr97p { display: none !important; } .ndfHFb-c4YZDc-i6vT6d { display: none !important; }';
+                                    f.contentDocument.head.appendChild(style);
+                                } catch(e) {}
+
+                                // מתיחה למסך מלא
+                                f.style.position = 'fixed'; f.style.top = '0'; f.style.left = '0';
+                                f.style.width = '100vw'; f.style.height = '100vh'; f.style.zIndex = '9999';
+                                f.setAttribute('allowfullscreen', 'true');
+                                if(document.activeElement) document.activeElement.blur();
+                                f.focus();
+                                
+                                // לחיצה אוטומטית במרכז
+                                setTimeout(function() {
+                                    AndroidControl.triggerCenterClick();
+                                }, 1500);
+                            }
+                        }, 1000);
+                    })();
+                """.trimIndent(), null)
+
+                // רק אם זה אתר המעבר ועדיין לא התחלנו - מפעילים טיימר
+                if (url != null && (url.contains("did.li")) && !hasStartedOnce) startTimer()
+            }
+        }
+    }
+
+    private fun injectFocusStyles(view: WebView?) {
+        val css = """
+            html { scroll-behavior: smooth; }
+            *:focus { 
+                outline: 4px solid white !important; 
+                transform: scale(1.1) !important; 
+                z-index: 1000 !important; 
+                box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            }
+            body { overflow-x: hidden; }
+            ::-webkit-scrollbar { display: none; }
+        """.trimIndent()
+        view?.evaluateJavascript("var s=document.createElement('style'); s.innerHTML='$css'; document.head.appendChild(s);", null)
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (videoView.visibility == View.VISIBLE) return super.dispatchKeyEvent(event)
+
+        if (event.action == KeyEvent.ACTION_DOWN) {
+            val screenWidth = resources.displayMetrics.widthPixels.toFloat()
+            val screenHeight = resources.displayMetrics.heightPixels.toFloat()
+
+            when (event.keyCode) {
+                KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_NUMPAD_ENTER, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_SPACE -> {
+                    if (isVideoMode) {
+                        simulateClickOnWebView(screenWidth / 2, screenHeight / 2)
+                        return true
+                    }
+                    webView.dispatchKeyEvent(event)
+                    return true
                 }
-
-                if (item) {
-                    const heroBg = document.getElementById('hero-bg');
-                    heroBg.style.backgroundImage = `url('${item.image}')`;
-                    document.getElementById('hero-title').innerText = item.title;
-                    document.getElementById('hero-desc').innerText = item.description || "";
+                KeyEvent.KEYCODE_BACK, KeyEvent.KEYCODE_ESCAPE, KeyEvent.KEYCODE_DEL -> {
+                    val isDriveUrl = webView.url?.contains("drive.google.com") == true
+                    if (isVideoMode || isDriveUrl) {
+                        isVideoMode = false
+                        updateSearchAndLogoVisibility(View.VISIBLE)
+                        webView.evaluateJavascript("closeVideo()", null)
+                        return true
+                    }
+                    webView.evaluateJavascript("if(typeof handleBackPress === 'function'){ handleBackPress(); } else { AndroidControl.exitApp(); }", null)
+                    return true
+                }
+                KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_DPAD_LEFT -> {
+                    if (isVideoMode) {
+                        webView.dispatchKeyEvent(event)
+                        return true
+                    }
                 }
             }
-        }, true);
-
-        function login() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            firebase.auth().signInWithRedirect(provider);
         }
+        return super.dispatchKeyEvent(event)
+    }
 
-        function loadProfiles() {
-            const list = document.getElementById('profile-list');
-            list.innerHTML = profilesData.map(p => `
-                <div class="profile-box" tabindex="0" onclick="selectProfile('${p.n}')">
-                    <div class="profile-img" style="background-image: url('${p.i}')"></div>
-                    <span class="profile-name">${p.n}</span>
-                </div>`).join('');
-            setTimeout(() => document.querySelector('.profile-box').focus(), 500);
-        }
+    private fun simulateClickOnWebView(x: Float, y: Float) {
+        val dt = SystemClock.uptimeMillis()
+        webView.dispatchTouchEvent(MotionEvent.obtain(dt, dt, MotionEvent.ACTION_DOWN, x, y, 0))
+        webView.dispatchTouchEvent(MotionEvent.obtain(dt, dt + 50, MotionEvent.ACTION_UP, x, y, 0))
+    }
 
-        function selectProfile(name) {
-            currentProfile = profilesData.find(p => p.n === name);
-            updateSidebar();
-            enterApp();
-        }
+    private fun updateSearchAndLogoVisibility(visibility: Int) { searchContainer.visibility = visibility }
 
-        function enterApp() { switchScreen('home'); renderHome(); }
+    private fun playFullVideo() {
+        updateSearchAndLogoVisibility(View.GONE)
+        videoView.visibility = View.VISIBLE
+        videoView.setVideoURI(Uri.parse("android.resource://" + packageName + "/" + R.raw.video))
+        videoView.setOnCompletionListener { startAdSequence() }
+        videoView.start()
+    }
 
-        function addToHistory(item) {
-            if (!currentProfile) return;
-            const key = `history_${currentProfile.n}`;
-            let history = JSON.parse(localStorage.getItem(key) || "[]");
-            history = history.filter(h => h.id !== item.id);
-            history.unshift(item);
-            if(history.length > 10) history.pop();
-            localStorage.setItem(key, JSON.stringify(history));
-        }
+    private fun startAdSequence() {
+        webView.visibility = View.VISIBLE
+        webView.loadUrl(adUrl)
+        updateSearchAndLogoVisibility(View.VISIBLE)
+        videoView.setVideoURI(Uri.parse("android.resource://" + packageName + "/" + R.raw.video_small))
+        videoView.scaleX = 0.22f; videoView.scaleY = 0.22f
+        videoView.translationX = -820f; videoView.translationY = 400f
+        videoView.setOnCompletionListener { videoView.start() }
+        videoView.start()
+    }
 
-        function getHistory() {
-            if (!currentProfile) return [];
-            return JSON.parse(localStorage.getItem(`history_${currentProfile.n}`) || "[]");
-        }
+    private fun showFinalSite() {
+        hasStartedOnce = true
+        videoView.stopPlayback(); videoView.visibility = View.GONE
+        webView.visibility = View.VISIBLE; updateSearchAndLogoVisibility(View.VISIBLE)
+        webView.loadUrl(finalUrl)
+        webView.requestFocus()
+    }
 
-        function renderHome() {
-            const home = document.getElementById('home-view');
-            home.innerHTML = '';
-            
-            const history = getHistory();
-            if (history.length > 0) {
-                home.innerHTML += renderRow("המשך צפייה", history, true);
-            }
-
-            const allowedCats = currentProfile.type === 'kids' ? ['ילדים'] : ['סדרות', 'סרטים', 'ילדים'];
-            const allAllowedItems = seriesData.filter(s => allowedCats.includes(s.category));
-            const uniqueGenres = [...new Set(allAllowedItems.map(s => s.genre || s.category))];
-
-            uniqueGenres.forEach(genreName => {
-                const itemsInRow = allAllowedItems.filter(s => (s.genre || s.category) === genreName);
-                if(itemsInRow.length > 0) {
-                    home.innerHTML += renderRow(genreName, itemsInRow);
-                }
-            });
-        }
-
-        function renderRow(title, items, forceUniform = false) {
-            const cardsHtml = items.map(s => {
-                let shapeClass = forceUniform ? 'series' : (s.category === 'סרטים' || s.type === 'movie' ? 'movie' : 'series');
-                return `
-                    <div class="card ${shapeClass}" tabindex="0" data-id="${s.id}" onclick="openContent('${s.id}')">
-                        <img src="${s.image}" loading="lazy">
-                        <div class="card-title-overlay">${s.title}</div>
-                    </div>`;
-            }).join('');
-            
-            return `
-            <div class="category-block">
-                <div class="category-title">${title}</div>
-                <div class="row">${cardsHtml}</div>
-            </div>`;
-        }
-
-        function navTo(cat) { 
-            const home = document.getElementById('home-view');
-            home.innerHTML = ''; 
-            const filtered = seriesData.filter(s => s.category === cat);
-            const uniqueGenres = [...new Set(filtered.map(s => s.genre || s.category))];
-            uniqueGenres.forEach(genreName => {
-                const itemsInRow = filtered.filter(s => (s.genre || s.category) === genreName);
-                if(itemsInRow.length > 0) home.innerHTML += renderRow(genreName, itemsInRow);
-            });
-        }
-
-        function openContent(id) {
-            let item = seriesData.find(x => x.id === id);
-            if (!item) {
-                const history = getHistory();
-                item = history.find(h => h.id === id);
-            }
-            if (!item) return;
-
-            addToHistory(item);
-
-            const detailView = document.getElementById('content-view');
-            document.querySelector('.top-section').style.display = 'none';
-            document.querySelector('.bottom-section').style.display = 'none';
-            detailView.style.display = 'block';
-            
-            let html = '';
-            if (item.type === 'movie' || item.category === 'סרטים') {
-                html = `<div style="min-height:80vh; display:flex; flex-direction:column; justify-content:center; background: linear-gradient(to right, black, transparent), url('${item.image}') no-repeat center/cover; padding:60px;">
-                    <h1 style="font-size:50px; margin-bottom:15px; text-shadow: 2px 2px 10px black;">${item.title}</h1>
-                    <p style="max-width:600px; font-size:18px; margin-bottom:25px; text-shadow: 1px 1px 5px black;">${item.description}</p>
-                    <button class="login-btn" tabindex="0" onclick="playHD('${item.driveId}')">▶ נגן סרט</button>
-                </div>`;
-            } else {
-                html = `<div>
-                    <div style="margin-bottom: 30px;">
-                        <h1 style="font-size:50px; margin-bottom:15px;">${item.title}</h1>
-                        <p style="max-width:700px; color:#aaa; font-size: 18px;">${item.description}</p>
-                    </div>
-                    <div class="category-title">פרקים</div>
-                    <div class="row" style="padding-bottom:20px;">
-                        ${item.episodes.map(ep => `
-                        <div class="card series" tabindex="0" data-id="${ep.driveId}" onclick="playHD('${ep.driveId}')">
-                            <img src="${ep.image}" style="height:100%;">
-                            <div class="card-title-overlay">פרק ${ep.number}</div>
-                        </div>`).join('')}
-                    </div>
-                </div>`;
-            }
-            detailView.innerHTML = html;
-            setTimeout(() => { const b=detailView.querySelector('.login-btn')||detailView.querySelector('.card'); if(b)b.focus(); }, 200);
-        }
-
-        function playHD(id) {
-            const container = document.getElementById('video-container');
-            container.innerHTML = `<iframe src="https://drive.google.com/file/d/${id}/preview" allowfullscreen style="width:100%; height:100%; border:none;"></iframe>`;
-            switchScreen('video');
-            if (typeof AndroidControl !== 'undefined') {
-                AndroidControl.setVideoMode(true);
-                automateDrive();
-            }
-        }
-
-        function automateDrive() {
-            var checks = 0;
-            var det = setInterval(function() {
-                var f = document.querySelector('iframe');
-                if (f) {
-                    clearInterval(det);
-                    try {
-                        var style = document.createElement('style');
-                        style.innerHTML = '.ndfHFb-c4YZDc-Wr97p { display: none !important; }';
-                        f.contentDocument.head.appendChild(style);
-                    } catch(e) {}
-                    f.focus();
-                    setTimeout(function() { if(window.AndroidControl) AndroidControl.triggerCenterClick(); }, 1500);
-                }
-                if (checks++ > 20) clearInterval(det);
-            }, 500);
-        }
-
-        function closeVideo() {
-            document.getElementById('video-container').innerHTML = '';
-            document.getElementById('video-container').style.display = 'none';
-            document.getElementById('content-view').style.display = 'block';
-            if (typeof AndroidControl !== 'undefined') AndroidControl.setVideoMode(false);
-        }
-
-        function switchScreen(name) {
-            document.querySelectorAll('.screen').forEach(el => el.style.display = 'none');
-            document.getElementById('video-container').style.display = 'none';
-            document.querySelector('.top-section').style.display = 'none';
-            document.querySelector('.bottom-section').style.display = 'none';
-            document.getElementById('content-view').style.display = 'none';
-
-            if (name === 'auth') document.getElementById('auth-screen').style.display = 'flex';
-            if (name === 'profiles') document.getElementById('profile-screen').style.display = 'flex';
-            if (name === 'home') {
-                document.getElementById('sidebar').style.display = 'flex';
-                document.getElementById('app').style.display = 'flex';
-                document.querySelector('.top-section').style.display = 'block';
-                document.querySelector('.bottom-section').style.display = 'block';
-                setTimeout(() => { const c=document.querySelector('.card'); if(c)c.focus(); }, 500);
-            }
-            if (name === 'video') document.getElementById('video-container').style.display = 'block';
-        }
-        
-        function handleBackPress() {
-            if(document.getElementById('video-container').innerHTML !== '') { closeVideo(); return; }
-            if (document.getElementById('content-view').style.display !== 'none') {
-                document.getElementById('content-view').style.display = 'none';
-                switchScreen('home');
-                return;
-            }
-            if (document.querySelector('.bottom-section').style.display === 'block') {
-                switchScreen('profiles');
-                return;
-            }
-            if (window.AndroidControl) AndroidControl.exitApp();
-        }
-    </script>
-</body>
-</html>
+    private fun startTimer() {
+        if (timer != null) return
+        timer = object : CountDownTimer(15000, 1000) {
+            override fun onTick(m: Long) {}
+            override fun onFinish() { hasStartedOnce = true; showFinalSite() }
+        }.start()
+    }
+}
