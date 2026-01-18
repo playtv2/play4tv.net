@@ -15,8 +15,8 @@
             --bg: #0f0f0f; 
             --sidebar-width: 70px; 
             --sidebar-expanded: 220px;
-            --hero-height: 55vh; /* גובה האזור העליון (טקסט) */
-            --rows-height: 45vh; /* גובה האזור התחתון (שורות) */
+            --hero-height: 55vh; 
+            --rows-height: 45vh; 
         }
         
         body { 
@@ -58,7 +58,7 @@
             flex-direction: column;
         }
 
-        /* --- תמונת רקע (קבועה לכל המסך) --- */
+        /* --- רקע (Hero) --- */
         .background-layer {
             position: absolute; inset: 0;
             background-size: cover; background-position: top center;
@@ -67,11 +67,10 @@
         }
         .background-layer::after {
             content: ''; position: absolute; inset: 0;
-            /* גרדיאנט שמשחיר את החלק התחתון כדי שהשורות יבלטו */
             background: linear-gradient(to top, #0f0f0f 10%, rgba(15,15,15,0.9) 40%, transparent 80%);
         }
 
-        /* --- אזור עליון (טקסט בלבד - לא גולל!) --- */
+        /* --- אזור עליון (טקסט) --- */
         .top-info-area {
             height: var(--hero-height);
             width: 100%;
@@ -79,7 +78,7 @@
             z-index: 1;
             display: flex;
             flex-direction: column;
-            justify-content: flex-end; /* הטקסט יושב בתחתית החלק העליון */
+            justify-content: flex-end; 
             padding-right: 50px;
             padding-bottom: 20px;
             box-sizing: border-box;
@@ -88,27 +87,28 @@
         .hero-title { font-size: 60px; font-weight: 800; margin-bottom: 10px; text-shadow: 2px 2px 15px black; line-height: 1.1; }
         .hero-desc { font-size: 20px; color: #eee; line-height: 1.4; text-shadow: 1px 1px 5px black; max-width: 60%; max-height: 100px; overflow: hidden; }
 
-        /* --- אזור תחתון (שורות בלבד - גולל בנפרד!) --- */
+        /* --- אזור תחתון (גלילה) --- */
         .bottom-scroll-area {
             height: var(--rows-height);
             width: 100%;
             position: relative;
             z-index: 2;
-            overflow-y: auto; /* הגלילה הופכת להיות פנימית רק לחלק הזה */
+            overflow-y: auto; 
             overflow-x: hidden;
             scroll-behavior: smooth;
             padding-bottom: 40px;
             padding-top: 10px;
-            scroll-snap-type: y mandatory; /* מגנט לשורות */
+            /* ביטלתי את ה-snap ב-CSS כי ה-JS מנהל את זה עכשיו טוב יותר */
         }
         
         .bottom-scroll-area::-webkit-scrollbar { display: none; }
 
-        /* --- עיצוב שורות --- */
+        /* --- שורות --- */
         .category-block {
-            scroll-snap-align: start; 
             margin-bottom: 30px;
             padding-right: 40px;
+            /* זה המזהה שלנו לניווט */
+            display: block; 
         }
 
         .category-title { font-size: 20px; margin-bottom: 10px; font-weight: bold; color: #ddd; text-shadow: 1px 1px 3px black; }
@@ -128,12 +128,10 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.5);
             border: 2px solid transparent;
         }
-        /* גדלים מדויקים */
         .card.movie { min-width: 110px; width: 110px; height: 165px; }
         .card.series { min-width: 210px; width: 210px; height: 118px; }
         .card img { width: 100%; height: 100%; object-fit: cover; }
         
-        /* פוקוס */
         .card:focus { transform: scale(1.1); z-index: 100; border-color: white; box-shadow: 0 10px 40px rgba(0,0,0,0.9); }
         .card-title-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); padding: 5px; text-align: center; font-size: 11px; opacity: 0; transition: 0.2s; color: white; }
         .card:focus .card-title-overlay { opacity: 1; }
@@ -187,8 +185,7 @@
             <div id="hero-desc" class="hero-desc">בחר תוכן לצפייה</div>
         </div>
 
-        <div class="bottom-scroll-area" id="home-view">
-            </div>
+        <div class="bottom-scroll-area" id="home-view"></div>
 
         <div id="content-view" style="display: none; padding: 30px; position: absolute; inset: 0; z-index: 20; background: var(--bg); overflow-y: auto;"></div>
     </div>
@@ -241,23 +238,11 @@
             nav.innerHTML = html;
         }
 
-        function addToHistory(item) {
-            if (!currentProfile) return;
-            const key = `history_${currentProfile.n}`;
-            let history = JSON.parse(localStorage.getItem(key) || "[]");
-            history = history.filter(h => h.id !== item.id);
-            history.unshift(item);
-            if(history.length > 10) history.pop();
-            localStorage.setItem(key, JSON.stringify(history));
-        }
-
-        function getHistory() {
-            if (!currentProfile) return [];
-            return JSON.parse(localStorage.getItem(`history_${currentProfile.n}`) || "[]");
-        }
-
+        // --- ניווט מקלדת חכם (זה התיקון הגדול!) ---
         document.addEventListener('keydown', function(e) {
             const active = document.activeElement;
+            
+            // 1. פתיחת תפריט ימינה (One Click)
             if (e.key === 'ArrowRight') {
                 if (active.classList.contains('card') && !active.previousElementSibling) {
                     e.preventDefault();
@@ -265,10 +250,41 @@
                     if(nav) nav.focus();
                 }
             }
+
+            // 2. ירידה קטגוריה שלמה למטה (One Click)
+            if (e.key === 'ArrowDown') {
+                // בודקים אם אנחנו על כרטיס
+                const currentBlock = active.closest('.category-block');
+                if (currentBlock) {
+                    e.preventDefault(); // עוצר את הגלילה הקטועה של הדפדפן
+                    const nextBlock = currentBlock.nextElementSibling;
+                    if (nextBlock && nextBlock.classList.contains('category-block')) {
+                        // מוצא את הכרטיס הראשון בשורה הבאה ומעביר אליו פוקוס
+                        const firstCard = nextBlock.querySelector('.card');
+                        if (firstCard) firstCard.focus(); // זה מפעיל את הגלילה האוטומטית
+                    }
+                }
+            }
+
+            // 3. עלייה קטגוריה שלמה למעלה (One Click)
+            if (e.key === 'ArrowUp') {
+                const currentBlock = active.closest('.category-block');
+                if (currentBlock) {
+                    e.preventDefault();
+                    const prevBlock = currentBlock.previousElementSibling;
+                    if (prevBlock && prevBlock.classList.contains('category-block')) {
+                        const firstCard = prevBlock.querySelector('.card');
+                        if (firstCard) firstCard.focus();
+                    }
+                }
+            }
         });
 
+        // --- פוקוס ומירכוז ---
         document.addEventListener('focus', function(e) {
+            // מירכוז אוטומטי (קריטי לגלילה החלקה!)
             if (e.target && e.target.scrollIntoView) {
+                // ממרכז את השורה שנבחרה באמצע החלק התחתון
                 e.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
             }
 
@@ -283,7 +299,6 @@
                         }
                     });
                 }
-                
                 if (!item) {
                     const history = getHistory();
                     item = history.find(h => h.id === id);
@@ -298,6 +313,7 @@
             }
         }, true);
 
+        // --- שאר הפונקציות (לוגין, פרופילים, נגן) ---
         function login() {
             const provider = new firebase.auth.GoogleAuthProvider();
             firebase.auth().signInWithRedirect(provider);
@@ -320,6 +336,21 @@
         }
 
         function enterApp() { switchScreen('home'); renderHome(); }
+
+        function addToHistory(item) {
+            if (!currentProfile) return;
+            const key = `history_${currentProfile.n}`;
+            let history = JSON.parse(localStorage.getItem(key) || "[]");
+            history = history.filter(h => h.id !== item.id);
+            history.unshift(item);
+            if(history.length > 10) history.pop();
+            localStorage.setItem(key, JSON.stringify(history));
+        }
+
+        function getHistory() {
+            if (!currentProfile) return [];
+            return JSON.parse(localStorage.getItem(`history_${currentProfile.n}`) || "[]");
+        }
 
         function renderHome() {
             const home = document.getElementById('home-view');
@@ -364,12 +395,9 @@
             home.innerHTML = ''; 
             const filtered = seriesData.filter(s => s.category === cat);
             const uniqueGenres = [...new Set(filtered.map(s => s.genre || s.category))];
-            
             uniqueGenres.forEach(genreName => {
                 const itemsInRow = filtered.filter(s => (s.genre || s.category) === genreName);
-                if(itemsInRow.length > 0) {
-                    home.innerHTML += renderRow(genreName, itemsInRow);
-                }
+                if(itemsInRow.length > 0) home.innerHTML += renderRow(genreName, itemsInRow);
             });
         }
 
@@ -384,6 +412,8 @@
             addToHistory(item);
 
             const detailView = document.getElementById('content-view');
+            document.querySelector('.scroll-wrapper').style.display = 'none'; 
+            document.getElementById('hero-bg').style.display = 'none'; 
             detailView.style.display = 'block';
             
             let html = '';
@@ -434,11 +464,8 @@
                         style.innerHTML = '.ndfHFb-c4YZDc-Wr97p { display: none !important; }';
                         f.contentDocument.head.appendChild(style);
                     } catch(e) {}
-
                     f.focus();
-                    setTimeout(function() {
-                        if(window.AndroidControl) AndroidControl.triggerCenterClick();
-                    }, 1500);
+                    setTimeout(function() { if(window.AndroidControl) AndroidControl.triggerCenterClick(); }, 1500);
                 }
                 if (checks++ > 20) clearInterval(det);
             }, 500);
@@ -454,6 +481,7 @@
         function switchScreen(name) {
             document.querySelectorAll('.screen').forEach(el => el.style.display = 'none');
             document.getElementById('video-container').style.display = 'none';
+            document.querySelector('.scroll-wrapper').style.display = 'none';
             document.getElementById('content-view').style.display = 'none';
 
             if (name === 'auth') document.getElementById('auth-screen').style.display = 'flex';
@@ -461,27 +489,23 @@
             if (name === 'home') {
                 document.getElementById('sidebar').style.display = 'flex';
                 document.getElementById('app').style.display = 'flex';
-                // בהום מציגים את כל רכיבי ה-UI המפוצלים
                 document.getElementById('hero-bg').style.display = 'block';
-                document.querySelector('.top-info-area').style.display = 'flex';
+                document.querySelector('.scroll-wrapper').style.display = 'block';
+                document.querySelector('.top-info-area').style.display = 'flex'; // מציג טקסט עליון
                 document.getElementById('home-view').style.display = 'block';
-                
                 setTimeout(() => { const c=document.querySelector('.card'); if(c)c.focus(); }, 500);
             }
             if (name === 'video') document.getElementById('video-container').style.display = 'block';
         }
         
         function handleBackPress() {
-            if(document.getElementById('video-container').innerHTML !== '') {
-                closeVideo();
-                return;
-            }
+            if(document.getElementById('video-container').innerHTML !== '') { closeVideo(); return; }
             if (document.getElementById('content-view').style.display !== 'none') {
                 document.getElementById('content-view').style.display = 'none';
                 switchScreen('home');
                 return;
             }
-            if (document.getElementById('app').style.display !== 'none') {
+            if (document.querySelector('.scroll-wrapper').style.display === 'block') {
                 switchScreen('profiles');
                 return;
             }
