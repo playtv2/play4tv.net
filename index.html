@@ -16,12 +16,12 @@
         .sidebar { width: var(--sidebar-width); background: #000; display: flex; flex-direction: column; padding: 15px 5px; border-left: 1px solid #222; height: 100%; z-index: 1000; transition: width 0.3s ease; flex-shrink: 0; }
         .sidebar:focus-within, .sidebar:hover { width: var(--sidebar-expanded); }
         
-        /* 🔴🔴🔴 כאן משנים את הלוגו (השתמשתי בקישור לדוגמה) 🔴🔴🔴 */
+        /* לוגו */
         .logo { 
             width: 100%; height: 50px; 
             background-size: contain; background-repeat: no-repeat; background-position: center; 
             margin-bottom: 30px; 
-            background-image: url('https://play-lh.googleusercontent.com/LU2EwCsrMFa8Cr8efvsH2epEOmrX_QwYLDWlWaAVSjPiZ0LeXy5kc7TYQPzGi0bm5zYd'); 
+            background-image: url('https://play-lh.googleusercontent.com/LU2EwCsrMFa8Cr8efvsH2epEOmrX_QwYLDWlWaAVSjPiZ0LeXy5kc7TYQPzGi0bm5zYd.png'); 
         }
         
         .nav-item { padding: 12px; font-size: 16px; border-radius: 8px; margin-bottom: 5px; cursor: pointer; white-space: nowrap; display: flex; align-items: center; color: #888; transition: 0.2s; }
@@ -30,7 +30,6 @@
         .sidebar:focus-within .nav-text, .sidebar:hover .nav-text { opacity: 1; }
         .nav-item:focus { background: var(--red); color: white; transform: scale(1.05); }
 
-        /* Layout */
         .main-content { flex: 1; height: 100vh; display: flex; flex-direction: column; position: relative; background: #000; }
         .top-section { height: 55%; width: 100%; position: relative; flex-shrink: 0; z-index: 1; }
         .hero-bg { position: absolute; inset: 0; background-size: cover; background-position: top center; transition: background-image 0.4s ease-out; }
@@ -39,7 +38,6 @@
         .hero-title { font-size: 60px; font-weight: 800; margin-bottom: 10px; text-shadow: 2px 2px 15px black; line-height: 1; }
         .hero-desc { font-size: 20px; color: #ddd; line-height: 1.3; text-shadow: 1px 1px 5px black; max-width: 60%; max-height: 80px; overflow: hidden; }
 
-        /* Bottom Section */
         .bottom-section { 
             height: 45%; flex-grow: 1; width: 100%; background: #0f0f0f; 
             overflow-y: auto; overflow-x: hidden; 
@@ -48,7 +46,6 @@
         }
         .bottom-section::-webkit-scrollbar { display: none; }
 
-        /* Rows */
         .category-block { margin-bottom: 25px; padding-right: 40px; display: block; }
         .category-title { font-size: 18px; margin-bottom: 8px; font-weight: bold; color: #aaa; }
         .row { display: flex; gap: 15px; padding: 5px 0 10px; overflow-x: auto; scroll-behavior: smooth; white-space: nowrap; }
@@ -58,13 +55,10 @@
         .card.movie { min-width: 100px; width: 100px; height: 150px; }
         .card.series { min-width: 200px; width: 200px; height: 112px; }
         .card img { width: 100%; height: 100%; object-fit: cover; }
-        
-        /* פוקוס חזק מאוד כדי שתראה איפה אתה נמצא */
         .card:focus { transform: scale(1.15); z-index: 100; border-color: #fff; box-shadow: 0 0 25px rgba(255,255,255,0.6); outline: none; }
         .card-title-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); padding: 5px; text-align: center; font-size: 11px; opacity: 0; transition: 0.2s; color: white; }
         .card:focus .card-title-overlay { opacity: 1; }
 
-        /* Screens */
         .screen { display: none; }
         #loading-screen, #auth-screen { position: fixed; inset: 0; background: #000; z-index: 20000; display: flex; align-items: center; justify-content: center; }
         #auth-screen { flex-direction: column; z-index: 10000; }
@@ -130,7 +124,6 @@
         firebase.initializeApp(firebaseConfig);
 
         let currentProfile = null;
-        // 🔴🔴🔴 תמונות הפרופיל נמצאות כאן 🔴🔴🔴
         const profilesData = [
             { n: 'ניתאי', i: 'https://img.freepik.com/free-psd/3d-illustration-person-with-sunglasses_23-2149436188.jpg', type: 'kids' },
             { n: 'אבא', i: 'https://img.freepik.com/free-psd/3d-illustration-business-man-with-glasses_23-2149436194.jpg', type: 'adults' },
@@ -163,61 +156,64 @@
             nav.innerHTML = html;
         }
 
-        // --- בקר ניווט ידני (Force Navigation) ---
-        // פונקציה זו מחליפה את הניווט הטבעי של הדפדפן כדי למנוע תקיעות
+        // --- בקר ניווט חכם (כולל תיקון באג בפרקים) ---
         window.addEventListener('keydown', function(e) {
             const active = document.activeElement;
             if (!active) return;
 
-            // --- חץ ימינה ---
+            // --- חץ ימינה (RTL: תנועה אחורה או לתפריט) ---
             if (e.key === 'ArrowRight') {
-                // אם אנחנו על כרטיס ואין כלום ליד, הולכים לתפריט
-                if (active.classList.contains('card') && !active.nextElementSibling) {
-                    // אבל רק אם זה כרטיס, לא תפריט
+                if (active.classList.contains('card')) {
                     e.preventDefault();
-                    // מוצא את הכפתור הראשון בתפריט ומפקס עליו
-                    const firstNav = document.querySelector('.nav-item');
-                    if (firstNav) firstNav.focus();
+                    
+                    // ב-RTL, "אחורה" (ימינה) זה nextElementSibling
+                    // "קדימה" (שמאלה) זה previousElementSibling
+                    // זה הפוך ממה שחושבים בדרך כלל
+                    
+                    const prevCard = active.nextElementSibling; // ב-RTL זה הכרטיס מימין!
+                    
+                    if (prevCard && prevCard.classList.contains('card')) {
+                        prevCard.focus();
+                    } else {
+                        // אם אין כרטיס מימין, עבור לתפריט
+                        const firstNav = document.querySelector('.nav-item');
+                        if (firstNav) firstNav.focus();
+                    }
                 }
-                return; // בשאר המקרים תן לדפדפן לעבוד
             }
 
-            // --- חץ למטה (הכי חשוב!) ---
+            // --- חץ שמאלה (RTL: תנועה קדימה בפרקים) ---
+            if (e.key === 'ArrowLeft') {
+                if (active.classList.contains('card')) {
+                    const nextCard = active.previousElementSibling; // ב-RTL זה הכרטיס משמאל!
+                    if (nextCard && nextCard.classList.contains('card')) {
+                        e.preventDefault();
+                        nextCard.focus();
+                    }
+                }
+            }
+
+            // --- חץ למטה ---
             if (e.key === 'ArrowDown') {
                 const currentBlock = active.closest('.category-block');
-                
-                // אם אנחנו בתוך שורה של סרטים
                 if (currentBlock) {
-                    e.preventDefault(); // עצור! אל תתן לדפדפן לנחש
-                    
-                    // מצא את כל השורות
+                    e.preventDefault();
                     const allBlocks = Array.from(document.querySelectorAll('.category-block'));
                     const currentIndex = allBlocks.indexOf(currentBlock);
-                    
-                    // יש שורה הבאה?
                     if (currentIndex < allBlocks.length - 1) {
                         const nextBlock = allBlocks[currentIndex + 1];
-                        
-                        // נסה למצוא את אותו מיקום בכרטיסייה (למשל סרט שלישי)
                         const currentCard = active.closest('.card');
                         const currentRowCards = Array.from(currentBlock.querySelectorAll('.card'));
                         const cardIndex = currentRowCards.indexOf(currentCard);
-                        
                         const nextRowCards = Array.from(nextBlock.querySelectorAll('.card'));
-                        // אם השורה הבאה קצרה יותר, קח את האחרון
                         let targetCard = nextRowCards[cardIndex];
                         if (!targetCard) targetCard = nextRowCards[nextRowCards.length - 1];
                         
                         if (targetCard) {
-                            // בצע גלילה ואז פוקוס
                             targetCard.scrollIntoView({ behavior: 'auto', block: 'center' });
                             targetCard.focus();
                         }
                     }
-                }
-                // אם אנחנו בתפריט הצד
-                else if (active.classList.contains('nav-item')) {
-                    // תן לדפדפן לעבוד רגיל
                 }
             }
 
@@ -225,18 +221,14 @@
             if (e.key === 'ArrowUp') {
                 const currentBlock = active.closest('.category-block');
                 if (currentBlock) {
-                    e.preventDefault(); 
-                    
+                    e.preventDefault();
                     const allBlocks = Array.from(document.querySelectorAll('.category-block'));
                     const currentIndex = allBlocks.indexOf(currentBlock);
-                    
                     if (currentIndex > 0) {
                         const prevBlock = allBlocks[currentIndex - 1];
-                        
                         const currentCard = active.closest('.card');
                         const currentRowCards = Array.from(currentBlock.querySelectorAll('.card'));
                         const cardIndex = currentRowCards.indexOf(currentCard);
-                        
                         const prevRowCards = Array.from(prevBlock.querySelectorAll('.card'));
                         let targetCard = prevRowCards[cardIndex];
                         if (!targetCard) targetCard = prevRowCards[prevRowCards.length - 1];
@@ -250,12 +242,9 @@
             }
         });
 
-        // --- עדכון Hero בפוקוס ---
         document.addEventListener('focus', function(e) {
             if (e.target.classList.contains('card')) {
-                // וידוא שהגלילה קרתה
                 e.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
-                
                 const id = e.target.getAttribute('data-id');
                 let item = seriesData.find(s => s.id === id);
                 if (!item) { 
@@ -270,7 +259,6 @@
                     const history = getHistory();
                     item = history.find(h => h.id === id);
                 }
-
                 if (item) {
                     const heroBg = document.getElementById('hero-bg');
                     heroBg.style.backgroundImage = `url('${item.image}')`;
@@ -321,21 +309,16 @@
         function renderHome() {
             const home = document.getElementById('home-view');
             home.innerHTML = '';
-            
             const history = getHistory();
             if (history.length > 0) {
                 home.innerHTML += renderRow("המשך צפייה", history, true);
             }
-
             const allowedCats = currentProfile.type === 'kids' ? ['ילדים'] : ['סדרות', 'סרטים', 'ילדים'];
             const allAllowedItems = seriesData.filter(s => allowedCats.includes(s.category));
             const uniqueGenres = [...new Set(allAllowedItems.map(s => s.genre || s.category))];
-
             uniqueGenres.forEach(genreName => {
                 const itemsInRow = allAllowedItems.filter(s => (s.genre || s.category) === genreName);
-                if(itemsInRow.length > 0) {
-                    home.innerHTML += renderRow(genreName, itemsInRow);
-                }
+                if(itemsInRow.length > 0) home.innerHTML += renderRow(genreName, itemsInRow);
             });
         }
 
@@ -348,7 +331,6 @@
                         <div class="card-title-overlay">${s.title}</div>
                     </div>`;
             }).join('');
-            
             return `
             <div class="category-block">
                 <div class="category-title">${title}</div>
