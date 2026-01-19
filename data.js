@@ -77,7 +77,7 @@ const seriesData = [
         ]
     },
 
-    // תבנית לסרט חדש (להעתיק מכאן)
+    // סרטי ילדים - חינם
     {
         id: "new-movie-id",
         type: "movie", 
@@ -112,7 +112,23 @@ const seriesData = [
         description: "קומדיית הרפתקאות חללית מבית דיסני Elio - אליאו, ילד עם דמיון פעיל שמתעניין בחלל, מוצא את עצמו בהרפתקה קוסמית שבה הוא חייב ליצור קשר עם חייזרים, לנהל משבר בין-גלקטי ולגלות את ייעודו האמיתי. קולות: לביא מור, ליאנה שחר, אריה צ'רנר. בימוי: אדריאן מולינה, מדלן שרפיאן, דומי שי (ארה''ב, 2025).",
         image: "https://lumiere-a.akamaihd.net/v1/images/image_cf1af1e0.jpeg?region=0,0,540,810",
         driveId: "ID"
+    },
+
+
+
+        {
+        id: "The Secret Life of Pets",
+        type: "movie", 
+        category: "ילדים",
+        genre: "סרטים חינם",
+        title: "החיים הסודיים של חיות המחמד",
+        description: "מה עושות חיות המחמד כשהן לבד בבית? The Secret Life of Pets - חייו של כלב בשם מקס מתהפכים מקצה לקצה כאשר הבעלים שלו מחליטה לאמץ כלב רחוב שמקס לא מחבב. לאחר שהם הולכים לאיבוד, הם מסתבכים עם ארנב מרושע. בדיבובם של: אלון נוימן, קובי מאור. בימוי: כריס רנו ו-ירואו צ'ייני (ארה''ב, 2016).",
+        image: "https://upload.wikimedia.org/wikipedia/he/7/73/Thesecretlifeofpetsposter.jpg",
+        driveId: "UyV7ntR9XyV1nNNvSmK1XE4jzdENvIC4"
     }
+
+
+    
 
 
     
