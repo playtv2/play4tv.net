@@ -40,7 +40,7 @@ const seriesData = [
         title: "סוניק פריים",
         description: "קרב הרסני נגד דוקטור אגמן מנפץ את היקום...",
         // 👇 וודא שיש קובץ בשם sonic.jpg
-        image: "./images/sonic.jpg",
+        image: "./images/sonicprime.jpg",
         episodes: [
             { number: "1", desc: "פרק ראשון", image: "", driveId: "1UyL5Tv98kAPGSkJ-r4R6AWs6DxvTMrSC" },
             { number: "2", desc: "פרק שני", image: "", driveId: "1AIg7ZS1gs8jWSBrYtsSnP3uVcKxfg_1J" },
@@ -53,11 +53,11 @@ const seriesData = [
         id: "zootopia2",
         type: "movie",
         category: "ילדים",
-        genre: "סרטים מצוירים",
-        title: "זוטרופוליס 2",
-        description: "כאן יופיע תקציר הסרט.",
+        genre: "חדשים ומומלצים ב-YOUNG",
+        title: "זוטרופוליס 2 - הסרט החדש!",
+        description: "הסרט עוקב אחר הבלשים ג’ודי הופס (ג’ניפר גודווין) וניק ויילד (ג’ייסון בייטמן), אשר מוצאים את עצמם בעקבותיו של זוחל מסתורי שמגיע לזוטרופוליס וגורם למהפכה בעיר החיות. כדי לפצח את התעלומה, ג’ודי וניק נאלצים לפעול תחת זהות בדויה באזורים חדשים ולא צפויים, שם השותפות ביניהם תעמוד במבחן שלא חוו מעולם..",
         // 👇 וודא שיש קובץ בשם zootopia.jpg
-        image: "./images/zootopia.jpg",
+        image: "./images/zoo2.jpg",
         driveId: "1Dp6najRAF8hvYKYEKLNMXyO7bZjQhDnU"
     },
 
