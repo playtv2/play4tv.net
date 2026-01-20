@@ -29,6 +29,7 @@
             transition: width 0.3s ease; flex-shrink: 0; 
             overflow: hidden; white-space: nowrap;
         }
+        /* התפריט נפתח רק כשהעכבר עליו או כשיש בתוכו פוקוס */
         .sidebar:focus-within, .sidebar:hover { width: var(--sidebar-expanded); }
         
         .logo { 
@@ -73,26 +74,15 @@
         
         .row { 
             display: flex; gap: 15px; 
-            /* החזרתי לריפוד אנכי בלבד */
-            padding: 40px 0 40px 0;
+            /* הסרתי את הריפוד מהצדדים כדי שלא יהיה רווח! */
+            padding: 40px 0 40px 0; 
             margin-top: -20px; 
             margin-bottom: -10px;
             overflow-x: auto; scroll-behavior: smooth; white-space: nowrap; 
             scroll-snap-type: x mandatory; 
+            /* וידוא שיש מקום קטן בצד ימין התחלתי */
+            padding-right: 50px; 
         }
-        
-        /* --- התיקון לחיתוך בצד ימין --- */
-        /* הוספת אלמנטים נסתרים בהתחלה ובסוף כדי לתת מקום לזום */
-        .row::before,
-        .row::after {
-            content: '';
-            display: block;
-            flex-shrink: 0;
-            width: 25px; /* רוחב באפר שמאפשר לזום להתרחב בלי להיחתך */
-            height: 1px;
-        }
-        /* -------------------------------- */
-
         .row::-webkit-scrollbar { display: none; }
         
         .card { 
@@ -103,7 +93,20 @@
             transition: transform 0.2s, border-color 0.2s; 
             scroll-snap-align: start; flex-shrink: 0; 
             z-index: 1;
+            /* ברירת מחדל: גדל מהמרכז */
+            transform-origin: center center;
         }
+
+        /* --- התיקון הגאוני לחיתוך --- */
+        /* האלמנט הראשון בשורה גדל "פנימה" (שמאלה) במקום החוצה, ולכן לא נחתך */
+        .row .card:first-child {
+            transform-origin: right center;
+        }
+        /* האלמנט האחרון גדל "פנימה" (ימינה) */
+        .row .card:last-child {
+            transform-origin: left center;
+        }
+        /* --------------------------- */
         
         .card.series, .card.movie { min-width: 200px; width: 200px; height: 112px; }
         .card img { width: 100%; height: 100%; object-fit: cover; }
@@ -120,7 +123,6 @@
         .card-title-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); padding: 5px; text-align: center; font-size: 11px; opacity: 0; transition: 0.2s; color: white; }
         .card:focus .card-title-overlay { opacity: 1; }
 
-        /* Search Styles */
         .search-container { padding: 20px 50px; }
         .search-input { 
             width: 100%; max-width: 600px; 
@@ -270,6 +272,7 @@
         window.addEventListener('keydown', function(e) {
             const active = document.activeElement;
             
+            // חיפוש
             if (active.id === 'search-input') {
                 if (e.key === 'ArrowDown') {
                     e.preventDefault();
@@ -281,6 +284,7 @@
 
             if (!active) return;
 
+            // בחירה (Enter)
             if (e.key === 'Enter') {
                 if (active.classList.contains('card') || active.classList.contains('nav-item') || active.classList.contains('profile-box')) {
                     e.preventDefault();
@@ -289,6 +293,7 @@
                 return;
             }
 
+            // ימינה (RTL = אחורה)
             if (e.key === 'ArrowRight') {
                 if (active.classList.contains('card')) {
                     e.preventDefault();
@@ -296,13 +301,33 @@
                     if (prevCard && prevCard.classList.contains('card')) {
                         prevCard.focus();
                     } else {
+                        // אם הגענו לקצה ימין, עוברים לתפריט
                         const firstNav = document.querySelector('.nav-item');
                         if (firstNav) firstNav.focus();
                     }
                 }
             }
 
+            // שמאלה (RTL = קדימה / חזרה מהתפריט לתוכן)
             if (e.key === 'ArrowLeft') {
+                // אם אנחנו בתפריט הצד - לחיצה שמאלה מחזירה לתוכן האחרון
+                if (active.classList.contains('nav-item')) {
+                    e.preventDefault();
+                    if (lastFocusedId) {
+                        const lastEl = document.querySelector(`[data-id="${lastFocusedId}"]`);
+                        if (lastEl) lastEl.focus();
+                        else {
+                            const firstCard = document.querySelector('.card');
+                            if(firstCard) firstCard.focus();
+                        }
+                    } else {
+                        const firstCard = document.querySelector('.card');
+                        if(firstCard) firstCard.focus();
+                    }
+                    return;
+                }
+
+                // אם אנחנו בכרטיסיות
                 if (active.classList.contains('card')) {
                     const nextCard = active.nextElementSibling;
                     if (nextCard && nextCard.classList.contains('card')) {
@@ -312,6 +337,7 @@
                 }
             }
 
+            // למטה
             if (e.key === 'ArrowDown') {
                 const currentBlock = active.closest('.category-block');
                 if (currentBlock) {
@@ -337,6 +363,7 @@
                 }
             }
 
+            // למעלה
             if (e.key === 'ArrowUp') {
                 const currentBlock = active.closest('.category-block');
                 if (currentBlock) {
@@ -576,11 +603,27 @@
             }, 500);
         }
 
+        // --- תיקון החזרה: פוקוס על הפרק האחרון ---
         function closeVideo() {
-            document.getElementById('video-container').innerHTML = '';
-            document.getElementById('video-container').style.display = 'none';
+            const container = document.getElementById('video-container');
+            container.innerHTML = '';
+            container.style.display = 'none';
             document.getElementById('content-view').style.display = 'block';
+            document.querySelector('.top-section').style.display = 'none'; // להסתיר באנר
+            document.querySelector('.bottom-section').style.display = 'none'; // להסתיר קטגוריות ראשיות
+            
             if (typeof AndroidControl !== 'undefined') AndroidControl.setVideoMode(false);
+
+            // שחזור פוקוס מדויק לפרק שהרגע ראינו
+            if (currentPlayingId) {
+                setTimeout(() => {
+                    const lastPlayedElement = document.querySelector(`[data-id="${currentPlayingId}"]`);
+                    if (lastPlayedElement) {
+                        lastPlayedElement.focus();
+                        lastPlayedElement.scrollIntoView({block: 'center', inline: 'center'});
+                    }
+                }, 100);
+            }
         }
 
         function switchScreen(name) {
@@ -603,7 +646,12 @@
         }
         
         function handleBackPress() {
-            if(document.getElementById('video-container').innerHTML !== '') { closeVideo(); return; }
+            // אם וידאו פתוח - סגור אותו וחזור לדף הסדרה
+            if(document.getElementById('video-container').style.display === 'block') { 
+                closeVideo(); 
+                return; 
+            }
+            // אם אנחנו בדף סדרה - חזור לבית
             if (document.getElementById('content-view').style.display !== 'none') {
                 document.getElementById('content-view').style.display = 'none';
                 switchScreen('home');
@@ -615,10 +663,12 @@
                 }
                 return;
             }
+            // אם בחיפוש - צא לבית
             if (document.getElementById('search-input')) {
                 enterApp();
                 return;
             }
+            // אם בבית - צא לפרופילים
             if (document.querySelector('.bottom-section').style.display === 'block') {
                 switchScreen('profiles');
                 return;
