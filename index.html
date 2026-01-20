@@ -73,8 +73,9 @@
         
         .row { 
             display: flex; gap: 15px; 
-            /* הסרתי כל ריפוד צדדי כדי שלא יהיה רווח */
-            padding: 40px 0 40px 0; 
+            /* ריפוד מינימלי חובה (30px) בצד ימין כדי למנוע חיתוך בזום */
+            /* זה גם נראה טוב יותר בטלוויזיה (Safe Area) */
+            padding: 40px 0 40px 30px; 
             margin-top: -20px; 
             margin-bottom: -10px;
             overflow-x: auto; scroll-behavior: smooth; white-space: nowrap; 
@@ -94,17 +95,15 @@
             transform-origin: center center;
         }
 
-        /* --- התיקון הגורף לכל השורות --- */
-        /* זה מבטיח שהתמונה הראשונה בכל שורה (לא משנה איזו) תגדל שמאלה ולא תיחתך */
+        /* הפכתי את זה ל- !important כדי שיתפוס על כל השורות בוודאות */
         .row .card:first-child {
-            transform-origin: right center !important;
+            transform-origin: right center !important; /* גדל שמאלה */
         }
-        /* התמונה האחרונה תגדל ימינה */
         .row .card:last-child {
-            transform-origin: left center !important;
+            transform-origin: left center !important; /* גדל ימינה */
         }
-        /* --------------------------- */
         
+        /* גדלים */
         .card.series { min-width: 200px; width: 200px; height: 112px; }
         .card.movie { min-width: 100px; width: 100px; height: 150px; }
         
@@ -604,21 +603,21 @@
             }, 500);
         }
 
-        // --- פונקציית היציאה המתוקנת: חוזרת לדף הסדרה מיד ---
+        // --- תיקון סופי למסך השחור ---
         function closeVideo() {
-            const vidContainer = document.getElementById('video-container');
-            vidContainer.innerHTML = ""; // מחיקת הוידאו כדי למנוע הבהוב
-            vidContainer.style.display = "none";
+            // 1. קודם כל נדאג שהדף הראשי מוצג
+            document.getElementById('content-view').style.display = 'block';
+            document.querySelector('.top-section').style.display = 'none';
+            document.querySelector('.bottom-section').style.display = 'none';
 
-            // הצגה כפויה של מסך התוכן
-            document.getElementById('content-view').style.display = "block";
-            // הסתרת מסכים אחרים ליתר ביטחון
-            document.querySelector('.top-section').style.display = "none";
-            document.querySelector('.bottom-section').style.display = "none";
+            // 2. עכשיו נעיף את הוידאו
+            const vidContainer = document.getElementById('video-container');
+            vidContainer.innerHTML = '';
+            vidContainer.style.display = 'none';
 
             if (typeof AndroidControl !== 'undefined') AndroidControl.setVideoMode(false);
 
-            // החזרת פוקוס לכרטיסייה האחרונה
+            // 3. החזרת פוקוס לכרטיסייה האחרונה
             if (currentPlayingId) {
                 setTimeout(() => {
                     const el = document.querySelector(`[data-id="${currentPlayingId}"]`);
@@ -650,12 +649,10 @@
         }
         
         function handleBackPress() {
-            // אם וידאו פתוח (גם אם שחור) - סגור אותו בכוח
             if(document.getElementById('video-container').style.display === 'block') { 
                 closeVideo(); 
                 return; 
             }
-            // אם אנחנו בדף סדרה - חזור לבית
             if (document.getElementById('content-view').style.display !== 'none') {
                 document.getElementById('content-view').style.display = 'none';
                 switchScreen('home');
@@ -667,12 +664,10 @@
                 }
                 return;
             }
-            // אם בחיפוש - צא לבית
             if (document.getElementById('search-input')) {
                 enterApp();
                 return;
             }
-            // אם בבית - צא לפרופילים
             if (document.querySelector('.bottom-section').style.display === 'block') {
                 switchScreen('profiles');
                 return;
