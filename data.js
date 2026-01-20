@@ -85,6 +85,21 @@ const seriesData = [
         driveId: "ID"
     },
 
+
+        {
+        id: "thepetsecret",
+        type: "movie", 
+        category: "ילדים",
+        genre: "סרטים חינם",
+        title: "החיים הסודיים של חיות המחמד",
+        description: "אנימציה. להיט האנימציה שחשף מה עושות חיות המחמד כשהן לבד... כלב הטרייר מקס מתקשה לחבב את דיוק, אחיו החדש. אך בשעת מצוקה, הוא יגלה מהי באמת משפחה. דיבוב לעברית: אלון נוימן. בימוי: כריס רנו, יארו צ'ייני. 2016. כ' עב'.",
+        // 👇 וודא שיש קובץ בשם elio.jpg
+        image: "./images/Thesecretlifeofpetsposter.jpg",
+        driveId: "1UyV7ntR9XyV1nNNvSmK1XE4jzdENvIC4"
+    },
+
+    
+
     {
         id: "The Secret Life of Pets",
         type: "movie", 
