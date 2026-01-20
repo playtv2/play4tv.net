@@ -10,7 +10,6 @@
     <style>
         :root { --red: #ff0055; --bg: #0f0f0f; --sidebar-width: 70px; --sidebar-expanded: 220px; }
         
-        /* --- הגדרות קריטיות למניעת תזוזת מסך --- */
         body { 
             background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; 
             margin: 0; padding: 0;
@@ -32,12 +31,10 @@
         }
         .sidebar:focus-within, .sidebar:hover { width: var(--sidebar-expanded); }
         
-        /* הלוגו - מופיע רק בתפריט */
         .logo { 
             width: 100%; height: 60px; 
             background-size: contain; background-repeat: no-repeat; background-position: center; 
             margin-bottom: 20px; margin-top: 20px;
-            /* תיקון נתיב: הוספתי נקודה בהתחלה ליתר ביטחון */
             background-image: url('./images/logo.png'); 
         }
         
@@ -66,16 +63,21 @@
         .bottom-section { 
             height: 45%; flex-grow: 1; width: 100%; background: #0f0f0f; 
             overflow-y: auto; overflow-x: hidden; 
+            /* תיקון: הוספתי ריפוד תחתון גדול כדי שהשורה האחרונה לא תיחתך */
             padding-top: 10px; padding-bottom: 100px; box-sizing: border-box; z-index: 2; 
             scroll-behavior: smooth; 
         }
         .bottom-section::-webkit-scrollbar { display: none; }
 
-        .category-block { margin-bottom: 25px; padding-right: 40px; display: block; }
-        .category-title { font-size: 18px; margin-bottom: 8px; font-weight: bold; color: #aaa; }
+        .category-block { margin-bottom: 5px; padding-right: 40px; display: block; }
+        .category-title { font-size: 18px; margin-bottom: 0px; font-weight: bold; color: #aaa; }
         
         .row { 
-            display: flex; gap: 15px; padding: 5px 0 10px; 
+            display: flex; gap: 15px; 
+            /* תיקון קריטי לחיתוך: ריפוד גדול למעלה ולמטה כדי שהזום לא ייחתך */
+            padding: 40px 0 40px; 
+            margin-top: -20px; /* קיזוז ויזואלי */
+            margin-bottom: -10px;
             overflow-x: auto; scroll-behavior: smooth; white-space: nowrap; 
             scroll-snap-type: x mandatory; 
             padding-left: 50px; 
@@ -84,16 +86,41 @@
         
         .card { 
             display: inline-block; position: relative; cursor: pointer; 
-            border-radius: 6px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.5); 
-            border: 2px solid transparent; transition: transform 0.2s; 
+            border-radius: 6px; overflow: hidden; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5); 
+            border: 3px solid transparent; /* מסגרת שקופה כברירת מחדל */
+            transition: transform 0.2s, border-color 0.2s; 
             scroll-snap-align: start; flex-shrink: 0; 
+            z-index: 1;
         }
-        .card.movie { min-width: 100px; width: 100px; height: 150px; }
-        .card.series { min-width: 200px; width: 200px; height: 112px; }
+        
+        /* כולם באותו גודל רחב (אחידות) */
+        .card.series, .card.movie { min-width: 200px; width: 200px; height: 112px; }
+        
         .card img { width: 100%; height: 100%; object-fit: cover; }
-        .card:focus { transform: scale(1.15); z-index: 100; border-color: #fff; box-shadow: 0 0 25px rgba(255,255,255,0.6); outline: none; }
+        
+        /* התיקון למסגרת לבנה פשוטה ללא זוהר */
+        .card:focus { 
+            transform: scale(1.15); 
+            z-index: 100; 
+            border-color: #ffffff; /* לבן נקי */
+            box-shadow: 0 10px 20px rgba(0,0,0,0.8); /* צל שחור עדין למטה, לא זוהר */
+            outline: none; 
+        }
+
         .card-title-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); padding: 5px; text-align: center; font-size: 11px; opacity: 0; transition: 0.2s; color: white; }
         .card:focus .card-title-overlay { opacity: 1; }
+
+        /* Search Styles */
+        .search-container { padding: 20px 50px; }
+        .search-input { 
+            width: 100%; max-width: 600px; 
+            background: #222; border: 2px solid #333; color: white; 
+            padding: 15px 20px; font-size: 20px; border-radius: 50px; 
+            outline: none; transition: 0.3s;
+            margin-bottom: 30px;
+        }
+        .search-input:focus { border-color: var(--red); background: #333; }
 
         .screen { display: none; }
         #loading-screen, #auth-screen { position: fixed; inset: 0; background: #000; z-index: 20000; display: flex; align-items: center; justify-content: center; }
@@ -185,7 +212,9 @@
 
         function updateSidebar() {
             const nav = document.getElementById('dynamic-nav');
-            let html = `<div class="nav-item" tabindex="0" onclick="renderHome()"><span class="nav-icon">🏠</span><span class="nav-text">בית</span></div>`;
+            // אייקון חיפוש נוסף כאן
+            let html = `<div class="nav-item" tabindex="0" onclick="showSearch()"><span class="nav-icon">🔍</span><span class="nav-text">חיפוש</span></div>
+                        <div class="nav-item" tabindex="0" onclick="enterApp()"><span class="nav-icon">🏠</span><span class="nav-text">בית</span></div>`;
             if (currentProfile.type === 'adults') {
                 html += `<div class="nav-item" tabindex="0" onclick="navTo('סדרות')"><span class="nav-icon">📺</span><span class="nav-text">סדרות</span></div>
                          <div class="nav-item" tabindex="0" onclick="navTo('סרטים')"><span class="nav-icon">🎬</span><span class="nav-text">סרטים</span></div>`;
@@ -195,9 +224,54 @@
             nav.innerHTML = html;
         }
 
+        // --- לוגיקה של החיפוש ---
+        function showSearch() {
+            const home = document.getElementById('home-view');
+            document.querySelector('.top-section').style.display = 'none';
+            home.innerHTML = `
+                <div class="search-container">
+                    <input type="text" id="search-input" class="search-input" placeholder="מה בא לך לראות?" oninput="runSearch(this.value)">
+                    <div id="search-results"></div>
+                </div>`;
+            setTimeout(() => document.getElementById('search-input').focus(), 100);
+        }
+
+        function runSearch(query) {
+            const container = document.getElementById('search-results');
+            if (!query || query.length < 2) {
+                container.innerHTML = '';
+                return;
+            }
+
+            const allowedCats = currentProfile.type === 'kids' ? ['ילדים'] : ['סדרות', 'סרטים', 'ילדים'];
+            const results = seriesData.filter(s => {
+                const isAllowed = allowedCats.includes(s.category);
+                const matchTitle = s.title.includes(query);
+                const matchDesc = s.description.includes(query);
+                const matchGenre = (s.genre || "").includes(query);
+                return isAllowed && (matchTitle || matchDesc || matchGenre);
+            });
+
+            if (results.length > 0) {
+                container.innerHTML = renderRow(`תוצאות עבור "${query}"`, results);
+            } else {
+                container.innerHTML = `<div style="padding: 20px; color: #777;">לא נמצאו תוצאות...</div>`;
+            }
+        }
+
         // --- בקר ניווט חכם (RTL + Delay Fix for Down Arrow) ---
         window.addEventListener('keydown', function(e) {
             const active = document.activeElement;
+            
+            if (active.id === 'search-input') {
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    const firstCard = document.querySelector('.card');
+                    if (firstCard) firstCard.focus();
+                }
+                return; 
+            }
+
             if (!active) return;
 
             if (e.key === 'Enter') {
@@ -235,7 +309,7 @@
             if (e.key === 'ArrowDown') {
                 const currentBlock = active.closest('.category-block');
                 if (currentBlock) {
-                    e.preventDefault(); // תמיד מונעים את ברירת המחדל
+                    e.preventDefault(); 
                     const allBlocks = Array.from(document.querySelectorAll('.category-block'));
                     const currentIndex = allBlocks.indexOf(currentBlock);
                     if (currentIndex < allBlocks.length - 1) {
@@ -248,12 +322,10 @@
                         if (!targetCard) targetCard = nextRowCards[nextRowCards.length - 1];
                         
                         if (targetCard) {
-                            // קודם גוללים
                             targetCard.scrollIntoView({ behavior: 'auto', block: 'center' });
-                            // מחכים שהגלילה תתחיל, ורק אז נותנים פוקוס
                             setTimeout(() => {
                                 targetCard.focus();
-                            }, 50); // השהייה של 50 מילי שניות
+                            }, 50); 
                         }
                     }
                 }
@@ -264,6 +336,12 @@
                 const currentBlock = active.closest('.category-block');
                 if (currentBlock) {
                     e.preventDefault();
+                    
+                    if (document.getElementById('search-input')) {
+                         document.getElementById('search-input').focus();
+                         return;
+                    }
+
                     const allBlocks = Array.from(document.querySelectorAll('.category-block'));
                     const currentIndex = allBlocks.indexOf(currentBlock);
                     if (currentIndex > 0) {
@@ -306,7 +384,8 @@
                     const history = getHistory();
                     item = history.find(h => h.id === id);
                 }
-                if (item) {
+                // בחיפוש אנחנו מסתירים את הבאנר, אז לא צריך לעדכן אותו
+                if (item && document.querySelector('.top-section').style.display !== 'none') {
                     const heroBg = document.getElementById('hero-bg');
                     heroBg.style.backgroundImage = `url('${item.image}')`;
                     document.getElementById('hero-title').innerText = item.title;
@@ -381,7 +460,8 @@
 
         function renderRow(title, items, forceUniform = false) {
             const cardsHtml = items.map(s => {
-                let shapeClass = forceUniform ? 'series' : (s.category === 'סרטים' || s.type === 'movie' ? 'movie' : 'series');
+                // שיניתי כאן! עכשיו גם movies מקבלים תמיד את המחלקה 'series' כדי להיות רחבים
+                let shapeClass = 'series'; 
                 return `
                     <div class="card ${shapeClass}" tabindex="0" data-id="${s.id}" onclick="openContent('${s.id}')">
                         <img src="${s.image}" loading="lazy">
@@ -397,6 +477,7 @@
 
         function navTo(cat) { 
             const home = document.getElementById('home-view');
+            document.querySelector('.top-section').style.display = 'block'; 
             home.innerHTML = ''; 
             const filtered = seriesData.filter(s => s.category === cat);
             const uniqueGenres = [...new Set(filtered.map(s => s.genre || s.category))];
@@ -531,6 +612,11 @@
                         if(el) el.focus();
                     }, 200);
                 }
+                return;
+            }
+            // אם אנחנו בחיפוש ולוחצים חזור - חוזרים לבית
+            if (document.getElementById('search-input')) {
+                enterApp();
                 return;
             }
             if (document.querySelector('.bottom-section').style.display === 'block') {
