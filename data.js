@@ -25,7 +25,7 @@ const seriesData = [
         title: "אל עצמי",
         description: "סיפורו המרגש של ציון.",
         // 👇 וודא שיש קובץ בשם elatzmi.jpg
-        image: "./images/elatzmi.jpg",
+        image: "./images/el-atsmi.jpg",
         episodes: [
             { number: "1", desc: "פרק ראשון", image: "", driveId: "1-TJDR-bjqha_x-DHndKd-uvGIuQU3Lz0" },
             { number: "2", desc: "פרק שני", image: "", driveId: "10Flj4VBaJ4ANqWfy8Lt0BRTPwsrITPHZ" }
