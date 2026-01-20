@@ -73,8 +73,8 @@
         
         .row { 
             display: flex; gap: 15px; 
-            /* תיקון הרווח: מחקתי padding-right והשארתי רק למעלה, למטה, ושמאל */
-            padding: 40px 0 40px 50px; 
+            /* הסרתי כל ריפוד צדדי כדי שלא יהיה רווח */
+            padding: 40px 0 40px 0; 
             margin-top: -20px; 
             margin-bottom: -10px;
             overflow-x: auto; scroll-behavior: smooth; white-space: nowrap; 
@@ -90,21 +90,21 @@
             transition: transform 0.2s, border-color 0.2s; 
             scroll-snap-align: start; flex-shrink: 0; 
             z-index: 1;
-            /* ברירת מחדל */
+            /* ברירת מחדל: גדל מהמרכז */
             transform-origin: center center;
         }
 
-        /* --- התיקון הקריטי: התמונה הראשונה גדלה פנימה --- */
-        /* בלי זה, התמונה תחתך בצד ימין כי אין ריפוד */
+        /* --- התיקון הגורף לכל השורות --- */
+        /* זה מבטיח שהתמונה הראשונה בכל שורה (לא משנה איזו) תגדל שמאלה ולא תיחתך */
         .row .card:first-child {
-            transform-origin: right center; /* גדל שמאלה */
+            transform-origin: right center !important;
         }
+        /* התמונה האחרונה תגדל ימינה */
         .row .card:last-child {
-            transform-origin: left center; /* גדל ימינה */
+            transform-origin: left center !important;
         }
-        /* ----------------------------------------------- */
+        /* --------------------------- */
         
-        /* גדלים */
         .card.series { min-width: 200px; width: 200px; height: 112px; }
         .card.movie { min-width: 100px; width: 100px; height: 150px; }
         
@@ -498,9 +498,8 @@
                 if (forceUniform) {
                     shapeClass = 'series'; 
                 } else if (hasSeries) {
-                    shapeClass = 'series'; // אם יש סדרות - כולם מתיישרים
+                    shapeClass = 'series'; 
                 } else {
-                    // אם רק סרטים - שומרים על הסוג המקורי
                     shapeClass = (s.type === 'movie' || s.category === 'סרטים') ? 'movie' : 'series';
                 }
 
@@ -605,29 +604,27 @@
             }, 500);
         }
 
-        // --- התיקון הקריטי למניעת מסך שחור ---
+        // --- פונקציית היציאה המתוקנת: חוזרת לדף הסדרה מיד ---
         function closeVideo() {
-            const container = document.getElementById('video-container');
-            container.innerHTML = '';
-            container.style.display = 'none'; // העלמה מיידית של הוידאו
-            
-            // חזרה מיידית לתצוגת פרטי הסדרה/סרט
-            const contentView = document.getElementById('content-view');
-            contentView.style.display = 'block';
-            
-            // הסתרת דברים אחרים ליתר ביטחון
-            document.querySelector('.top-section').style.display = 'none'; 
-            document.querySelector('.bottom-section').style.display = 'none';
-            
+            const vidContainer = document.getElementById('video-container');
+            vidContainer.innerHTML = ""; // מחיקת הוידאו כדי למנוע הבהוב
+            vidContainer.style.display = "none";
+
+            // הצגה כפויה של מסך התוכן
+            document.getElementById('content-view').style.display = "block";
+            // הסתרת מסכים אחרים ליתר ביטחון
+            document.querySelector('.top-section').style.display = "none";
+            document.querySelector('.bottom-section').style.display = "none";
+
             if (typeof AndroidControl !== 'undefined') AndroidControl.setVideoMode(false);
 
-            // החזרת הפוקוס לפרק האחרון
+            // החזרת פוקוס לכרטיסייה האחרונה
             if (currentPlayingId) {
                 setTimeout(() => {
-                    const lastPlayedElement = document.querySelector(`[data-id="${currentPlayingId}"]`);
-                    if (lastPlayedElement) {
-                        lastPlayedElement.focus();
-                        lastPlayedElement.scrollIntoView({block: 'center', inline: 'center'});
+                    const el = document.querySelector(`[data-id="${currentPlayingId}"]`);
+                    if (el) {
+                        el.focus();
+                        el.scrollIntoView({block: 'center', inline: 'center'});
                     }
                 }, 100);
             }
@@ -653,12 +650,12 @@
         }
         
         function handleBackPress() {
-            // אם הוידאו מוצג (אפילו אם הוא שחור/ריק) -> סגור אותו
+            // אם וידאו פתוח (גם אם שחור) - סגור אותו בכוח
             if(document.getElementById('video-container').style.display === 'block') { 
                 closeVideo(); 
                 return; 
             }
-            // אם אנחנו בדף סדרה -> חזור לבית
+            // אם אנחנו בדף סדרה - חזור לבית
             if (document.getElementById('content-view').style.display !== 'none') {
                 document.getElementById('content-view').style.display = 'none';
                 switchScreen('home');
@@ -670,12 +667,12 @@
                 }
                 return;
             }
-            // אם בחיפוש -> חזור לבית
+            // אם בחיפוש - צא לבית
             if (document.getElementById('search-input')) {
                 enterApp();
                 return;
             }
-            // אם בבית -> חזור לפרופילים
+            // אם בבית - צא לפרופילים
             if (document.querySelector('.bottom-section').style.display === 'block') {
                 switchScreen('profiles');
                 return;
