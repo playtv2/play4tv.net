@@ -73,13 +73,12 @@
         
         .row { 
             display: flex; gap: 15px; 
-            /* ריפוד מינימלי חובה (30px) בצד ימין כדי למנוע חיתוך בזום */
-            /* זה גם נראה טוב יותר בטלוויזיה (Safe Area) */
-            padding: 40px 0 40px 30px; 
+            padding: 40px 0 40px 0; /* אין ריפוד בצדדים בקונטיינר עצמו */
             margin-top: -20px; 
             margin-bottom: -10px;
             overflow-x: auto; scroll-behavior: smooth; white-space: nowrap; 
             scroll-snap-type: x mandatory; 
+            padding-left: 50px; 
         }
         .row::-webkit-scrollbar { display: none; }
         
@@ -91,21 +90,20 @@
             transition: transform 0.2s, border-color 0.2s; 
             scroll-snap-align: start; flex-shrink: 0; 
             z-index: 1;
-            /* ברירת מחדל: גדל מהמרכז */
             transform-origin: center center;
         }
 
-        /* הפכתי את זה ל- !important כדי שיתפוס על כל השורות בוודאות */
+        /* --- התיקון לחיתוך בצד ימין: --- */
+        /* מוסיפים שוליים רק לתמונה הראשונה. ככה יש לה מקום לגדול, אבל זה לא משפיע על כל השורה */
         .row .card:first-child {
-            transform-origin: right center !important; /* גדל שמאלה */
-        }
-        .row .card:last-child {
-            transform-origin: left center !important; /* גדל ימינה */
+            margin-right: 60px; /* נותן אוויר לתמונה הראשונה */
+            transform-origin: center center; /* גדלה רגיל */
         }
         
         /* גדלים */
         .card.series { min-width: 200px; width: 200px; height: 112px; }
-        .card.movie { min-width: 100px; width: 100px; height: 150px; }
+        /* סרטים נשארים עומדים אלא אם נחליט אחרת בלוגיקה */
+        .card.movie { min-width: 100px; width: 100px; height: 150px; } 
         
         .card img { width: 100%; height: 100%; object-fit: cover; }
         
@@ -567,6 +565,13 @@
                 AndroidControl.setVideoMode(true);
                 automateDrive();
             }
+            // --- תיקון: זיהוי יציאה ממסך מלא (ה-ESC הראשון) ---
+            // זה יגרום לכך שהמערכת תבין לבד שלחצת ESC ותסגור את הוידאו
+            document.onfullscreenchange = function() {
+                if (!document.fullscreenElement) {
+                    closeVideo(); // סגירה אוטומטית כשהדרייב יוצא ממסך מלא
+                }
+            };
         }
 
         function playNextEpisode() {
@@ -603,29 +608,29 @@
             }, 500);
         }
 
-        // --- תיקון סופי למסך השחור ---
+        // --- תיקון סופי למסך השחור ולחזרה לפרק הנכון ---
         function closeVideo() {
-            // 1. קודם כל נדאג שהדף הראשי מוצג
+            // 1. קודם כל מציגים את דף הסדרה
             document.getElementById('content-view').style.display = 'block';
-            document.querySelector('.top-section').style.display = 'none';
+            document.querySelector('.top-section').style.display = 'none'; 
             document.querySelector('.bottom-section').style.display = 'none';
 
-            // 2. עכשיו נעיף את הוידאו
-            const vidContainer = document.getElementById('video-container');
-            vidContainer.innerHTML = '';
-            vidContainer.style.display = 'none';
-
+            // 2. רק אז מוחקים את הוידאו ומסתירים את הקונטיינר
+            const container = document.getElementById('video-container');
+            container.innerHTML = ''; 
+            container.style.display = 'none';
+            
             if (typeof AndroidControl !== 'undefined') AndroidControl.setVideoMode(false);
 
-            // 3. החזרת פוקוס לכרטיסייה האחרונה
+            // 3. החזרת פוקוס לפרק הספציפי שהרגע נוגן
             if (currentPlayingId) {
                 setTimeout(() => {
-                    const el = document.querySelector(`[data-id="${currentPlayingId}"]`);
-                    if (el) {
-                        el.focus();
-                        el.scrollIntoView({block: 'center', inline: 'center'});
+                    const lastPlayedElement = document.querySelector(`[data-id="${currentPlayingId}"]`);
+                    if (lastPlayedElement) {
+                        lastPlayedElement.focus();
+                        lastPlayedElement.scrollIntoView({block: 'center', inline: 'center'});
                     }
-                }, 100);
+                }, 50); // טיימר קצרצר כדי לוודא שהדף נטען
             }
         }
 
