@@ -12,11 +12,16 @@
         
         body { 
             background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; 
-            margin: 0; padding: 0; width: 100vw; height: 100vh; 
-            overflow: hidden; display: flex; position: fixed; inset: 0;
+            margin: 0; padding: 0;
+            width: 100vw; height: 100vh; 
+            overflow: hidden; 
+            display: flex; 
+            position: fixed; 
+            inset: 0;
         }
         *:focus { outline: none; }
         
+        /* Sidebar */
         .sidebar { 
             width: var(--sidebar-width); background: #000; 
             display: flex; flex-direction: column; padding: 15px 5px; 
@@ -27,8 +32,9 @@
         .sidebar:focus-within, .sidebar:hover { width: var(--sidebar-expanded); }
         
         .logo { 
-            width: 100%; height: 60px; background-size: contain; background-repeat: no-repeat; 
-            background-position: center; margin-bottom: 20px; margin-top: 20px;
+            width: 100%; height: 60px; 
+            background-size: contain; background-repeat: no-repeat; background-position: center; 
+            margin-bottom: 20px; margin-top: 20px;
             background-image: url('./images/logo.png'); 
         }
         
@@ -38,79 +44,128 @@
         .sidebar:focus-within .nav-text, .sidebar:hover .nav-text { opacity: 1; visibility: visible; }
         .nav-item:focus { background: var(--red); color: white; transform: scale(1.05); }
 
-        .main-content { flex: 1; height: 100vh; display: flex; flex-direction: column; position: relative; background: #000; overflow: hidden; }
+        /* Layout */
+        .main-content { 
+            flex: 1; height: 100vh; display: flex; flex-direction: column; 
+            position: relative; background: #000; 
+            overflow: hidden; 
+            max-width: calc(100vw - var(--sidebar-width));
+        }
 
         .top-section { height: 55%; width: 100%; position: relative; flex-shrink: 0; z-index: 1; }
         .hero-bg { position: absolute; inset: 0; background-size: cover; background-position: top center; transition: background-image 0.4s ease-out; }
-        .hero-bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, #000 5%, rgba(0,0,0,0.6) 50%, transparent 100%); }
+        .hero-bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, #000000 5%, rgba(0,0,0,0.6) 50%, transparent 100%); }
         .hero-text { position: absolute; bottom: 20px; right: 50px; left: 50px; z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; }
         .hero-title { font-size: 60px; font-weight: 800; margin-bottom: 10px; text-shadow: 2px 2px 15px black; line-height: 1; }
         .hero-desc { font-size: 20px; color: #ddd; line-height: 1.3; text-shadow: 1px 1px 5px black; max-width: 60%; max-height: 80px; overflow: hidden; }
 
+        /* Scroll Area */
         .bottom-section { 
-            height: 45%; flex-grow: 1; width: 100%; background: #000; 
-            overflow-y: auto; overflow-x: hidden; padding-top: 10px; padding-bottom: 100px; box-sizing: border-box; z-index: 2; 
+            height: 45%; flex-grow: 1; width: 100%; background: #000000; 
+            overflow-y: auto; overflow-x: hidden; 
+            padding-top: 10px; padding-bottom: 100px; box-sizing: border-box; z-index: 2; 
             scroll-behavior: smooth; 
         }
         .bottom-section::-webkit-scrollbar { display: none; }
 
-        .category-block { margin-bottom: 5px; display: block; }
-        .category-title { font-size: 18px; margin-right: 60px; font-weight: bold; color: #aaa; }
+        .category-block { margin-bottom: 5px; padding-right: 40px; display: block; }
+        .category-title { font-size: 18px; margin-bottom: 0px; font-weight: bold; color: #aaa; }
         
-        /* --- שכפול ההצלחה של המשך צפייה לכל השורות --- */
         .row { 
             display: flex; gap: 15px; 
-            padding: 40px 60px; /* ריפוד זהה לכולם שמונע חיתוך */
-            margin-top: -30px; 
+            /* הסרתי לחלוטין את הריפוד בצדדים - התמונה תתחיל בול בהתחלה */
+            padding: 40px 0 40px 0; 
+            margin-top: -20px; 
+            margin-bottom: -10px;
             overflow-x: auto; scroll-behavior: smooth; white-space: nowrap; 
             scroll-snap-type: x mandatory; 
+            /* וידוא שאין ריפוד נסתר */
+            padding-right: 0 !important;
+            padding-left: 50px; /* רק בסוף שיהיה מקום */
         }
         .row::-webkit-scrollbar { display: none; }
         
         .card { 
             display: inline-block; position: relative; cursor: pointer; 
-            border-radius: 6px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.5); 
-            border: 2px solid transparent; transition: transform 0.2s, border-color 0.2s; 
-            scroll-snap-align: start; flex-shrink: 0; z-index: 1;
+            border-radius: 6px; overflow: hidden; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5); 
+            border: 2px solid transparent; 
+            transition: transform 0.2s, border-color 0.2s; 
+            scroll-snap-align: start; flex-shrink: 0; 
+            z-index: 1;
+            /* ברירת מחדל */
+            transform-origin: center center;
         }
 
-        /* מניעת חיתוך אבסולוטית לתמונה הראשונה והאחרונה */
-        .row .card:first-child { transform-origin: right center !important; }
-        .row .card:last-child { transform-origin: left center !important; }
+        /* --- הפתרון המדעי לבעיית החיתוך --- */
+        /* האלמנט הראשון ב-RTL (צד ימין) יגדל שמאלה בלבד */
+        .row .card:first-of-type {
+            transform-origin: right center !important;
+        }
+        /* האלמנט האחרון יגדל ימינה בלבד */
+        .row .card:last-of-type {
+            transform-origin: left center !important;
+        }
         
+        /* גדלים */
         .card.series { min-width: 200px; width: 200px; height: 112px; }
         .card.movie { min-width: 100px; width: 100px; height: 150px; }
+        
         .card img { width: 100%; height: 100%; object-fit: cover; }
         
         .card:focus { 
-            transform: scale(1.15); z-index: 100; border-color: #fff; 
-            box-shadow: 0 10px 20px rgba(0,0,0,0.9); outline: none; 
+            transform: scale(1.15); 
+            z-index: 100; 
+            border-width: 2px; 
+            border-color: #ffffff; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.9); 
+            outline: none; 
         }
 
-        .card-title-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); padding: 5px; text-align: center; font-size: 11px; opacity: 0; color: white; }
+        .card-title-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); padding: 5px; text-align: center; font-size: 11px; opacity: 0; transition: 0.2s; color: white; }
         .card:focus .card-title-overlay { opacity: 1; }
 
-        #video-container { position: fixed; inset: 0; background: #000; z-index: 20000; display: none; }
-        .screen { display: none; }
-        #loading-screen, #auth-screen { position: fixed; inset: 0; background: #000; z-index: 30000; display: flex; align-items: center; justify-content: center; }
-        #content-view { display: none; padding: 30px; position: absolute; inset: 0; z-index: 20; background: #000; overflow-y: auto; }
-
         .search-container { padding: 20px 50px; }
-        .search-input { width: 100%; max-width: 600px; background: #222; border: 2px solid #333; color: white; padding: 15px 20px; font-size: 20px; border-radius: 50px; outline: none; }
+        .search-input { 
+            width: 100%; max-width: 600px; 
+            background: #222; border: 2px solid #333; color: white; 
+            padding: 15px 20px; font-size: 20px; border-radius: 50px; 
+            outline: none; transition: 0.3s;
+            margin-bottom: 30px;
+        }
+        .search-input:focus { border-color: var(--red); background: #333; }
+
+        .screen { display: none; }
+        #loading-screen, #auth-screen { position: fixed; inset: 0; background: #000; z-index: 20000; display: flex; align-items: center; justify-content: center; }
+        #auth-screen { flex-direction: column; z-index: 10000; }
+        .login-btn { background: var(--red); color: white; border: none; padding: 10px 30px; font-size: 20px; font-weight: bold; border-radius: 50px; margin-top: 20px; }
+        .login-btn:focus { background: white; color: black; transform: scale(1.1); }
+        #profile-screen { position: fixed; inset: 0; background: #000; z-index: 9999; flex-direction: column; align-items: center; justify-content: center; }
+        .profile-container { display: flex; gap: 25px; }
+        .profile-box { text-align: center; padding: 10px; border-radius: 10px; transition: 0.2s; }
+        .profile-img { width: 100px; height: 100px; border-radius: 50%; background-size: cover; background-color: #222; margin-bottom: 10px; border: 3px solid transparent; }
+        .profile-box:focus { transform: scale(1.15); }
+        .profile-box:focus .profile-img { border-color: var(--red); }
+        .profile-name { font-size: 16px; color: #ccc; }
+        #video-container { position: fixed; inset: 0; background: #000; z-index: 20000; display: none; }
+        iframe { width: 100%; height: 100%; border: none; }
     </style>
 </head>
 <body>
 
-    <div id="loading-screen" style="display: flex;"><h1 style="color: #444; font-size: 24px;">טוען...</h1></div>
-
-    <div id="auth-screen" class="screen">
-        <h1 style="font-size: 60px; color: var(--red);">HOT Play</h1>
-        <button class="login-btn" tabindex="1" onclick="login()" style="background:var(--red); color:white; border:none; padding:15px 40px; border-radius:50px; font-size:20px; cursor:pointer;">התחברות עם Google</button>
+    <div id="loading-screen" style="display: flex;">
+        <h1 style="color: #444; font-size: 24px;">טוען...</h1>
     </div>
 
-    <div id="profile-screen" class="screen" style="flex-direction: column; align-items: center; justify-content: center;">
+    <div id="auth-screen" class="screen">
+        <h1 style="font-size: 60px; color: var(--red); margin: 0;">HOT Play</h1>
+        <h2 style="font-size: 24px; margin-top: 5px; opacity: 0.7;">ברוכים הבאים</h2>
+        <button class="login-btn" tabindex="1" onclick="login()">התחברות עם Google</button>
+    </div>
+
+    <div id="profile-screen" class="screen">
         <h1 style="font-size: 35px; margin-bottom: 30px;">מי צופה?</h1>
-        <div class="profile-container" id="profile-list" style="display:flex; gap:25px;"></div>
+        <div class="profile-container" id="profile-list"></div>
     </div>
 
     <div class="sidebar screen" id="sidebar">
@@ -122,19 +177,26 @@
         <div class="top-section">
             <div id="hero-bg" class="hero-bg"></div>
             <div class="hero-text">
-                <div id="hero-title" class="hero-title"></div>
-                <div id="hero-desc" class="hero-desc"></div>
+                <div id="hero-title" class="hero-title">HOT Play</div>
+                <div id="hero-desc" class="hero-desc">בחר תוכן לצפייה</div>
             </div>
         </div>
         <div class="bottom-section" id="home-view"></div>
-        <div id="content-view"></div>
+        <div id="content-view" style="display: none; padding: 30px; position: absolute; inset: 0; z-index: 20; background: #000; overflow-y: auto;"></div>
     </div>
 
     <div id="video-container"></div>
 
     <script src="data.js"></script>
     <script>
-        const firebaseConfig = { apiKey: "AIzaSyAuJlFyTuYypCVdJrZCrQGOEZZS5WDH6pI", authDomain: "app-c71dd.firebaseapp.com", projectId: "app-c71dd", storageBucket: "app-c71dd.firebasestorage.app", messagingSenderId: "256556501971", appId: "1:256556501971:web:98dbba775b0b8ca913bd26" };
+        const firebaseConfig = {
+            apiKey: "AIzaSyAuJlFyTuYypCVdJrZCrQGOEZZS5WDH6pI",
+            authDomain: "app-c71dd.firebaseapp.com",
+            projectId: "app-c71dd",
+            storageBucket: "app-c71dd.firebasestorage.app",
+            messagingSenderId: "256556501971",
+            appId: "1:256556501971:web:98dbba775b0b8ca913bd26"
+        };
         firebase.initializeApp(firebaseConfig);
 
         let currentProfile = null;
@@ -149,18 +211,224 @@
             { n: 'אורי', i: 'https://img.freepik.com/free-psd/3d-illustration-person-with-glasses_23-2149436185.jpg', type: 'kids' }
         ];
 
+        setTimeout(() => { document.getElementById('loading-screen').style.display = 'none'; }, 5000);
+
         firebase.auth().onAuthStateChanged(user => {
             document.getElementById('loading-screen').style.display = 'none';
-            if (user && user.email === "nitaylayish298@gmail.com") { switchScreen('profiles'); loadProfiles(); } 
-            else { switchScreen('auth'); }
+            if (user && user.email === "nitaylayish298@gmail.com") {
+                switchScreen('profiles');
+                loadProfiles();
+            } else {
+                switchScreen('auth');
+            }
         });
+
+        function updateSidebar() {
+            const nav = document.getElementById('dynamic-nav');
+            let html = `<div class="nav-item" tabindex="0" onclick="showSearch()"><span class="nav-icon">🔍</span><span class="nav-text">חיפוש</span></div>
+                        <div class="nav-item" tabindex="0" onclick="renderHome()"><span class="nav-icon">🏠</span><span class="nav-text">ראשי</span></div>`;
+            html += `<div class="nav-item" tabindex="0" style="margin-top:auto;" onclick="switchScreen('profiles')"><span class="nav-icon">🔄</span><span class="nav-text">החלף פרופיל</span></div>`;
+            nav.innerHTML = html;
+        }
+
+        function showSearch() {
+            const home = document.getElementById('home-view');
+            document.querySelector('.top-section').style.display = 'none';
+            home.innerHTML = `
+                <div class="search-container">
+                    <input type="text" id="search-input" class="search-input" placeholder="מה בא לך לראות?" oninput="runSearch(this.value)">
+                    <div id="search-results"></div>
+                </div>`;
+            setTimeout(() => document.getElementById('search-input').focus(), 100);
+        }
+
+        function runSearch(query) {
+            const container = document.getElementById('search-results');
+            if (!query || query.length < 2) {
+                container.innerHTML = '';
+                return;
+            }
+
+            let allowedCats = [];
+            if (currentProfile.type === 'kids') {
+                allowedCats = ['ילדים'];
+            } else {
+                allowedCats = ['סדרות', 'סרטים'];
+            }
+
+            const results = seriesData.filter(s => {
+                const isAllowed = allowedCats.includes(s.category);
+                const matchTitle = s.title.includes(query);
+                const matchDesc = s.description.includes(query);
+                const matchGenre = (s.genre || "").includes(query);
+                return isAllowed && (matchTitle || matchDesc || matchGenre);
+            });
+
+            if (results.length > 0) {
+                container.innerHTML = renderRow(`תוצאות עבור "${query}"`, results);
+            } else {
+                container.innerHTML = `<div style="padding: 20px; color: #777;">לא נמצאו תוצאות...</div>`;
+            }
+        }
+
+        window.addEventListener('keydown', function(e) {
+            const active = document.activeElement;
+            
+            if (active.id === 'search-input') {
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    const firstCard = document.querySelector('.card');
+                    if (firstCard) firstCard.focus();
+                }
+                return; 
+            }
+
+            if (!active) return;
+
+            if (e.key === 'Enter') {
+                if (active.classList.contains('card') || active.classList.contains('nav-item') || active.classList.contains('profile-box')) {
+                    e.preventDefault();
+                    active.click(); 
+                }
+                return;
+            }
+
+            if (e.key === 'ArrowRight') {
+                if (active.classList.contains('card')) {
+                    e.preventDefault();
+                    const prevCard = active.previousElementSibling;
+                    if (prevCard && prevCard.classList.contains('card')) {
+                        prevCard.focus();
+                    } else {
+                        const firstNav = document.querySelector('.nav-item');
+                        if (firstNav) firstNav.focus();
+                    }
+                }
+            }
+
+            if (e.key === 'ArrowLeft') {
+                if (active.classList.contains('nav-item')) {
+                    e.preventDefault();
+                    if (lastFocusedId) {
+                        const lastEl = document.querySelector(`[data-id="${lastFocusedId}"]`);
+                        if (lastEl) lastEl.focus();
+                        else {
+                            const firstCard = document.querySelector('.card');
+                            if(firstCard) firstCard.focus();
+                        }
+                    } else {
+                        const firstCard = document.querySelector('.card');
+                        if(firstCard) firstCard.focus();
+                    }
+                    return;
+                }
+
+                if (active.classList.contains('card')) {
+                    const nextCard = active.nextElementSibling;
+                    if (nextCard && nextCard.classList.contains('card')) {
+                        e.preventDefault();
+                        nextCard.focus();
+                    }
+                }
+            }
+
+            if (e.key === 'ArrowDown') {
+                const currentBlock = active.closest('.category-block');
+                if (currentBlock) {
+                    e.preventDefault(); 
+                    const allBlocks = Array.from(document.querySelectorAll('.category-block'));
+                    const currentIndex = allBlocks.indexOf(currentBlock);
+                    if (currentIndex < allBlocks.length - 1) {
+                        const nextBlock = allBlocks[currentIndex + 1];
+                        const currentCard = active.closest('.card');
+                        const currentRowCards = Array.from(currentBlock.querySelectorAll('.card'));
+                        const cardIndex = currentRowCards.indexOf(currentCard);
+                        const nextRowCards = Array.from(nextBlock.querySelectorAll('.card'));
+                        let targetCard = nextRowCards[cardIndex];
+                        if (!targetCard) targetCard = nextRowCards[nextRowCards.length - 1];
+                        
+                        if (targetCard) {
+                            targetCard.scrollIntoView({ behavior: 'auto', block: 'center' });
+                            setTimeout(() => {
+                                targetCard.focus();
+                            }, 50); 
+                        }
+                    }
+                }
+            }
+
+            if (e.key === 'ArrowUp') {
+                const currentBlock = active.closest('.category-block');
+                if (currentBlock) {
+                    e.preventDefault();
+                    
+                    if (document.getElementById('search-input')) {
+                         document.getElementById('search-input').focus();
+                         return;
+                    }
+
+                    const allBlocks = Array.from(document.querySelectorAll('.category-block'));
+                    const currentIndex = allBlocks.indexOf(currentBlock);
+                    if (currentIndex > 0) {
+                        const prevBlock = allBlocks[currentIndex - 1];
+                        const currentCard = active.closest('.card');
+                        const currentRowCards = Array.from(currentBlock.querySelectorAll('.card'));
+                        const cardIndex = currentRowCards.indexOf(currentCard);
+                        const prevRowCards = Array.from(prevBlock.querySelectorAll('.card'));
+                        let targetCard = prevRowCards[cardIndex];
+                        if (!targetCard) targetCard = prevRowCards[prevRowCards.length - 1];
+                        
+                        if (targetCard) {
+                            targetCard.scrollIntoView({ behavior: 'auto', block: 'center' });
+                            setTimeout(() => {
+                                targetCard.focus();
+                            }, 50);
+                        }
+                    }
+                }
+            }
+        });
+
+        document.addEventListener('focus', function(e) {
+            if (e.target.classList.contains('card')) {
+                lastFocusedId = e.target.getAttribute('data-id');
+                e.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                
+                const id = lastFocusedId;
+                let item = seriesData.find(s => s.id === id);
+                if (!item) { 
+                    seriesData.forEach(s => {
+                        if(s.episodes) {
+                            const ep = s.episodes.find(ep => ep.driveId === id);
+                            if(ep) item = { title: `פרק ${ep.number}`, description: s.title, image: ep.image };
+                        }
+                    });
+                }
+                if (!item) {
+                    const history = getHistory();
+                    item = history.find(h => h.id === id);
+                }
+                
+                if (item && document.querySelector('.top-section').style.display !== 'none') {
+                    const heroBg = document.getElementById('hero-bg');
+                    heroBg.style.backgroundImage = `url('${item.image}')`;
+                    document.getElementById('hero-title').innerText = item.title;
+                    document.getElementById('hero-desc').innerText = item.description || "";
+                }
+            }
+        }, true);
+
+        function login() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            firebase.auth().signInWithRedirect(provider);
+        }
 
         function loadProfiles() {
             const list = document.getElementById('profile-list');
             list.innerHTML = profilesData.map(p => `
-                <div class="profile-box" tabindex="0" onclick="selectProfile('${p.n}')" style="text-align:center;">
-                    <div style="width:100px; height:100px; border-radius:50%; background-image:url('${p.i}'); background-size:cover; border:3px solid transparent;" class="p-img"></div>
-                    <p>${p.n}</p>
+                <div class="profile-box" tabindex="0" onclick="selectProfile('${p.n}')">
+                    <div class="profile-img" style="background-image: url('${p.i}')"></div>
+                    <span class="profile-name">${p.n}</span>
                 </div>`).join('');
             setTimeout(() => document.querySelector('.profile-box').focus(), 500);
         }
@@ -168,135 +436,255 @@
         function selectProfile(name) {
             currentProfile = profilesData.find(p => p.n === name);
             updateSidebar();
-            switchScreen('home');
-            renderHome();
+            enterApp();
         }
 
-        function updateSidebar() {
-            const nav = document.getElementById('dynamic-nav');
-            nav.innerHTML = `
-                <div class="nav-item" tabindex="0" onclick="showSearch()"><span class="nav-icon">🔍</span><span class="nav-text">חיפוש</span></div>
-                <div class="nav-item" tabindex="0" onclick="renderHome()"><span class="nav-icon">🏠</span><span class="nav-text">ראשי</span></div>
-                <div class="nav-item" tabindex="0" style="margin-top:auto" onclick="switchScreen('profiles')"><span class="nav-icon">🔄</span><span class="nav-text">החלף פרופיל</span></div>`;
+        function enterApp() { switchScreen('home'); renderHome(); }
+
+        function addToHistory(item) {
+            if (!currentProfile) return;
+            const key = `history_${currentProfile.n}`;
+            let history = JSON.parse(localStorage.getItem(key) || "[]");
+            history = history.filter(h => h.id !== item.id);
+            history.unshift(item);
+            if(history.length > 10) history.pop();
+            localStorage.setItem(key, JSON.stringify(history));
+        }
+
+        function getHistory() {
+            if (!currentProfile) return [];
+            return JSON.parse(localStorage.getItem(`history_${currentProfile.n}`) || "[]");
         }
 
         function renderHome() {
             const home = document.getElementById('home-view');
-            home.innerHTML = '';
             document.querySelector('.top-section').style.display = 'block';
-            const history = JSON.parse(localStorage.getItem(`history_${currentProfile.n}`) || "[]");
-            if (history.length > 0) home.innerHTML += renderRow("המשך צפייה", history);
-
-            const allowed = currentProfile.type === 'kids' ? ['ילדים'] : ['סדרות', 'סרטים'];
-            const filtered = seriesData.filter(s => allowed.includes(s.category));
-            const uniqueGenres = [...new Set(filtered.map(s => s.genre || s.category))];
-            uniqueGenres.forEach(g => {
-                const items = filtered.filter(s => (s.genre || s.category) === g);
-                home.innerHTML += renderRow(g, items);
-            });
-        }
-
-        function renderRow(title, items) {
-            const hasSeries = items.some(i => i.type === 'series' || i.category === 'סדרות');
-            const cards = items.map(s => {
-                let cls = (hasSeries || title === "המשך צפייה") ? 'series' : 'movie';
-                return `<div class="card ${cls}" tabindex="0" data-id="${s.id}" onclick="openContent('${s.id}')">
-                    <img src="${s.image}"><div class="card-title-overlay">${s.title}</div>
-                </div>`;
-            }).join('');
-            return `<div class="category-block"><p class="category-title">${title}</p><div class="row">${cards}</div></div>`;
-        }
-
-        function openContent(id) {
-            const item = seriesData.find(x => x.id === id) || JSON.parse(localStorage.getItem(`history_${currentProfile.n}`)).find(x => x.id === id);
-            if (!item) return;
-            lastFocusedId = id;
-            const view = document.getElementById('content-view');
-            document.querySelectorAll('.top-section, .bottom-section').forEach(e => e.style.display = 'none');
-            view.style.display = 'block';
+            home.innerHTML = '';
             
-            if (item.type === 'movie') {
-                view.innerHTML = `<div style="height:100vh; display:flex; flex-direction:column; justify-content:center; padding:60px; background:linear-gradient(to right, #000, transparent), url('${item.image}') center/cover;">
-                    <h1>${item.title}</h1><p style="max-width:500px">${item.description}</p>
-                    <button class="nav-item" style="background:var(--red); color:white; width:200px; justify-content:center" onclick="playHD('${item.driveId}')">▶ נגן סרט</button>
-                </div>`;
+            const history = getHistory();
+            if (history.length > 0) {
+                home.innerHTML += renderRow("המשך צפייה", history, true);
+            }
+
+            let allowedCats = [];
+            if (currentProfile.type === 'kids') {
+                allowedCats = ['ילדים'];
             } else {
-                view.innerHTML = `<div style="padding:40px"><h1>${item.title}</h1><p>${item.description}</p>
-                    <div class="row">${item.episodes.map(e => `<div class="card series" tabindex="0" data-id="${e.driveId}" onclick="playHD('${e.driveId}')"><img src="${e.image || item.image}"><div class="card-title-overlay">פרק ${e.number}</div></div>`).join('')}</div>
-                </div>`;
+                allowedCats = ['סדרות', 'סרטים'];
             }
-            setTimeout(() => view.querySelector('[tabindex="0"]').focus(), 100);
-        }
 
-        function playHD(id) {
-            currentPlayingId = id;
-            const container = document.getElementById('video-container');
-            container.style.display = 'block';
-            container.innerHTML = `<iframe src="https://drive.google.com/file/d/${id}/preview" style="width:100%; height:100%; border:none;"></iframe>`;
+            const allAllowedItems = seriesData.filter(s => allowedCats.includes(s.category));
+            const uniqueGenres = [...new Set(allAllowedItems.map(s => s.genre || s.category))];
             
-            // הוספה להיסטוריה
-            const item = seriesData.find(s => s.id === lastFocusedId || (s.episodes && s.episodes.some(e => e.driveId === id)));
-            if(item) {
-                let h = JSON.parse(localStorage.getItem(`history_${currentProfile.n}`) || "[]");
-                h = h.filter(x => x.id !== item.id); h.unshift(item);
-                localStorage.setItem(`history_${currentProfile.n}`, JSON.stringify(h.slice(0,10)));
-            }
-        }
+            uniqueGenres.forEach(genreName => {
+                const itemsInRow = allAllowedItems.filter(s => (s.genre || s.category) === genreName);
+                if(itemsInRow.length > 0) home.innerHTML += renderRow(genreName, itemsInRow);
+            });
 
-        // --- התיקון הסופי למסך השחור ---
-        function closeVideo() {
-            const container = document.getElementById('video-container');
-            container.innerHTML = ''; 
-            container.style.display = 'none';
-
-            // החזרת דף הסדרה מיידית
-            document.getElementById('content-view').style.display = 'block';
-            
-            if (currentPlayingId) {
+            if (lastFocusedId) {
                 setTimeout(() => {
-                    const el = document.querySelector(`[data-id="${currentPlayingId}"]`);
-                    if (el) { el.focus(); el.scrollIntoView({block:'center'}); }
+                    const el = document.querySelector(`[data-id="${lastFocusedId}"]`);
+                    if(el) {
+                        el.focus();
+                        el.scrollIntoView({block: 'center', inline: 'center'});
+                    }
                 }, 100);
             }
         }
 
-        window.addEventListener('keydown', e => {
-            if (e.key === 'Escape' || e.keyCode === 27) {
-                if (document.getElementById('video-container').style.display === 'block') {
-                    closeVideo();
-                } else if (document.getElementById('content-view').style.display === 'block') {
-                    document.getElementById('content-view').style.display = 'none';
-                    switchScreen('home');
-                    renderHome();
+        function renderRow(title, items, forceUniform = false) {
+            const hasSeries = items.some(item => item.type === 'series' || item.category === 'סדרות' || (item.genre && item.genre.includes('סדרות')));
+            
+            const cardsHtml = items.map(s => {
+                let shapeClass = '';
+                
+                if (forceUniform) {
+                    shapeClass = 'series'; 
+                } else if (hasSeries) {
+                    shapeClass = 'series'; 
+                } else {
+                    shapeClass = (s.type === 'movie' || s.category === 'סרטים') ? 'movie' : 'series';
                 }
-            }
-            // ניווט מהתפריט חזרה
-            if (document.activeElement.classList.contains('nav-item') && e.key === 'ArrowLeft') {
-                const firstCard = document.querySelector('.card');
-                if (firstCard) firstCard.focus();
-            }
-        });
 
-        function switchScreen(s) {
-            document.querySelectorAll('.screen, #content-view, #video-container').forEach(e => e.style.display = 'none');
-            if (s === 'profiles') document.getElementById('profile-screen').style.display = 'flex';
-            if (s === 'home') { document.getElementById('sidebar').style.display = 'flex'; document.getElementById('app').style.display = 'flex'; document.querySelector('.bottom-section').style.display = 'block'; }
-            if (s === 'auth') document.getElementById('auth-screen').style.display = 'flex';
+                return `
+                    <div class="card ${shapeClass}" tabindex="0" data-id="${s.id}" onclick="openContent('${s.id}')">
+                        <img src="${s.image}" loading="lazy">
+                        <div class="card-title-overlay">${s.title}</div>
+                    </div>`;
+            }).join('');
+            return `
+            <div class="category-block">
+                <div class="category-title">${title}</div>
+                <div class="row">${cardsHtml}</div>
+            </div>`;
         }
 
-        document.addEventListener('focus', e => {
-            if (e.target.classList.contains('card') && document.querySelector('.top-section').style.display !== 'none') {
-                const id = e.target.dataset.id;
-                const item = seriesData.find(x => x.id === id) || seriesData.find(s => s.episodes && s.episodes.some(ep => ep.driveId === id));
-                if (item) {
-                    document.getElementById('hero-bg').style.backgroundImage = `url('${item.image}')`;
-                    document.getElementById('hero-title').innerText = item.title;
-                    document.getElementById('hero-desc').innerText = item.description;
-                }
+        function openContent(id) {
+            let item = seriesData.find(x => x.id === id);
+            if (!item) {
+                const history = getHistory();
+                item = history.find(h => h.id === id);
             }
-        }, true);
+            if (!item) return;
 
-        function login() { firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider()); }
+            lastFocusedId = id; 
+            addToHistory(item);
+
+            const detailView = document.getElementById('content-view');
+            document.querySelector('.top-section').style.display = 'none';
+            document.querySelector('.bottom-section').style.display = 'none';
+            detailView.style.display = 'block';
+            
+            let html = '';
+            if (item.type === 'movie' || item.category === 'סרטים') {
+                html = `<div style="min-height:80vh; display:flex; flex-direction:column; justify-content:center; background: linear-gradient(to right, black, transparent), url('${item.image}') no-repeat center/cover; padding:60px;">
+                    <h1 style="font-size:50px; margin-bottom:15px; text-shadow: 2px 2px 10px black;">${item.title}</h1>
+                    <p style="max-width:600px; font-size:18px; margin-bottom:25px; text-shadow: 1px 1px 5px black;">${item.description}</p>
+                    <button class="login-btn" tabindex="0" onclick="playHD('${item.driveId}')">▶ נגן סרט</button>
+                </div>`;
+            } else {
+                html = `<div>
+                    <div style="margin-bottom: 30px;">
+                        <h1 style="font-size:50px; margin-bottom:15px;">${item.title}</h1>
+                        <p style="max-width:700px; color:#aaa; font-size: 18px;">${item.description}</p>
+                    </div>
+                    <div class="category-title">פרקים</div>
+                    <div class="row" style="padding-bottom:20px;">
+                        ${item.episodes.map(ep => `
+                        <div class="card series" tabindex="0" data-id="${ep.driveId}" onclick="playHD('${ep.driveId}')">
+                            <img src="${ep.image}" style="height:100%;">
+                            <div class="card-title-overlay">פרק ${ep.number}</div>
+                        </div>`).join('')}
+                    </div>
+                </div>`;
+            }
+            detailView.innerHTML = html;
+            setTimeout(() => { const b=detailView.querySelector('.login-btn')||detailView.querySelector('.card'); if(b)b.focus(); }, 200);
+        }
+
+        function playHD(id) {
+            currentPlayingId = id; 
+            const container = document.getElementById('video-container');
+            container.innerHTML = `<iframe src="https://drive.google.com/file/d/${id}/preview" allowfullscreen style="width:100%; height:100%; border:none;"></iframe>`;
+            switchScreen('video');
+            if (typeof AndroidControl !== 'undefined') {
+                AndroidControl.setVideoMode(true);
+                automateDrive();
+            }
+            // --- תיקון: זיהוי אוטומטי של יציאה ממסך מלא ---
+            document.onfullscreenchange = function() {
+                if (!document.fullscreenElement) {
+                    closeVideo(); // אם יצאת ממסך מלא -> חזור לאפליקציה
+                }
+            };
+        }
+
+        function playNextEpisode() {
+            let currentSeries = seriesData.find(s => s.episodes && s.episodes.some(ep => ep.driveId === currentPlayingId));
+            if (currentSeries) {
+                const currentIndex = currentSeries.episodes.findIndex(ep => ep.driveId === currentPlayingId);
+                if (currentIndex !== -1 && currentIndex < currentSeries.episodes.length - 1) {
+                    const nextEp = currentSeries.episodes[currentIndex + 1];
+                    closeVideo(); 
+                    setTimeout(() => { playHD(nextEp.driveId); }, 500);
+                } else {
+                    closeVideo();
+                }
+            } else {
+                closeVideo();
+            }
+        }
+
+        function automateDrive() {
+            var checks = 0;
+            var det = setInterval(function() {
+                var f = document.querySelector('iframe');
+                if (f) {
+                    clearInterval(det);
+                    try {
+                        var style = document.createElement('style');
+                        style.innerHTML = '.ndfHFb-c4YZDc-Wr97p { display: none !important; }';
+                        f.contentDocument.head.appendChild(style);
+                    } catch(e) {}
+                    f.focus();
+                    setTimeout(function() { if(window.AndroidControl) AndroidControl.triggerCenterClick(); }, 1500);
+                }
+                if (checks++ > 20) clearInterval(det);
+            }, 500);
+        }
+
+        // --- פונקציית היציאה המתוקנת והסופית ---
+        function closeVideo() {
+            const container = document.getElementById('video-container');
+            container.innerHTML = ''; // מחיקת הנגן מיד
+            container.style.display = 'none';
+            
+            // חזרה מיידית לפרטי הסדרה
+            document.getElementById('content-view').style.display = 'block';
+            document.querySelector('.top-section').style.display = 'none'; 
+            document.querySelector('.bottom-section').style.display = 'none';
+            
+            if (typeof AndroidControl !== 'undefined') AndroidControl.setVideoMode(false);
+
+            // שחזור פוקוס לפרק האחרון
+            if (currentPlayingId) {
+                setTimeout(() => {
+                    const lastPlayedElement = document.querySelector(`[data-id="${currentPlayingId}"]`);
+                    if (lastPlayedElement) {
+                        lastPlayedElement.focus();
+                        lastPlayedElement.scrollIntoView({block: 'center', inline: 'center'});
+                    }
+                }, 100);
+            }
+        }
+
+        function switchScreen(name) {
+            document.querySelectorAll('.screen').forEach(el => el.style.display = 'none');
+            document.getElementById('video-container').style.display = 'none';
+            document.querySelector('.top-section').style.display = 'none';
+            document.querySelector('.bottom-section').style.display = 'none';
+            document.getElementById('content-view').style.display = 'none';
+
+            if (name === 'auth') document.getElementById('auth-screen').style.display = 'flex';
+            if (name === 'profiles') document.getElementById('profile-screen').style.display = 'flex';
+            if (name === 'home') {
+                document.getElementById('sidebar').style.display = 'flex';
+                document.getElementById('app').style.display = 'flex';
+                document.querySelector('.top-section').style.display = 'block';
+                document.querySelector('.bottom-section').style.display = 'block';
+                setTimeout(() => { const c=document.querySelector('.card'); if(c)c.focus(); }, 500);
+            }
+            if (name === 'video') document.getElementById('video-container').style.display = 'block';
+        }
+        
+        function handleBackPress() {
+            // אם וידאו פתוח (גם אם שחור/ריק) - סגור אותו בכוח
+            if(document.getElementById('video-container').style.display === 'block') { 
+                closeVideo(); 
+                return; 
+            }
+            // אם אנחנו בדף סדרה - חזור לבית
+            if (document.getElementById('content-view').style.display !== 'none') {
+                document.getElementById('content-view').style.display = 'none';
+                switchScreen('home');
+                if (lastFocusedId) {
+                    setTimeout(() => {
+                        const el = document.querySelector(`[data-id="${lastFocusedId}"]`);
+                        if(el) el.focus();
+                    }, 200);
+                }
+                return;
+            }
+            if (document.getElementById('search-input')) {
+                enterApp();
+                return;
+            }
+            if (document.querySelector('.bottom-section').style.display === 'block') {
+                switchScreen('profiles');
+                return;
+            }
+            if (window.AndroidControl) AndroidControl.exitApp();
+        }
     </script>
 </body>
 </html>
