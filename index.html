@@ -98,11 +98,11 @@
 
         #video-container { position: fixed; inset: 0; background: #000; z-index: 50000; display: none; }
         
-        /* --- מסך הטעינה השקוף-ללחיצות --- */
+        /* --- מסך הטעינה --- */
         #loader-overlay {
             position: fixed; inset: 0; background: #000; z-index: 50001; 
             display: none; align-items: center; justify-content: center;
-            /* הפקודה הזו מאפשרת ללחיצות לעבור דרך הוידאו! */
+            /* הפקודה הקריטית: לחיצות עוברות דרך הוידאו! */
             pointer-events: none; 
         }
         #loader-overlay video {
@@ -167,6 +167,7 @@
 
     <script src="data.js"></script>
     <script>
+        // ביטול טעינה מיידי
         setTimeout(() => { document.getElementById('loading-screen').style.display = 'none'; }, 5000);
 
         const firebaseConfig = { apiKey: "AIzaSyAuJlFyTuYypCVdJrZCrQGOEZZS5WDH6pI", authDomain: "app-c71dd.firebaseapp.com", projectId: "app-c71dd", storageBucket: "app-c71dd.firebasestorage.app", messagingSenderId: "256556501971", appId: "1:256556501971:web:98dbba775b0b8ca913bd26" };
@@ -342,27 +343,68 @@
             setTimeout(() => { const b=detailView.querySelector('.login-btn')||detailView.querySelector('.card'); if(b)b.focus(); }, 200);
         }
 
+        // --- כאן השינוי החשוב ---
         function playHD(id) {
             currentPlayingId = id;
             if (typeof AndroidControl !== 'undefined') AndroidControl.setVideoMode(true);
             
-            // מציגים את הלואדר מיד
+            // 1. מראה את מסך הטעינה
             const loader = document.getElementById('loader-overlay');
             loader.style.display = 'flex';
             
             const container = document.getElementById('video-container');
             container.style.display = 'block'; 
             container.innerHTML = `<iframe src="https://drive.google.com/file/d/${id}/preview" allowfullscreen style="width:100%; height:100%; border:none;"></iframe>`;
+            
+            // 2. אוטומציה של לחיצות
+            if (typeof AndroidControl !== 'undefined') automateDrive();
+            
+            // 3. טיימר קשיח של 7 שניות - מעלים את ה-Loading
+            setTimeout(() => {
+                loader.style.display = 'none';
+            }, 7000);
         }
 
-        // --- פונקציית החזרה ---
+        function playNextEpisode() {
+            let s = seriesData.find(s => s.episodes && s.episodes.some(ep => ep.driveId === currentPlayingId));
+            if (s) {
+                const idx = s.episodes.findIndex(ep => ep.driveId === currentPlayingId);
+                if (idx !== -1 && idx < s.episodes.length - 1) {
+                    closeVideo(); setTimeout(() => playHD(s.episodes[idx + 1].driveId), 500);
+                } else closeVideo();
+            } else closeVideo();
+        }
+
+        function automateDrive() {
+            var checks = 0;
+            var det = setInterval(function() {
+                var f = document.querySelector('iframe');
+                if (f) {
+                    clearInterval(det);
+                    try { var style = document.createElement('style'); style.innerHTML = '.ndfHFb-c4YZDc-Wr97p { display: none !important; }'; f.contentDocument.head.appendChild(style); } catch(e) {}
+                    f.focus(); 
+                    
+                    if(window.AndroidControl) {
+                        setTimeout(function() { AndroidControl.triggerCenterClick(); }, 500); 
+                        setTimeout(function() { AndroidControl.triggerCenterClick(); }, 1500);
+                        setTimeout(function() { AndroidControl.triggerCenterDoubleClick(); }, 2500);
+                    }
+                }
+                if (checks++ > 20) clearInterval(det);
+            }, 500);
+        }
+
+        // --- איפוס חשוב ביציאה ---
         window.handleBackPress = function() {
             if(document.getElementById('video-container').style.display === 'block') {
                 document.getElementById('video-container').innerHTML = '';
                 document.getElementById('video-container').style.display = 'none';
                 
-                // וודא שמסך הטעינה נעלם אם יוצאים באמצע
+                // וודא שמסך הטעינה מוסתר
                 document.getElementById('loader-overlay').style.display = 'none';
+                
+                // איפוס המשתנה (קריטי)
+                window.hpDone = false; 
                 
                 document.getElementById('content-view').style.display = 'block';
                 if(currentPlayingId) setTimeout(() => { const el = document.querySelector(`[data-id="${currentPlayingId}"]`); if(el) { el.focus(); el.scrollIntoView({block: 'center', inline: 'center'}); } }, 100);
