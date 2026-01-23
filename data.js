@@ -1,5 +1,86 @@
 const seriesData = [
-    // --- סדרה 1 ---
+
+    // סדרות ---
+
+
+
+    
+    // סדרות חדשות ומומלצות ---
+
+
+
+    
+
+    // סדרות בינג׳ ---
+
+
+    
+
+
+    //   הפקרות המקור   ---
+    
+
+
+    //   סדרות לפי ז׳אנר  ---
+
+
+    //   סדרות דרמה  ---
+
+
+    //  סדרות קומדיה  ---
+
+    {
+        id: "YeledHara",
+        type: "series", 
+        category: "סדרות", 
+        genre: "סדרות קומדיה",
+        title: "ילד חרא",
+        description: "קומדיה שחורה אפלה ומקורית. שי בן ה-12 סובל מהתעללות בבית ובבית הספר. כשהוא מגלה שאביו מנהל רומן, הוא מחליט לסחוט אותו בזהות בדויה. הסחיטה מדרדרת לשרשרת אירועים סוערת שמובילה לעימות בין-דורי ומערבת דמויות צבעוניות מהשכונה.",
+        // 👇 וודא שיש לך קובץ בשם tsayar.jpg בתיקיית images
+        image: "./images/yeledhara.jpg",
+        episodes: [
+            // אם יש לך תמונה לפרק, שים אותה בתיקייה ותעדכן כאן. אם אין, תשאיר גרשיים ריקים ""
+            { number: "1", desc: "פרק ראשון", image: "", driveId: "" },
+            { number: "2", desc: "פרק שני", image: "", driveId: "1IrT1jJfFjEkJY-DpoGLUEhUy3go0uvlR" },
+            { number: "3", desc: "פרק שלישי", image: "", driveId: "1OmEgPT8Q6w9PO0PdvPf2SiHbhpPBnBl0" },
+            { number: "4", desc: "פרק רביעי", image: "", driveId: "1WfweUSnkT52Wuxneet1ZRATaYn8DSOV7" }
+        ]
+    },
+
+    {
+            id: "friends",
+        type: "series", 
+        category: "סדרות", 
+        genre: "סדרות קומדיה",
+        title: "חברים",
+        description: " סיטקום מצליח שעוקב אחר הרפתקאותיהם הכושלות אך המשעשעות של שישה חברים בגילאי העשרים פלוס שמתמודדים עם מהמורות בקריירה, בחיים ובאהבה במנהטן של שנות ה-90",
+        // 👇 וודא שיש לך קובץ בשם tsayar.jpg בתיקיית images
+        image: "./images/friends.jpg",
+        episodes: [
+            // אם יש לך תמונה לפרק, שים אותה בתיקייה ותעדכן כאן. אם אין, תשאיר גרשיים ריקים ""
+            { number: "1", desc: "פרק ראשון", image: "", driveId: "" },
+            { number: "2", desc: "פרק שני", image: "", driveId: "" },
+            { number: "3", desc: "פרק שלישי", image: "", driveId: "" },
+            { number: "4", desc: "פרק רביעי", image: "", driveId: "" }
+        ]
+    },
+
+
+    
+
+    
+
+
+    //   סדרות אקשן ---
+
+    
+
+
+
+
+
+    
+    // סדרות ילדים ונוער ---
     {
         id: "tsaiamearot",
         type: "series", 
@@ -48,7 +129,7 @@ const seriesData = [
         ]
     },
 
-    // --- סרט לילדים ---
+    // ----------- סרטי ילדים -----------------
     {
         id: "zootopia2",
         type: "movie",
@@ -111,4 +192,30 @@ const seriesData = [
         image: "./images/pets.jpg",
         driveId: "UyV7ntR9XyV1nNNvSmK1XE4jzdENvIC4"
     }
+
+
+
+     // ----------- סרטי קומדיה -----------------
+
+
+
+
+
+     // ----------- סרטי מתח ופעולה -----------------
+
+
+
+
+
+     // ----------- סרטים חדשים ומומלצים -----------------
+
+
+
+
+    
+
+
+
+
+    
 ];
