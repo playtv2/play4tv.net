@@ -3,6 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>HOT play</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    
+    <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth-compat.js"></script>
     <style>
         :root { --red: #ff0055; --bg: #000000; --sidebar-width: 70px; --sidebar-expanded: 220px; }
         body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; display: flex; }
@@ -30,20 +34,20 @@
         .category-block { margin-bottom: 5px; display: block; }
         .category-title { font-size: 18px; margin-right: 35px; font-weight: bold; color: #aaa; }
 
-        /* שורות - בלי רווח מימין, עם הגנה משמאל */
+        /* שורות - התיקון הסופי לחיתוך */
         .row { display: flex; gap: 15px; padding: 40px 0 40px 0; margin-top: -30px; overflow-x: auto; scroll-behavior: smooth; scroll-snap-type: x mandatory; padding-left: 50px; }
         .row::-webkit-scrollbar { display: none; }
 
         .card { display: inline-block; position: relative; cursor: pointer; border-radius: 6px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.5); border: 2px solid transparent; transition: transform 0.2s, border-color 0.2s; flex-shrink: 0; z-index: 1; scroll-snap-align: start; transform-origin: center center; }
         
-        /* התיקון הגאוני לתמונות */
-        .row .card:first-child { transform-origin: right center !important; margin-right: 2px; }
+        /* התיקון הקריטי: תמונה ראשונה גדלה שמאלה (פנימה) */
+        .row .card:first-child { transform-origin: right center !important; }
         .row .card:last-child { transform-origin: left center !important; }
 
         .card.series { min-width: 200px; width: 200px; height: 112px; }
         .card.movie { min-width: 100px; width: 100px; height: 150px; }
         
-        /* התיקון לתמונות חתוכות (ממקם למעלה במקום באמצע) */
+        /* תיקון יחסי תמונה שלא ייחתכו פנים */
         .card img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
         
         .card:focus { transform: scale(1.15); z-index: 100; border-color: #fff; box-shadow: 0 10px 20px rgba(0,0,0,0.9); outline: none; }
@@ -83,14 +87,31 @@
 
     <script src="data.js"></script>
     <script>
-        const firebaseConfig = { apiKey: "AIzaSyAuJlFyTuYypCVdJrZCrQGOEZZS5WDH6pI", authDomain: "app-c71dd.firebaseapp.com", projectId: "app-c71dd", storageBucket: "app-c71dd.firebasestorage.app", messagingSenderId: "256556501971", appId: "1:256556501971:web:98dbba775b0b8ca913bd26" };
-        firebase.initializeApp(firebaseConfig);
+        // ביטול מסך טעינה מיידי (למקרה של שגיאה)
+        setTimeout(() => { 
+            const loader = document.getElementById('loading-screen');
+            if(loader) loader.style.display='none'; 
+        }, 3000);
+
+        try {
+            const firebaseConfig = { apiKey: "AIzaSyAuJlFyTuYypCVdJrZCrQGOEZZS5WDH6pI", authDomain: "app-c71dd.firebaseapp.com", projectId: "app-c71dd", storageBucket: "app-c71dd.firebasestorage.app", messagingSenderId: "256556501971", appId: "1:256556501971:web:98dbba775b0b8ca913bd26" };
+            firebase.initializeApp(firebaseConfig);
+            
+            firebase.auth().onAuthStateChanged(u => { 
+                document.getElementById('loading-screen').style.display='none';
+                if(u && u.email === "nitaylayish298@gmail.com") { switchScreen('profiles'); loadProfiles(); } 
+                else { switchScreen('auth'); } 
+            });
+        } catch(e) {
+            console.error("Firebase Error", e);
+            document.getElementById('loading-screen').style.display='none';
+            switchScreen('auth'); // נסיון גיבוי
+        }
 
         let currentProfile = null;
         let lastFocusedId = null;
         let currentPlayingId = null; 
 
-        // פרופילים
         const profilesData = [
             { n: 'ניתאי', i: 'https://img.freepik.com/free-psd/3d-illustration-person-with-sunglasses_23-2149436188.jpg', type: 'kids' },
             { n: 'אבא', i: 'https://img.freepik.com/free-psd/3d-illustration-business-man-with-glasses_23-2149436194.jpg', type: 'adults' },
@@ -98,9 +119,6 @@
             { n: 'נועה', i: 'https://img.freepik.com/free-psd/3d-illustration-person-with-pink-hair_23-2149436186.jpg', type: 'kids' },
             { n: 'אורי', i: 'https://img.freepik.com/free-psd/3d-illustration-person-with-glasses_23-2149436185.jpg', type: 'kids' }
         ];
-
-        setTimeout(() => document.getElementById('loading-screen').style.display='none', 3000);
-        firebase.auth().onAuthStateChanged(u => { if(u && u.email === "nitaylayish298@gmail.com") { switchScreen('profiles'); loadProfiles(); } else { switchScreen('auth'); } });
 
         function loadProfiles() {
             document.getElementById('profile-list').innerHTML = profilesData.map(p => `
@@ -164,29 +182,29 @@
 
         function playHD(id) {
             currentPlayingId = id;
+            if (typeof AndroidControl !== 'undefined') AndroidControl.setVideoMode(true);
             const c = document.getElementById('video-container');
             c.style.display='block';
             c.innerHTML = `<iframe src="https://drive.google.com/file/d/${id}/preview" allowfullscreen style="width:100%; height:100%; border:none"></iframe>`;
         }
 
-        // --- הפונקציה הקריטית לחזרה (מופעלת ע"י MainActivity) ---
+        // --- פונקציית החזרה (מופעלת מ-Java) ---
         window.handleBackPress = function() {
             // 1. סגירת וידאו
             if(document.getElementById('video-container').style.display === 'block') {
                 document.getElementById('video-container').innerHTML = '';
                 document.getElementById('video-container').style.display = 'none';
                 
-                // מראה את התוכן חזרה
                 document.getElementById('content-view').style.display = 'block';
-                
-                // מחזיר פוקוס לפרק
                 if(currentPlayingId) setTimeout(()=>{ 
                     const e = document.querySelector(`[data-id="${currentPlayingId}"]`);
                     if(e) { e.focus(); e.scrollIntoView({block:'center', inline:'center'}); }
                 }, 50);
+                
+                if (typeof AndroidControl !== 'undefined') AndroidControl.setVideoMode(false);
                 return;
             }
-            // 2. יציאה מדף סדרה לבית
+            // 2. חזרה לבית
             if(document.getElementById('content-view').style.display === 'block') {
                 document.getElementById('content-view').style.display = 'none';
                 switchScreen('home'); renderHome(); return;
@@ -194,7 +212,9 @@
             // 3. יציאה מחיפוש
             if(document.getElementById('search-input')) { enterApp(); return; }
             // 4. יציאה לפרופילים
-            if(document.querySelector('.bottom-section').style.display === 'block') { switchScreen('profiles'); }
+            if(document.querySelector('.bottom-section').style.display === 'block') { switchScreen('profiles'); return; }
+            
+            if (window.AndroidControl) AndroidControl.exitApp();
         };
 
         function addToHistory(item) {
@@ -211,16 +231,27 @@
             if(n==='home') {
                 document.getElementById('sidebar').style.display='flex';
                 document.getElementById('app').style.display='flex';
+                document.querySelector('.top-section').style.display='block';
                 document.querySelector('.bottom-section').style.display='block';
+                setTimeout(() => { const c=document.querySelector('.card'); if(c)c.focus(); }, 500);
             }
         }
 
-        // ניווט מקלדת רגיל
+        function enterApp() { switchScreen('home'); renderHome(); }
+        function login() { firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider()); }
+        
+        // Navigation Logic
         window.addEventListener('keydown', e => {
             const active = document.activeElement;
+            // Back menu nav
             if(active.classList.contains('nav-item') && e.key === 'ArrowLeft') {
                 if(lastFocusedId) { const el=document.querySelector(`[data-id="${lastFocusedId}"]`); if(el) el.focus(); else document.querySelector('.card').focus(); }
                 else document.querySelector('.card').focus();
+            }
+            // Search Input Nav
+            if(active.id === 'search-input' && e.key === 'ArrowDown') {
+                e.preventDefault();
+                const f = document.querySelector('.card'); if(f) f.focus();
             }
         });
         
@@ -237,8 +268,6 @@
             document.getElementById('search-results').innerHTML = res.length ? renderRow("תוצאות", res) : "לא נמצא";
         }
 
-        function enterApp() { switchScreen('home'); renderHome(); }
-        
         document.addEventListener('focus', e => {
             if(e.target.classList.contains('card') && document.querySelector('.top-section').style.display!=='none') {
                 const id = e.target.dataset.id;
