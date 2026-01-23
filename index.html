@@ -3,177 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <title>HOT play</title>
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth-compat.js"></script>
     <style>
         :root { --red: #ff0055; --bg: #000000; --sidebar-width: 70px; --sidebar-expanded: 220px; }
-        
-        body { 
-            background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; 
-            margin: 0; padding: 0; width: 100vw; height: 100vh; 
-            overflow: hidden; display: flex; position: fixed; inset: 0;
-        }
+        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; display: flex; }
         *:focus { outline: none; }
-        
-        /* Sidebar */
-        .sidebar { 
-            width: var(--sidebar-width); background: #000; 
-            display: flex; flex-direction: column; padding: 15px 5px; 
-            border-left: 1px solid #222; height: 100%; z-index: 1000; 
-            transition: width 0.3s ease; flex-shrink: 0; 
-            overflow: hidden; white-space: nowrap;
-        }
+
+        .sidebar { width: var(--sidebar-width); background: #000; display: flex; flex-direction: column; padding: 15px 5px; border-left: 1px solid #222; height: 100%; z-index: 1000; transition: width 0.3s ease; overflow: hidden; white-space: nowrap; flex-shrink: 0; }
         .sidebar:focus-within, .sidebar:hover { width: var(--sidebar-expanded); }
-        
-        .logo { 
-            width: 100%; height: 60px; 
-            background-size: contain; background-repeat: no-repeat; background-position: center; 
-            margin-bottom: 20px; margin-top: 20px;
-            background-image: url('./images/logo.png'); 
-        }
-        
+        .logo { width: 100%; height: 60px; background: url('./images/logo.png') no-repeat center/contain; margin: 20px 0; }
         .nav-item { padding: 12px; font-size: 16px; border-radius: 8px; margin-bottom: 5px; cursor: pointer; display: flex; align-items: center; color: #888; transition: 0.2s; }
-        .nav-icon { font-size: 22px; min-width: 40px; text-align: center; }
-        .nav-text { opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; margin-right: 10px; font-weight: 600; }
-        .sidebar:focus-within .nav-text, .sidebar:hover .nav-text { opacity: 1; visibility: visible; }
         .nav-item:focus { background: var(--red); color: white; transform: scale(1.05); }
+        .nav-icon { font-size: 22px; min-width: 40px; text-align: center; }
+        .nav-text { opacity: 0; visibility: hidden; transition: 0.2s; margin-right: 10px; font-weight: 600; }
+        .sidebar:focus-within .nav-text, .sidebar:hover .nav-text { opacity: 1; visibility: visible; }
 
-        /* Layout */
-        .main-content { flex: 1; height: 100vh; display: flex; flex-direction: column; position: relative; background: #000; overflow: hidden; }
+        .main-content { flex: 1; display: flex; flex-direction: column; position: relative; background: #000; overflow: hidden; }
+        .top-section { height: 55%; width: 100%; position: relative; flex-shrink: 0; }
+        .hero-bg { position: absolute; inset: 0; background-size: cover; background-position: top center; transition: 0.4s; }
+        .hero-bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, #000 5%, rgba(0,0,0,0.6) 50%, transparent 100%); }
+        .hero-text { position: absolute; bottom: 20px; right: 50px; z-index: 2; }
+        .hero-title { font-size: 60px; font-weight: 800; text-shadow: 2px 2px 15px black; margin: 0; }
+        .hero-desc { font-size: 20px; color: #ddd; max-width: 60%; margin-top: 10px; }
 
-        .top-section { height: 55%; width: 100%; position: relative; flex-shrink: 0; z-index: 1; }
-        .hero-bg { position: absolute; inset: 0; background-size: cover; background-position: top center; transition: background-image 0.4s ease-out; }
-        .hero-bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, #000000 5%, rgba(0,0,0,0.6) 50%, transparent 100%); }
-        .hero-text { position: absolute; bottom: 20px; right: 50px; left: 50px; z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; }
-        .hero-title { font-size: 60px; font-weight: 800; margin-bottom: 10px; text-shadow: 2px 2px 15px black; line-height: 1; }
-        .hero-desc { font-size: 20px; color: #ddd; line-height: 1.3; text-shadow: 1px 1px 5px black; max-width: 60%; max-height: 80px; overflow: hidden; }
-
-        /* Scroll Area */
-        .bottom-section { 
-            height: 45%; flex-grow: 1; width: 100%; background: #000000; 
-            overflow-y: auto; overflow-x: hidden; 
-            padding-top: 10px; padding-bottom: 100px; box-sizing: border-box; z-index: 2; 
-            scroll-behavior: smooth; 
-        }
+        .bottom-section { height: 45%; flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding-bottom: 100px; padding-top: 10px; scroll-behavior: smooth; }
         .bottom-section::-webkit-scrollbar { display: none; }
+        .category-block { margin-bottom: 5px; display: block; }
+        .category-title { font-size: 18px; margin-right: 35px; font-weight: bold; color: #aaa; }
 
-        .category-block { margin-bottom: 5px; padding-right: 40px; display: block; }
-        .category-title { font-size: 18px; margin-bottom: 0px; font-weight: bold; color: #aaa; }
-        
-        .row { 
-            display: flex; gap: 15px; 
-            /* הסרת רווח מיותר מימין (התחלה) */
-            padding: 40px 0 40px 0; 
-            margin-top: -20px; 
-            margin-bottom: -10px;
-            overflow-x: auto; scroll-behavior: smooth; white-space: nowrap; 
-            scroll-snap-type: x mandatory; 
-            /* רווח רק בסוף הגלילה (שמאל) */
-            padding-left: 50px; 
-        }
+        .row { display: flex; gap: 15px; padding: 40px 0 40px 0; margin-top: -30px; overflow-x: auto; scroll-behavior: smooth; scroll-snap-type: x mandatory; padding-left: 50px; }
         .row::-webkit-scrollbar { display: none; }
-        
-        .card { 
-            display: inline-block; position: relative; cursor: pointer; 
-            border-radius: 6px; overflow: hidden; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5); 
-            border: 2px solid transparent; 
-            transition: transform 0.2s, border-color 0.2s; 
-            scroll-snap-align: start; flex-shrink: 0; 
-            z-index: 1;
-            /* ברירת מחדל: גדל מהמרכז */
-            transform-origin: center center;
-        }
 
-        /* --- התיקון המוחלט: --- */
-        /* האלמנט הראשון תמיד יגדל שמאלה (פנימה) ולכן לא ייחתך בקצה המסך */
-        .row .card:first-child {
-            transform-origin: right center !important;
-        }
-        /* האלמנט האחרון יגדל ימינה */
-        .row .card:last-child {
-            transform-origin: left center !important;
-        }
-        
-        /* גדלים */
+        .card { display: inline-block; position: relative; cursor: pointer; border-radius: 6px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.5); border: 2px solid transparent; transition: transform 0.2s, border-color 0.2s; flex-shrink: 0; z-index: 1; scroll-snap-align: start; transform-origin: center center; }
+        .row .card:first-child { transform-origin: right center !important; margin-right: 2px; }
+        .row .card:last-child { transform-origin: left center !important; }
+
         .card.series { min-width: 200px; width: 200px; height: 112px; }
         .card.movie { min-width: 100px; width: 100px; height: 150px; }
-        .card img { width: 100%; height: 100%; object-fit: cover; }
-        
-        .card:focus { 
-            transform: scale(1.15); 
-            z-index: 100; 
-            border-width: 2px; 
-            border-color: #ffffff; 
-            box-shadow: 0 10px 20px rgba(0,0,0,0.9); 
-            outline: none; 
-        }
-
-        .card-title-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); padding: 5px; text-align: center; font-size: 11px; opacity: 0; transition: 0.2s; color: white; }
+        .card img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+        .card:focus { transform: scale(1.15); z-index: 100; border-color: #fff; box-shadow: 0 10px 20px rgba(0,0,0,0.9); outline: none; }
+        .card-title-overlay { position: absolute; bottom: 0; inset-inline: 0; background: rgba(0,0,0,0.8); padding: 5px; text-align: center; font-size: 11px; opacity: 0; transition: 0.2s; }
         .card:focus .card-title-overlay { opacity: 1; }
 
-        /* Video Container - תמיד מעל הכל */
         #video-container { position: fixed; inset: 0; background: #000; z-index: 50000; display: none; }
-
-        .search-container { padding: 20px 50px; }
-        .search-input { width: 100%; max-width: 600px; background: #222; border: 2px solid #333; color: white; padding: 15px 20px; font-size: 20px; border-radius: 50px; outline: none; transition: 0.3s; margin-bottom: 30px; }
-        .search-input:focus { border-color: var(--red); background: #333; }
-
-        .screen { display: none; }
-        #loading-screen, #auth-screen { position: fixed; inset: 0; background: #000; z-index: 20000; display: flex; align-items: center; justify-content: center; }
+        .screen { display: none; position: fixed; inset: 0; background: #000; z-index: 20000; align-items: center; justify-content: center; }
         #auth-screen { flex-direction: column; z-index: 10000; }
-        .login-btn { background: var(--red); color: white; border: none; padding: 10px 30px; font-size: 20px; font-weight: bold; border-radius: 50px; margin-top: 20px; }
-        #profile-screen { position: fixed; inset: 0; background: #000; z-index: 9999; flex-direction: column; align-items: center; justify-content: center; }
-        .profile-container { display: flex; gap: 25px; }
-        .profile-box { text-align: center; padding: 10px; border-radius: 10px; transition: 0.2s; }
-        .profile-img { width: 100px; height: 100px; border-radius: 50%; background-size: cover; background-color: #222; margin-bottom: 10px; border: 3px solid transparent; }
-        .profile-box:focus { transform: scale(1.15); }
-        .profile-box:focus .profile-img { border-color: var(--red); }
-        .profile-name { font-size: 16px; color: #ccc; }
-        
-        iframe { width: 100%; height: 100%; border: none; }
+        #content-view { display: none; padding: 30px; position: absolute; inset: 0; z-index: 20; background: #000; overflow-y: auto; }
+        .search-input { width: 600px; background: #222; border: 2px solid #333; color: white; padding: 15px; border-radius: 50px; font-size: 20px; }
+        .search-input:focus { border-color: var(--red); }
     </style>
 </head>
 <body>
-
-    <div id="loading-screen" style="display: flex;"><h1 style="color: #444; font-size: 24px;">טוען...</h1></div>
-
+    <div id="loading-screen" class="screen" style="display: flex;"><h1>טוען...</h1></div>
     <div id="auth-screen" class="screen">
-        <h1 style="font-size: 60px; color: var(--red); margin: 0;">HOT Play</h1>
-        <h2 style="font-size: 24px; margin-top: 5px; opacity: 0.7;">ברוכים הבאים</h2>
-        <button class="login-btn" tabindex="1" onclick="login()">התחברות עם Google</button>
+        <h1 style="color:var(--red); font-size:60px">HOT Play</h1>
+        <button class="nav-item" onclick="login()" style="background:var(--red); color:white; justify-content:center; width:200px;">התחברות</button>
     </div>
-
-    <div id="profile-screen" class="screen">
-        <h1 style="font-size: 35px; margin-bottom: 30px;">מי צופה?</h1>
-        <div class="profile-container" id="profile-list"></div>
-    </div>
-
+    <div id="profile-screen" class="screen" style="flex-direction:column"><h1 style="margin-bottom:30px">מי צופה?</h1><div id="profile-list" style="display:flex; gap:20px"></div></div>
+    
     <div class="sidebar screen" id="sidebar">
-        <div class="logo"></div>
-        <div id="dynamic-nav"></div>
+        <div class="logo"></div><div id="dynamic-nav"></div>
     </div>
-
+    
     <div class="main-content screen" id="app">
         <div class="top-section">
             <div id="hero-bg" class="hero-bg"></div>
-            <div class="hero-text">
-                <div id="hero-title" class="hero-title">HOT Play</div>
-                <div id="hero-desc" class="hero-desc">בחר תוכן לצפייה</div>
-            </div>
+            <div class="hero-text"><div id="hero-title" class="hero-title"></div><div id="hero-desc" class="hero-desc"></div></div>
         </div>
         <div class="bottom-section" id="home-view"></div>
-        <div id="content-view" style="display: none; padding: 30px; position: absolute; inset: 0; z-index: 20; background: #000; overflow-y: auto;"></div>
+        <div id="content-view"></div>
     </div>
-
+    
     <div id="video-container"></div>
 
     <script src="data.js"></script>
     <script>
-        const firebaseConfig = { apiKey: "AIzaSyAuJlFyTuYypCVdJrZCrQGOEZZS5WDH6pI", authDomain: "app-c71dd.firebaseapp.com", projectId: "app-c71dd", storageBucket: "app-c71dd.firebasestorage.app", messagingSenderId: "256556501971", appId: "1:256556501971:web:98dbba775b0b8ca913bd26" };
-        firebase.initializeApp(firebaseConfig);
+        setTimeout(() => { 
+            const loader = document.getElementById('loading-screen');
+            if(loader) loader.style.display='none'; 
+        }, 3000);
+
+        try {
+            const firebaseConfig = { apiKey: "AIzaSyAuJlFyTuYypCVdJrZCrQGOEZZS5WDH6pI", authDomain: "app-c71dd.firebaseapp.com", projectId: "app-c71dd", storageBucket: "app-c71dd.firebasestorage.app", messagingSenderId: "256556501971", appId: "1:256556501971:web:98dbba775b0b8ca913bd26" };
+            firebase.initializeApp(firebaseConfig);
+            
+            firebase.auth().onAuthStateChanged(u => { 
+                document.getElementById('loading-screen').style.display='none';
+                if(u && u.email === "nitaylayish298@gmail.com") { switchScreen('profiles'); loadProfiles(); } 
+                else { switchScreen('auth'); } 
+            });
+        } catch(e) {
+            console.error(e);
+            document.getElementById('loading-screen').style.display='none';
+            switchScreen('auth');
+        }
 
         let currentProfile = null;
         let lastFocusedId = null;
@@ -187,246 +113,161 @@
             { n: 'אורי', i: 'https://img.freepik.com/free-psd/3d-illustration-person-with-glasses_23-2149436185.jpg', type: 'kids' }
         ];
 
-        setTimeout(() => { document.getElementById('loading-screen').style.display = 'none'; }, 5000);
+        function loadProfiles() {
+            document.getElementById('profile-list').innerHTML = profilesData.map(p => `
+                <div class="profile-box" tabindex="0" onclick="selectProfile('${p.n}')" style="text-align:center; cursor:pointer">
+                    <div style="width:100px; height:100px; border-radius:50%; background:url('${p.i}') center/cover; border:3px solid transparent; margin-bottom:10px" class="p-img"></div>
+                    <span>${p.n}</span>
+                </div>`).join('');
+            setTimeout(()=> document.querySelector('.profile-box').focus(), 500);
+        }
 
-        firebase.auth().onAuthStateChanged(user => {
-            document.getElementById('loading-screen').style.display = 'none';
-            if (user && user.email === "nitaylayish298@gmail.com") { switchScreen('profiles'); loadProfiles(); } else { switchScreen('auth'); }
-        });
-
+        function selectProfile(n) { currentProfile = profilesData.find(p=>p.n===n); updateSidebar(); switchScreen('home'); renderHome(); }
         function updateSidebar() {
-            const nav = document.getElementById('dynamic-nav');
-            let html = `<div class="nav-item" tabindex="0" onclick="showSearch()"><span class="nav-icon">🔍</span><span class="nav-text">חיפוש</span></div>
-                        <div class="nav-item" tabindex="0" onclick="renderHome()"><span class="nav-icon">🏠</span><span class="nav-text">ראשי</span></div>`;
-            html += `<div class="nav-item" tabindex="0" style="margin-top:auto;" onclick="switchScreen('profiles')"><span class="nav-icon">🔄</span><span class="nav-text">החלף פרופיל</span></div>`;
-            nav.innerHTML = html;
+            document.getElementById('dynamic-nav').innerHTML = `
+                <div class="nav-item" tabindex="0" onclick="showSearch()"><span class="nav-icon">🔍</span><span class="nav-text">חיפוש</span></div>
+                <div class="nav-item" tabindex="0" onclick="renderHome()"><span class="nav-icon">🏠</span><span class="nav-text">ראשי</span></div>
+                <div class="nav-item" tabindex="0" style="margin-top:auto" onclick="switchScreen('profiles')"><span class="nav-icon">🔄</span><span class="nav-text">פרופיל</span></div>`;
         }
-
-        function showSearch() {
-            const home = document.getElementById('home-view');
-            document.querySelector('.top-section').style.display = 'none';
-            home.innerHTML = `<div class="search-container"><input type="text" id="search-input" class="search-input" placeholder="מה בא לך לראות?" oninput="runSearch(this.value)"><div id="search-results"></div></div>`;
-            setTimeout(() => document.getElementById('search-input').focus(), 100);
-        }
-
-        function runSearch(query) {
-            const container = document.getElementById('search-results');
-            if (!query || query.length < 2) { container.innerHTML = ''; return; }
-            let allowedCats = currentProfile.type === 'kids' ? ['ילדים'] : ['סדרות', 'סרטים'];
-            const results = seriesData.filter(s => allowedCats.includes(s.category) && (s.title.includes(query) || s.description.includes(query)));
-            container.innerHTML = results.length > 0 ? renderRow(`תוצאות עבור "${query}"`, results) : `<div style="padding: 20px; color: #777;">לא נמצאו תוצאות...</div>`;
-        }
-
-        window.addEventListener('keydown', function(e) {
-            const active = document.activeElement;
-            if (active.id === 'search-input') {
-                if (e.key === 'ArrowDown') { e.preventDefault(); const firstCard = document.querySelector('.card'); if (firstCard) firstCard.focus(); }
-                return; 
-            }
-            if (!active) return;
-            if (e.key === 'Enter' && (active.classList.contains('card') || active.classList.contains('nav-item') || active.classList.contains('profile-box'))) { e.preventDefault(); active.click(); return; }
-            if (e.key === 'ArrowRight' && active.classList.contains('card')) {
-                e.preventDefault(); const prevCard = active.previousElementSibling;
-                if (prevCard && prevCard.classList.contains('card')) prevCard.focus(); else document.querySelector('.nav-item').focus();
-            }
-            if (e.key === 'ArrowLeft') {
-                if (active.classList.contains('nav-item')) {
-                    e.preventDefault();
-                    if (lastFocusedId) { const el = document.querySelector(`[data-id="${lastFocusedId}"]`); if(el) el.focus(); else document.querySelector('.card').focus(); }
-                    else document.querySelector('.card').focus();
-                    return;
-                }
-                if (active.classList.contains('card')) { const nextCard = active.nextElementSibling; if (nextCard && nextCard.classList.contains('card')) { e.preventDefault(); nextCard.focus(); } }
-            }
-            // (ArrowDown/Up logic remains same as provided previously, condensed here for brevity)
-            if (e.key === 'ArrowDown') {
-                const currentBlock = active.closest('.category-block');
-                if (currentBlock) {
-                    e.preventDefault(); 
-                    const allBlocks = Array.from(document.querySelectorAll('.category-block'));
-                    const currentIndex = allBlocks.indexOf(currentBlock);
-                    if (currentIndex < allBlocks.length - 1) {
-                        const nextBlock = allBlocks[currentIndex + 1];
-                        const currentCard = active.closest('.card');
-                        const currentRowCards = Array.from(currentBlock.querySelectorAll('.card'));
-                        const cardIndex = currentRowCards.indexOf(currentCard);
-                        const nextRowCards = Array.from(nextBlock.querySelectorAll('.card'));
-                        let targetCard = nextRowCards[cardIndex];
-                        if (!targetCard) targetCard = nextRowCards[nextRowCards.length - 1];
-                        if (targetCard) { targetCard.scrollIntoView({ behavior: 'auto', block: 'center' }); setTimeout(() => { targetCard.focus(); }, 50); }
-                    }
-                }
-            }
-            if (e.key === 'ArrowUp') {
-                const currentBlock = active.closest('.category-block');
-                if (currentBlock) {
-                    e.preventDefault();
-                    if (document.getElementById('search-input')) { document.getElementById('search-input').focus(); return; }
-                    const allBlocks = Array.from(document.querySelectorAll('.category-block'));
-                    const currentIndex = allBlocks.indexOf(currentBlock);
-                    if (currentIndex > 0) {
-                        const prevBlock = allBlocks[currentIndex - 1];
-                        const currentCard = active.closest('.card');
-                        const currentRowCards = Array.from(currentBlock.querySelectorAll('.card'));
-                        const cardIndex = currentRowCards.indexOf(currentCard);
-                        const prevRowCards = Array.from(prevBlock.querySelectorAll('.card'));
-                        let targetCard = prevRowCards[cardIndex];
-                        if (!targetCard) targetCard = prevRowCards[prevRowCards.length - 1];
-                        if (targetCard) { targetCard.scrollIntoView({ behavior: 'auto', block: 'center' }); setTimeout(() => { targetCard.focus(); }, 50); }
-                    }
-                }
-            }
-        });
-
-        document.addEventListener('focus', function(e) {
-            if (e.target.classList.contains('card')) {
-                lastFocusedId = e.target.getAttribute('data-id');
-                e.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
-                const id = lastFocusedId;
-                let item = seriesData.find(s => s.id === id) || seriesData.find(s => s.episodes && s.episodes.some(ep => ep.driveId === id));
-                if (!item) { const history = getHistory(); item = history.find(h => h.id === id); }
-                if (item && document.querySelector('.top-section').style.display !== 'none') {
-                    document.getElementById('hero-bg').style.backgroundImage = `url('${item.image}')`;
-                    document.getElementById('hero-title').innerText = item.title;
-                    document.getElementById('hero-desc').innerText = item.description || "";
-                }
-            }
-        }, true);
-
-        function login() { firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider()); }
-        function loadProfiles() { document.getElementById('profile-list').innerHTML = profilesData.map(p => `<div class="profile-box" tabindex="0" onclick="selectProfile('${p.n}')"><div class="profile-img" style="background-image: url('${p.i}')"></div><span class="profile-name">${p.n}</span></div>`).join(''); setTimeout(() => document.querySelector('.profile-box').focus(), 500); }
-        function selectProfile(name) { currentProfile = profilesData.find(p => p.n === name); updateSidebar(); enterApp(); }
-        function enterApp() { switchScreen('home'); renderHome(); }
-        
-        function addToHistory(item) { if (!currentProfile) return; const key = `history_${currentProfile.n}`; let h = JSON.parse(localStorage.getItem(key) || "[]"); h = h.filter(x => x.id !== item.id); h.unshift(item); if(h.length > 10) h.pop(); localStorage.setItem(key, JSON.stringify(h)); }
-        function getHistory() { if (!currentProfile) return []; return JSON.parse(localStorage.getItem(`history_${currentProfile.n}`) || "[]"); }
 
         function renderHome() {
-            const home = document.getElementById('home-view');
-            document.querySelector('.top-section').style.display = 'block';
-            home.innerHTML = '';
-            const history = getHistory();
-            if (history.length > 0) home.innerHTML += renderRow("המשך צפייה", history, true);
-            let allowedCats = currentProfile.type === 'kids' ? ['ילדים'] : ['סדרות', 'סרטים'];
-            const allItems = seriesData.filter(s => allowedCats.includes(s.category));
-            [...new Set(allItems.map(s => s.genre || s.category))].forEach(g => {
-                const items = allItems.filter(s => (s.genre || s.category) === g);
-                if(items.length > 0) home.innerHTML += renderRow(g, items);
+            const h = document.getElementById('home-view'); h.innerHTML=''; document.querySelector('.top-section').style.display='block';
+            const hist = JSON.parse(localStorage.getItem(`history_${currentProfile.n}`)||"[]");
+            if(hist.length) h.innerHTML += renderRow("המשך צפייה", hist, true);
+            
+            const cats = currentProfile.type==='kids'?['ילדים']:['סדרות','סרטים'];
+            const items = seriesData.filter(s=>cats.includes(s.category));
+            [...new Set(items.map(s=>s.genre||s.category))].forEach(g => {
+                const rowItems = items.filter(s=>(s.genre||s.category)===g);
+                if(rowItems.length) h.innerHTML += renderRow(g, rowItems);
             });
-            if (lastFocusedId) setTimeout(() => { const el = document.querySelector(`[data-id="${lastFocusedId}"]`); if(el) { el.focus(); el.scrollIntoView({block: 'center', inline: 'center'}); } }, 100);
+            if(lastFocusedId) setTimeout(()=>{const e=document.querySelector(`[data-id="${lastFocusedId}"]`); if(e){e.focus(); e.scrollIntoView({block:'center'})}},100);
         }
 
-        function renderRow(title, items, forceUniform = false) {
-            const hasSeries = items.some(item => item.type === 'series' || item.category === 'סדרות' || (item.genre && item.genre.includes('סדרות')));
-            const cardsHtml = items.map(s => {
-                let shapeClass = (forceUniform || hasSeries) ? 'series' : ((s.type === 'movie' || s.category === 'סרטים') ? 'movie' : 'series');
-                return `<div class="card ${shapeClass}" tabindex="0" data-id="${s.id}" onclick="openContent('${s.id}')"><img src="${s.image}" loading="lazy"><div class="card-title-overlay">${s.title}</div></div>`;
+        function renderRow(t, items, force) {
+            const mixed = items.some(i=>i.type==='series'||i.category==='סדרות');
+            const cards = items.map(s => {
+                let cls = (force||mixed) ? 'series' : (s.type==='movie'?'movie':'series');
+                return `<div class="card ${cls}" tabindex="0" data-id="${s.id}" onclick="openContent('${s.id}')">
+                    <img src="${s.image}"><div class="card-title-overlay">${s.title}</div></div>`;
             }).join('');
-            return `<div class="category-block"><div class="category-title">${title}</div><div class="row">${cardsHtml}</div></div>`;
+            return `<div class="category-block"><div class="category-title">${t}</div><div class="row">${cards}</div></div>`;
         }
 
         function openContent(id) {
-            let item = seriesData.find(x => x.id === id);
-            if (!item) { const history = getHistory(); item = history.find(h => h.id === id); }
-            if (!item) return;
-            lastFocusedId = id; addToHistory(item);
-            const detailView = document.getElementById('content-view');
-            document.querySelector('.top-section').style.display = 'none'; document.querySelector('.bottom-section').style.display = 'none';
-            detailView.style.display = 'block';
-            let html = '';
-            if (item.type === 'movie' || item.category === 'סרטים') {
-                html = `<div style="min-height:80vh; display:flex; flex-direction:column; justify-content:center; background: linear-gradient(to right, black, transparent), url('${item.image}') no-repeat center/cover; padding:60px;">
-                    <h1 style="font-size:50px; margin-bottom:15px; text-shadow: 2px 2px 10px black;">${item.title}</h1><p style="max-width:600px; font-size:18px; margin-bottom:25px; text-shadow: 1px 1px 5px black;">${item.description}</p>
-                    <button class="login-btn" tabindex="0" onclick="playHD('${item.driveId}')">▶ נגן סרט</button></div>`;
+            let s = seriesData.find(x=>x.id===id) || JSON.parse(localStorage.getItem(`history_${currentProfile.n}`)).find(x=>x.id===id);
+            if(!s) return;
+            lastFocusedId=id; addToHistory(s);
+            const v = document.getElementById('content-view');
+            document.querySelector('.top-section').style.display='none'; document.querySelector('.bottom-section').style.display='none';
+            v.style.display='block';
+            
+            if(s.type==='movie') {
+                v.innerHTML = `<div style="height:100vh; padding:60px; display:flex; flex-direction:column; justify-content:center; background:linear-gradient(to right, #000, transparent), url('${s.image}') center/cover;">
+                    <h1>${s.title}</h1><p style="max-width:600px">${s.description}</p>
+                    <button class="nav-item" style="background:var(--red); color:white; width:200px; justify-content:center" onclick="playHD('${s.driveId}')">▶ נגן</button></div>`;
             } else {
-                html = `<div><div style="margin-bottom: 30px;"><h1 style="font-size:50px; margin-bottom:15px;">${item.title}</h1><p style="max-width:700px; color:#aaa; font-size: 18px;">${item.description}</p></div>
-                    <div class="category-title">פרקים</div><div class="row" style="padding-bottom:20px;">
-                        ${item.episodes.map(ep => `<div class="card series" tabindex="0" data-id="${ep.driveId}" onclick="playHD('${ep.driveId}')"><img src="${ep.image}" style="height:100%;"><div class="card-title-overlay">פרק ${ep.number}</div></div>`).join('')}
-                    </div></div>`;
+                v.innerHTML = `<div style="padding:40px"><h1>${s.title}</h1><p>${s.description}</p>
+                    <div class="row">${s.episodes.map(e=>`<div class="card series" tabindex="0" data-id="${e.driveId}" onclick="playHD('${e.driveId}')"><img src="${e.image||s.image}"><div class="card-title-overlay">פרק ${e.number}</div></div>`).join('')}</div></div>`;
             }
-            detailView.innerHTML = html;
-            setTimeout(() => { const b=detailView.querySelector('.login-btn')||detailView.querySelector('.card'); if(b)b.focus(); }, 200);
+            setTimeout(()=>v.querySelector('[tabindex="0"]').focus(),100);
         }
 
         function playHD(id) {
             currentPlayingId = id;
             if (typeof AndroidControl !== 'undefined') AndroidControl.setVideoMode(true);
-            const container = document.getElementById('video-container');
-            container.style.display = 'block'; // חובה להציג לפני ששמים תוכן
-            container.innerHTML = `<iframe src="https://drive.google.com/file/d/${id}/preview" allowfullscreen style="width:100%; height:100%; border:none;"></iframe>`;
-            if (typeof AndroidControl !== 'undefined') automateDrive();
+            const c = document.getElementById('video-container');
+            c.style.display='block';
+            c.innerHTML = `<iframe src="https://drive.google.com/file/d/${id}/preview" allowfullscreen style="width:100%; height:100%; border:none"></iframe>`;
         }
 
-        function playNextEpisode() {
-            let currentSeries = seriesData.find(s => s.episodes && s.episodes.some(ep => ep.driveId === currentPlayingId));
-            if (currentSeries) {
-                const currentIndex = currentSeries.episodes.findIndex(ep => ep.driveId === currentPlayingId);
-                if (currentIndex !== -1 && currentIndex < currentSeries.episodes.length - 1) {
-                    const nextEp = currentSeries.episodes[currentIndex + 1];
-                    closeVideo(); setTimeout(() => { playHD(nextEp.driveId); }, 500);
-                } else { closeVideo(); }
-            } else { closeVideo(); }
-        }
-
-        function automateDrive() {
-            var checks = 0;
-            var det = setInterval(function() {
-                var f = document.querySelector('iframe');
-                if (f) {
-                    clearInterval(det);
-                    try { var style = document.createElement('style'); style.innerHTML = '.ndfHFb-c4YZDc-Wr97p { display: none !important; }'; f.contentDocument.head.appendChild(style); } catch(e) {}
-                    f.focus(); setTimeout(function() { if(window.AndroidControl) AndroidControl.triggerCenterClick(); }, 1500);
-                }
-                if (checks++ > 20) clearInterval(det);
-            }, 500);
-        }
-
-        // --- הפונקציה הקריטית שנקראת מה-Java ---
+        // --- התיקון הקריטי: איפוס משתנה הניגון ---
         window.handleBackPress = function() {
-            // 1. סגירת וידאו מיידית
-            const vidContainer = document.getElementById('video-container');
-            if(vidContainer.style.display === 'block') {
-                vidContainer.innerHTML = '';
-                vidContainer.style.display = 'none';
+            if(document.getElementById('video-container').style.display === 'block') {
+                document.getElementById('video-container').innerHTML = '';
+                document.getElementById('video-container').style.display = 'none';
+                
+                // >>> הנה השורה שתסדר את הבעיה: מאפסים את ה"בוצע" <<<
+                window.hpDone = false; 
                 
                 document.getElementById('content-view').style.display = 'block';
-                if(currentPlayingId) setTimeout(() => { const el = document.querySelector(`[data-id="${currentPlayingId}"]`); if(el) { el.focus(); el.scrollIntoView({block:'center'}); } }, 100);
+                if(currentPlayingId) setTimeout(()=>{ 
+                    const e = document.querySelector(`[data-id="${currentPlayingId}"]`);
+                    if(e) { e.focus(); e.scrollIntoView({block:'center', inline:'center'}); }
+                }, 50);
                 
                 if (typeof AndroidControl !== 'undefined') AndroidControl.setVideoMode(false);
                 return;
             }
-            // 2. יציאה מתוכן
-            if (document.getElementById('content-view').style.display !== 'none') {
+            if(document.getElementById('content-view').style.display === 'block') {
                 document.getElementById('content-view').style.display = 'none';
-                switchScreen('home');
-                if (lastFocusedId) setTimeout(() => { const el = document.querySelector(`[data-id="${lastFocusedId}"]`); if(el) el.focus(); }, 200);
-                return;
+                switchScreen('home'); renderHome(); return;
             }
-            if (document.getElementById('search-input')) { enterApp(); return; }
-            if (document.querySelector('.bottom-section').style.display === 'block') { switchScreen('profiles'); return; }
+            if(document.getElementById('search-input')) { enterApp(); return; }
+            if(document.querySelector('.bottom-section').style.display === 'block') { switchScreen('profiles'); return; }
+            
             if (window.AndroidControl) AndroidControl.exitApp();
         };
 
-        // --- פונקציה פנימית ל-JS בלבד (למקרה שה-Java לא עובד) ---
-        function closeVideo() { window.handleBackPress(); }
+        function addToHistory(item) {
+            if(!currentProfile) return;
+            const k = `history_${currentProfile.n}`;
+            let h = JSON.parse(localStorage.getItem(k)||"[]").filter(x=>x.id!==item.id);
+            h.unshift(item); localStorage.setItem(k, JSON.stringify(h.slice(0,10)));
+        }
 
-        function switchScreen(name) {
-            document.querySelectorAll('.screen').forEach(el => el.style.display = 'none');
-            document.getElementById('video-container').style.display = 'none';
-            document.querySelector('.top-section').style.display = 'none';
-            document.querySelector('.bottom-section').style.display = 'none';
-            document.getElementById('content-view').style.display = 'none';
-
-            if (name === 'auth') document.getElementById('auth-screen').style.display = 'flex';
-            if (name === 'profiles') document.getElementById('profile-screen').style.display = 'flex';
-            if (name === 'home') {
-                document.getElementById('sidebar').style.display = 'flex';
-                document.getElementById('app').style.display = 'flex';
-                document.querySelector('.top-section').style.display = 'block';
-                document.querySelector('.bottom-section').style.display = 'block';
+        function switchScreen(n) {
+            document.querySelectorAll('.screen, #content-view, #video-container').forEach(e=>e.style.display='none');
+            if(n==='auth') document.getElementById('auth-screen').style.display='flex';
+            if(n==='profiles') document.getElementById('profile-screen').style.display='flex';
+            if(n==='home') {
+                document.getElementById('sidebar').style.display='flex';
+                document.getElementById('app').style.display='flex';
+                document.querySelector('.top-section').style.display='block';
+                document.querySelector('.bottom-section').style.display='block';
                 setTimeout(() => { const c=document.querySelector('.card'); if(c)c.focus(); }, 500);
             }
         }
+
+        function enterApp() { switchScreen('home'); renderHome(); }
+        function login() { firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider()); }
+        
+        window.addEventListener('keydown', e => {
+            const active = document.activeElement;
+            if(active.classList.contains('nav-item') && e.key === 'ArrowLeft') {
+                if(lastFocusedId) { const el=document.querySelector(`[data-id="${lastFocusedId}"]`); if(el) el.focus(); else document.querySelector('.card').focus(); }
+                else document.querySelector('.card').focus();
+            }
+            if(active.id === 'search-input' && e.key === 'ArrowDown') {
+                e.preventDefault();
+                const f = document.querySelector('.card'); if(f) f.focus();
+            }
+        });
+        
+        function showSearch() {
+            document.getElementById('home-view').innerHTML = `<div class="search-container"><input type="text" id="search-input" class="search-input" placeholder="חפש..." oninput="runSearch(this.value)"><div id="search-results"></div></div>`;
+            document.querySelector('.top-section').style.display='none';
+            setTimeout(()=>document.getElementById('search-input').focus(),100);
+        }
+        
+        function runSearch(q) {
+            if(q.length<2) { document.getElementById('search-results').innerHTML=''; return; }
+            const cats = currentProfile.type==='kids'?['ילדים']:['סדרות','סרטים'];
+            const res = seriesData.filter(s=>cats.includes(s.category) && s.title.includes(q));
+            document.getElementById('search-results').innerHTML = res.length ? renderRow("תוצאות", res) : "לא נמצא";
+        }
+
+        document.addEventListener('focus', e => {
+            if(e.target.classList.contains('card') && document.querySelector('.top-section').style.display!=='none') {
+                const id = e.target.dataset.id;
+                const s = seriesData.find(x=>x.id===id) || seriesData.find(x=>x.episodes && x.episodes.some(ep=>ep.driveId===id));
+                if(s) {
+                    document.getElementById('hero-bg').style.backgroundImage = `url('${s.image}')`;
+                    document.getElementById('hero-title').innerText = s.title;
+                    document.getElementById('hero-desc').innerText = s.description;
+                }
+            }
+        }, true);
     </script>
 </body>
 </html>
