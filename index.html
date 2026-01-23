@@ -40,7 +40,7 @@
         .sidebar:focus-within .nav-text, .sidebar:hover .nav-text { opacity: 1; visibility: visible; }
         .nav-item:focus { background: var(--red); color: white; transform: scale(1.05); }
 
-        /* Main Content */
+        /* Layout */
         .main-content { flex: 1; height: 100vh; display: flex; flex-direction: column; position: relative; background: #000; overflow: hidden; }
 
         .top-section { height: 55%; width: 100%; position: relative; flex-shrink: 0; z-index: 1; }
@@ -62,7 +62,6 @@
         .category-block { margin-bottom: 5px; padding-right: 40px; display: block; }
         .category-title { font-size: 18px; margin-bottom: 0px; font-weight: bold; color: #aaa; }
         
-        /* --- תיקון שורות: בלי רווח בצד ימין! --- */
         .row { 
             display: flex; gap: 15px; 
             /* הסרת רווח מיותר מימין (התחלה) */
@@ -71,7 +70,7 @@
             margin-bottom: -10px;
             overflow-x: auto; scroll-behavior: smooth; white-space: nowrap; 
             scroll-snap-type: x mandatory; 
-            /* רווח רק בסוף הגלילה (שמאל) */
+            /* רווח רק בסוף הגלילה בצד שמאל */
             padding-left: 50px; 
         }
         .row::-webkit-scrollbar { display: none; }
@@ -84,14 +83,16 @@
             transition: transform 0.2s, border-color 0.2s; 
             scroll-snap-align: start; flex-shrink: 0; 
             z-index: 1;
-            /* ברירת מחדל */
+            /* ברירת מחדל: גדל מהמרכז */
             transform-origin: center center;
         }
 
-        /* --- התיקון הגדול לחיתוך בצד ימין --- */
-        /* לא משנה אם זה סרט או סדרה - התמונה הראשונה תמיד ננעלת לימין וגדלה שמאלה */
+        /* --- התיקון המיוחד לכרטיסייה הראשונה --- */
+        /* 1. גדלה רק שמאלה (פנימה) */
+        /* 2. מיקרו-שוליים של 2px כדי למנוע חיתוך של המסגרת הלבנה */
         .row .card:first-child {
             transform-origin: right center !important;
+            margin-right: 2px; 
         }
         /* האלמנט האחרון יגדל ימינה */
         .row .card:last-child {
@@ -115,7 +116,7 @@
         .card-title-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); padding: 5px; text-align: center; font-size: 11px; opacity: 0; transition: 0.2s; color: white; }
         .card:focus .card-title-overlay { opacity: 1; }
 
-        /* Video Container */
+        /* Video Container - תמיד מעל הכל */
         #video-container { position: fixed; inset: 0; background: #000; z-index: 50000; display: none; }
 
         .search-container { padding: 20px 50px; }
@@ -239,15 +240,14 @@
                 }
                 if (active.classList.contains('card')) { const nextCard = active.nextElementSibling; if (nextCard && nextCard.classList.contains('card')) { e.preventDefault(); nextCard.focus(); } }
             }
-            // ניווט למעלה ולמטה (אין שינוי בלוגיקה)
             if (e.key === 'ArrowDown') {
                 const currentBlock = active.closest('.category-block');
                 if (currentBlock) {
-                    e.preventDefault();
+                    e.preventDefault(); 
                     const allBlocks = Array.from(document.querySelectorAll('.category-block'));
-                    const idx = allBlocks.indexOf(currentBlock);
-                    if (idx < allBlocks.length - 1) {
-                        const nextBlock = allBlocks[idx+1];
+                    const currentIndex = allBlocks.indexOf(currentBlock);
+                    if (currentIndex < allBlocks.length - 1) {
+                        const nextBlock = allBlocks[currentIndex + 1];
                         const currentCard = active.closest('.card');
                         const currentRowCards = Array.from(currentBlock.querySelectorAll('.card'));
                         const cardIndex = currentRowCards.indexOf(currentCard);
@@ -264,9 +264,9 @@
                     e.preventDefault();
                     if (document.getElementById('search-input')) { document.getElementById('search-input').focus(); return; }
                     const allBlocks = Array.from(document.querySelectorAll('.category-block'));
-                    const idx = allBlocks.indexOf(currentBlock);
-                    if (idx > 0) {
-                        const prevBlock = allBlocks[idx-1];
+                    const currentIndex = allBlocks.indexOf(currentBlock);
+                    if (currentIndex > 0) {
+                        const prevBlock = allBlocks[currentIndex - 1];
                         const currentCard = active.closest('.card');
                         const currentRowCards = Array.from(currentBlock.querySelectorAll('.card'));
                         const cardIndex = currentRowCards.indexOf(currentCard);
@@ -355,11 +355,34 @@
             const container = document.getElementById('video-container');
             container.style.display = 'block'; 
             container.innerHTML = `<iframe src="https://drive.google.com/file/d/${id}/preview" allowfullscreen style="width:100%; height:100%; border:none;"></iframe>`;
-            switchScreen('video');
             if (typeof AndroidControl !== 'undefined') automateDrive();
         }
 
-        // --- הפונקציה הקריטית לחזרה (נקראת מה-Java) ---
+        function playNextEpisode() {
+            let currentSeries = seriesData.find(s => s.episodes && s.episodes.some(ep => ep.driveId === currentPlayingId));
+            if (currentSeries) {
+                const currentIndex = currentSeries.episodes.findIndex(ep => ep.driveId === currentPlayingId);
+                if (currentIndex !== -1 && currentIndex < currentSeries.episodes.length - 1) {
+                    const nextEp = currentSeries.episodes[currentIndex + 1];
+                    closeVideo(); setTimeout(() => { playHD(nextEp.driveId); }, 500);
+                } else { closeVideo(); }
+            } else { closeVideo(); }
+        }
+
+        function automateDrive() {
+            var checks = 0;
+            var det = setInterval(function() {
+                var f = document.querySelector('iframe');
+                if (f) {
+                    clearInterval(det);
+                    try { var style = document.createElement('style'); style.innerHTML = '.ndfHFb-c4YZDc-Wr97p { display: none !important; }'; f.contentDocument.head.appendChild(style); } catch(e) {}
+                    f.focus(); setTimeout(function() { if(window.AndroidControl) AndroidControl.triggerCenterClick(); }, 1500);
+                }
+                if (checks++ > 20) clearInterval(det);
+            }, 500);
+        }
+
+        // --- הפונקציה הקריטית שנקראת מה-Java ---
         window.handleBackPress = function() {
             // 1. סגירת וידאו מיידית
             const vidContainer = document.getElementById('video-container');
@@ -368,10 +391,7 @@
                 vidContainer.style.display = 'none';
                 
                 document.getElementById('content-view').style.display = 'block';
-                document.querySelector('.top-section').style.display = 'none';
-                document.querySelector('.bottom-section').style.display = 'none';
-                
-                if(currentPlayingId) setTimeout(() => { const el = document.querySelector(`[data-id="${currentPlayingId}"]`); if(el) { el.focus(); el.scrollIntoView({block:'center'}); } }, 100);
+                if(currentPlayingId) setTimeout(() => { const el = document.querySelector(`[data-id="${currentPlayingId}"]`); if(el) { el.focus(); el.scrollIntoView({block:'center', inline:'center'}); } }, 100);
                 
                 if (typeof AndroidControl !== 'undefined') AndroidControl.setVideoMode(false);
                 return;
@@ -388,30 +408,8 @@
             if (window.AndroidControl) AndroidControl.exitApp();
         };
 
+        // --- פונקציה פנימית ל-JS בלבד (למקרה שה-Java לא עובד) ---
         function closeVideo() { window.handleBackPress(); }
-
-        function playNextEpisode() {
-            let s = seriesData.find(s => s.episodes && s.episodes.some(ep => ep.driveId === currentPlayingId));
-            if (s) {
-                const idx = s.episodes.findIndex(ep => ep.driveId === currentPlayingId);
-                if (idx !== -1 && idx < s.episodes.length - 1) {
-                    closeVideo(); setTimeout(() => playHD(s.episodes[idx + 1].driveId), 500);
-                } else closeVideo();
-            } else closeVideo();
-        }
-
-        function automateDrive() {
-            var checks = 0;
-            var det = setInterval(function() {
-                var f = document.querySelector('iframe');
-                if (f) {
-                    clearInterval(det);
-                    try { var style = document.createElement('style'); style.innerHTML = '.ndfHFb-c4YZDc-Wr97p { display: none !important; }'; f.contentDocument.head.appendChild(style); } catch(e) {}
-                    f.focus(); setTimeout(function() { if(window.AndroidControl) AndroidControl.triggerCenterClick(); }, 1500);
-                }
-                if (checks++ > 20) clearInterval(det);
-            }, 500);
-        }
 
         function switchScreen(name) {
             document.querySelectorAll('.screen').forEach(el => el.style.display = 'none');
@@ -429,7 +427,6 @@
                 document.querySelector('.bottom-section').style.display = 'block';
                 setTimeout(() => { const c=document.querySelector('.card'); if(c)c.focus(); }, 500);
             }
-            if (name === 'video') document.getElementById('video-container').style.display = 'block';
         }
     </script>
 </body>
