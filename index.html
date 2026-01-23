@@ -4,21 +4,18 @@
     <meta charset="UTF-8">
     <title>HOT play</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth-compat.js"></script>
     <style>
         :root { --red: #ff0055; --bg: #000000; --sidebar-width: 70px; --sidebar-expanded: 220px; }
         
-        /* ביטול גורף של סימונים כחולים בכל האפליקציה */
-        * { -webkit-tap-highlight-color: transparent !important; outline: none !important; }
-        
         body { 
             background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; 
             margin: 0; padding: 0; width: 100vw; height: 100vh; 
             overflow: hidden; display: flex; position: fixed; inset: 0;
         }
+        *:focus { outline: none; }
         
         /* Sidebar */
         .sidebar { 
@@ -87,29 +84,18 @@
             transform-origin: center center;
         }
 
-        .row .card:first-child { transform-origin: right center !important; margin-right: 2px; }
+        .row .card:first-child { transform-origin: right center !important; }
         .row .card:last-child { transform-origin: left center !important; }
         
         .card.series { min-width: 200px; width: 200px; height: 112px; }
         .card.movie { min-width: 100px; width: 100px; height: 150px; }
-        .card img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+        .card img { width: 100%; height: 100%; object-fit: cover; }
         
         .card:focus { transform: scale(1.15); z-index: 100; border-width: 2px; border-color: #ffffff; box-shadow: 0 10px 20px rgba(0,0,0,0.9); outline: none; }
         .card-title-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); padding: 5px; text-align: center; font-size: 11px; opacity: 0; transition: 0.2s; color: white; }
         .card:focus .card-title-overlay { opacity: 1; }
 
         #video-container { position: fixed; inset: 0; background: #000; z-index: 50000; display: none; }
-        
-        /* --- התיקון למסך הטעינה --- */
-        #loader-overlay {
-            position: fixed; inset: 0; background: #000; z-index: 50001; 
-            display: none; align-items: center; justify-content: center;
-            pointer-events: none; /* קריטי: לחיצות עוברות דרכו */
-        }
-        #loader-overlay video {
-            width: 300px; height: 300px; object-fit: contain;
-        }
-
         .search-container { padding: 20px 50px; }
         .search-input { width: 100%; max-width: 600px; background: #222; border: 2px solid #333; color: white; padding: 15px 20px; font-size: 20px; border-radius: 50px; outline: none; transition: 0.3s; margin-bottom: 30px; }
         .search-input:focus { border-color: var(--red); background: #333; }
@@ -131,10 +117,6 @@
 <body>
 
     <div id="loading-screen" style="display: flex;"><h1 style="color: #444; font-size: 24px;">טוען...</h1></div>
-
-    <div id="loader-overlay">
-        <video src="loading.mp4" autoplay loop muted playsinline></video>
-    </div>
 
     <div id="auth-screen" class="screen">
         <h1 style="font-size: 60px; color: var(--red); margin: 0;">HOT Play</h1>
@@ -168,8 +150,6 @@
 
     <script src="data.js"></script>
     <script>
-        setTimeout(() => { document.getElementById('loading-screen').style.display = 'none'; }, 5000);
-
         const firebaseConfig = { apiKey: "AIzaSyAuJlFyTuYypCVdJrZCrQGOEZZS5WDH6pI", authDomain: "app-c71dd.firebaseapp.com", projectId: "app-c71dd", storageBucket: "app-c71dd.firebasestorage.app", messagingSenderId: "256556501971", appId: "1:256556501971:web:98dbba775b0b8ca913bd26" };
         firebase.initializeApp(firebaseConfig);
 
@@ -184,6 +164,8 @@
             { n: 'נועה', i: 'https://img.freepik.com/free-psd/3d-illustration-person-with-pink-hair_23-2149436186.jpg', type: 'kids' },
             { n: 'אורי', i: 'https://img.freepik.com/free-psd/3d-illustration-person-with-glasses_23-2149436185.jpg', type: 'kids' }
         ];
+
+        setTimeout(() => { document.getElementById('loading-screen').style.display = 'none'; }, 5000);
 
         firebase.auth().onAuthStateChanged(user => {
             document.getElementById('loading-screen').style.display = 'none';
@@ -343,60 +325,24 @@
             setTimeout(() => { const b=detailView.querySelector('.login-btn')||detailView.querySelector('.card'); if(b)b.focus(); }, 200);
         }
 
-        // --- פונקציית הניגון (המתוקנת) ---
         function playHD(id) {
             currentPlayingId = id;
             if (typeof AndroidControl !== 'undefined') AndroidControl.setVideoMode(true);
-            
-            // מציגים את מסך הטעינה
-            const loader = document.getElementById('loader-overlay');
-            loader.style.display = 'flex';
-            
             const container = document.getElementById('video-container');
             container.style.display = 'block'; 
             container.innerHTML = `<iframe src="https://drive.google.com/file/d/${id}/preview" allowfullscreen style="width:100%; height:100%; border:none;"></iframe>`;
-            
-            // אוטומציה של לחיצות
             if (typeof AndroidControl !== 'undefined') automateDrive();
-            
-            // --- התיקון הקשיח: 10 שניות בדיוק ואז נעלם ---
-            setTimeout(() => {
-                loader.style.display = 'none';
-            }, 10000); 
         }
 
-        function playNextEpisode() {
-            let s = seriesData.find(s => s.episodes && s.episodes.some(ep => ep.driveId === currentPlayingId));
-            if (s) {
-                const idx = s.episodes.findIndex(ep => ep.driveId === currentPlayingId);
-                if (idx !== -1 && idx < s.episodes.length - 1) {
-                    closeVideo(); setTimeout(() => playHD(s.episodes[idx + 1].driveId), 500);
-                } else closeVideo();
-            } else closeVideo();
-        }
-
-        // --- האוטומציה שביקשת (רצף פעולות אחד וזהו) ---
-        function automateDrive() {
-            if(window.AndroidControl) {
-                // לוחץ מיד
-                setTimeout(function() { AndroidControl.triggerCenterClick(); }, 1000); 
-                
-                // לוחץ שוב אחרי 2.5 שניות
-                setTimeout(function() { AndroidControl.triggerCenterClick(); }, 2500);
-                
-                // דאבל קליק סופי אחרי 4 שניות
-                setTimeout(function() { AndroidControl.triggerCenterDoubleClick(); }, 4000);
-            }
-        }
-
-        // --- איפוס חשוב ביציאה ---
+        // --- התיקון היחיד והקריטי נמצא כאן ---
         window.handleBackPress = function() {
             if(document.getElementById('video-container').style.display === 'block') {
                 document.getElementById('video-container').innerHTML = '';
                 document.getElementById('video-container').style.display = 'none';
                 
-                document.getElementById('loader-overlay').style.display = 'none'; // הסתרת לואדר
-                window.hpDone = false; // איפוס
+                // >>>>>>>>> השורה שנוספה לתיקון "עובד רק פעם אחת" <<<<<<<<<<
+                window.hpDone = false; 
+                // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
                 
                 document.getElementById('content-view').style.display = 'block';
                 if(currentPlayingId) setTimeout(() => { const el = document.querySelector(`[data-id="${currentPlayingId}"]`); if(el) { el.focus(); el.scrollIntoView({block: 'center', inline: 'center'}); } }, 100);
@@ -416,6 +362,36 @@
         };
 
         function closeVideo() { window.handleBackPress(); }
+
+        function playNextEpisode() {
+            let s = seriesData.find(s => s.episodes && s.episodes.some(ep => ep.driveId === currentPlayingId));
+            if (s) {
+                const idx = s.episodes.findIndex(ep => ep.driveId === currentPlayingId);
+                if (idx !== -1 && idx < s.episodes.length - 1) {
+                    closeVideo(); setTimeout(() => playHD(s.episodes[idx + 1].driveId), 500);
+                } else closeVideo();
+            } else closeVideo();
+        }
+
+        function automateDrive() {
+            var checks = 0;
+            var det = setInterval(function() {
+                var f = document.querySelector('iframe');
+                if (f) {
+                    clearInterval(det);
+                    try { var style = document.createElement('style'); style.innerHTML = '.ndfHFb-c4YZDc-Wr97p { display: none !important; }'; f.contentDocument.head.appendChild(style); } catch(e) {}
+                    f.focus(); 
+                    
+                    // מנגנון לחיצות שמותאם לסטרימר
+                    if(window.AndroidControl) {
+                        setTimeout(function() { AndroidControl.triggerCenterClick(); }, 500); 
+                        setTimeout(function() { AndroidControl.triggerCenterClick(); }, 1500);
+                        setTimeout(function() { AndroidControl.triggerCenterDoubleClick(); }, 2500);
+                    }
+                }
+                if (checks++ > 20) clearInterval(det);
+            }, 500);
+        }
 
         function switchScreen(name) {
             document.querySelectorAll('.screen').forEach(el => el.style.display = 'none');
