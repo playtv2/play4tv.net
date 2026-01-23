@@ -28,8 +28,9 @@
         .sidebar:focus-within, .sidebar:hover { width: var(--sidebar-expanded); }
         
         .logo { 
-            width: 100%; height: 60px; background-size: contain; background-repeat: no-repeat; 
-            background-position: center; margin-bottom: 20px; margin-top: 20px;
+            width: 100%; height: 60px; 
+            background-size: contain; background-repeat: no-repeat; background-position: center; 
+            margin-bottom: 20px; margin-top: 20px;
             background-image: url('./images/logo.png'); 
         }
         
@@ -39,7 +40,7 @@
         .sidebar:focus-within .nav-text, .sidebar:hover .nav-text { opacity: 1; visibility: visible; }
         .nav-item:focus { background: var(--red); color: white; transform: scale(1.05); }
 
-        /* Main Content */
+        /* Layout */
         .main-content { flex: 1; height: 100vh; display: flex; flex-direction: column; position: relative; background: #000; overflow: hidden; }
 
         .top-section { height: 55%; width: 100%; position: relative; flex-shrink: 0; z-index: 1; }
@@ -63,12 +64,14 @@
         
         .row { 
             display: flex; gap: 15px; 
-            /* אין רווחים בצדדים! */
+            /* הסרת רווח מיותר מימין (התחלה) */
             padding: 40px 0 40px 0; 
-            margin-top: -30px; 
+            margin-top: -20px; 
+            margin-bottom: -10px;
             overflow-x: auto; scroll-behavior: smooth; white-space: nowrap; 
             scroll-snap-type: x mandatory; 
-            padding-left: 50px; /* רווח בסוף הגלילה בלבד */
+            /* רווח רק בסוף הגלילה (שמאל) */
+            padding-left: 50px; 
         }
         .row::-webkit-scrollbar { display: none; }
         
@@ -84,26 +87,24 @@
             transform-origin: center center;
         }
 
-        /* --- התיקון שלך: הגדלה לכיוון הנכון --- */
-        
-        /* 1. התמונה הראשונה בכל שורה: ננעלת לימין וגדלה שמאלה (פנימה) */
-        .row .card:first-of-type {
+        /* --- התיקון המוחלט: --- */
+        /* האלמנט הראשון תמיד יגדל שמאלה (פנימה) ולכן לא ייחתך בקצה המסך */
+        .row .card:first-child {
             transform-origin: right center !important;
         }
-        
-        /* 2. התמונה האחרונה בכל שורה: ננעלת לשמאל וגדלה ימינה (פנימה) */
-        .row .card:last-of-type {
+        /* האלמנט האחרון יגדל ימינה */
+        .row .card:last-child {
             transform-origin: left center !important;
         }
-        /* ---------------------------------------- */
         
+        /* גדלים */
         .card.series { min-width: 200px; width: 200px; height: 112px; }
         .card.movie { min-width: 100px; width: 100px; height: 150px; }
         .card img { width: 100%; height: 100%; object-fit: cover; }
         
         .card:focus { 
             transform: scale(1.15); 
-            z-index: 100; /* עולה מעל כולם */
+            z-index: 100; 
             border-width: 2px; 
             border-color: #ffffff; 
             box-shadow: 0 10px 20px rgba(0,0,0,0.9); 
@@ -113,7 +114,7 @@
         .card-title-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); padding: 5px; text-align: center; font-size: 11px; opacity: 0; transition: 0.2s; color: white; }
         .card:focus .card-title-overlay { opacity: 1; }
 
-        /* Video Container */
+        /* Video Container - תמיד מעל הכל */
         #video-container { position: fixed; inset: 0; background: #000; z-index: 50000; display: none; }
 
         .search-container { padding: 20px 50px; }
@@ -131,6 +132,7 @@
         .profile-box:focus { transform: scale(1.15); }
         .profile-box:focus .profile-img { border-color: var(--red); }
         .profile-name { font-size: 16px; color: #ccc; }
+        
         iframe { width: 100%; height: 100%; border: none; }
     </style>
 </head>
@@ -194,10 +196,10 @@
 
         function updateSidebar() {
             const nav = document.getElementById('dynamic-nav');
-            nav.innerHTML = `
-                <div class="nav-item" tabindex="0" onclick="showSearch()"><span class="nav-icon">🔍</span><span class="nav-text">חיפוש</span></div>
-                <div class="nav-item" tabindex="0" onclick="renderHome()"><span class="nav-icon">🏠</span><span class="nav-text">ראשי</span></div>
-                <div class="nav-item" tabindex="0" style="margin-top:auto;" onclick="switchScreen('profiles')"><span class="nav-icon">🔄</span><span class="nav-text">החלף פרופיל</span></div>`;
+            let html = `<div class="nav-item" tabindex="0" onclick="showSearch()"><span class="nav-icon">🔍</span><span class="nav-text">חיפוש</span></div>
+                        <div class="nav-item" tabindex="0" onclick="renderHome()"><span class="nav-icon">🏠</span><span class="nav-text">ראשי</span></div>`;
+            html += `<div class="nav-item" tabindex="0" style="margin-top:auto;" onclick="switchScreen('profiles')"><span class="nav-icon">🔄</span><span class="nav-text">החלף פרופיל</span></div>`;
+            nav.innerHTML = html;
         }
 
         function showSearch() {
@@ -236,17 +238,22 @@
                 }
                 if (active.classList.contains('card')) { const nextCard = active.nextElementSibling; if (nextCard && nextCard.classList.contains('card')) { e.preventDefault(); nextCard.focus(); } }
             }
+            // (ArrowDown/Up logic remains same as provided previously, condensed here for brevity)
             if (e.key === 'ArrowDown') {
                 const currentBlock = active.closest('.category-block');
                 if (currentBlock) {
-                    e.preventDefault();
+                    e.preventDefault(); 
                     const allBlocks = Array.from(document.querySelectorAll('.category-block'));
-                    const idx = allBlocks.indexOf(currentBlock);
-                    if (idx < allBlocks.length - 1) {
-                        const nextCards = Array.from(allBlocks[idx+1].querySelectorAll('.card'));
-                        const currentCards = Array.from(currentBlock.querySelectorAll('.card'));
-                        let target = nextCards[currentCards.indexOf(active.closest('.card'))] || nextCards[nextCards.length-1];
-                        if(target) { target.scrollIntoView({behavior:'auto',block:'center'}); setTimeout(()=>target.focus(),50); }
+                    const currentIndex = allBlocks.indexOf(currentBlock);
+                    if (currentIndex < allBlocks.length - 1) {
+                        const nextBlock = allBlocks[currentIndex + 1];
+                        const currentCard = active.closest('.card');
+                        const currentRowCards = Array.from(currentBlock.querySelectorAll('.card'));
+                        const cardIndex = currentRowCards.indexOf(currentCard);
+                        const nextRowCards = Array.from(nextBlock.querySelectorAll('.card'));
+                        let targetCard = nextRowCards[cardIndex];
+                        if (!targetCard) targetCard = nextRowCards[nextRowCards.length - 1];
+                        if (targetCard) { targetCard.scrollIntoView({ behavior: 'auto', block: 'center' }); setTimeout(() => { targetCard.focus(); }, 50); }
                     }
                 }
             }
@@ -256,12 +263,16 @@
                     e.preventDefault();
                     if (document.getElementById('search-input')) { document.getElementById('search-input').focus(); return; }
                     const allBlocks = Array.from(document.querySelectorAll('.category-block'));
-                    const idx = allBlocks.indexOf(currentBlock);
-                    if (idx > 0) {
-                        const prevCards = Array.from(allBlocks[idx-1].querySelectorAll('.card'));
-                        const currentCards = Array.from(currentBlock.querySelectorAll('.card'));
-                        let target = prevCards[currentCards.indexOf(active.closest('.card'))] || prevCards[prevCards.length-1];
-                        if(target) { target.scrollIntoView({behavior:'auto',block:'center'}); setTimeout(()=>target.focus(),50); }
+                    const currentIndex = allBlocks.indexOf(currentBlock);
+                    if (currentIndex > 0) {
+                        const prevBlock = allBlocks[currentIndex - 1];
+                        const currentCard = active.closest('.card');
+                        const currentRowCards = Array.from(currentBlock.querySelectorAll('.card'));
+                        const cardIndex = currentRowCards.indexOf(currentCard);
+                        const prevRowCards = Array.from(prevBlock.querySelectorAll('.card'));
+                        let targetCard = prevRowCards[cardIndex];
+                        if (!targetCard) targetCard = prevRowCards[prevRowCards.length - 1];
+                        if (targetCard) { targetCard.scrollIntoView({ behavior: 'auto', block: 'center' }); setTimeout(() => { targetCard.focus(); }, 50); }
                     }
                 }
             }
@@ -341,48 +352,20 @@
             currentPlayingId = id;
             if (typeof AndroidControl !== 'undefined') AndroidControl.setVideoMode(true);
             const container = document.getElementById('video-container');
-            container.style.display = 'block';
+            container.style.display = 'block'; // חובה להציג לפני ששמים תוכן
             container.innerHTML = `<iframe src="https://drive.google.com/file/d/${id}/preview" allowfullscreen style="width:100%; height:100%; border:none;"></iframe>`;
-            switchScreen('video');
             if (typeof AndroidControl !== 'undefined') automateDrive();
         }
 
-        // --- הפונקציה הקריטית לחזרה ---
-        window.handleBackPress = function() {
-            if(document.getElementById('video-container').style.display === 'block') {
-                document.getElementById('video-container').innerHTML = ''; // מחיקה מידית
-                document.getElementById('video-container').style.display = 'none';
-                
-                document.getElementById('content-view').style.display = 'block';
-                document.querySelector('.top-section').style.display = 'none';
-                document.querySelector('.bottom-section').style.display = 'none';
-                
-                if (typeof AndroidControl !== 'undefined') AndroidControl.setVideoMode(false);
-                if (currentPlayingId) setTimeout(() => { const el = document.querySelector(`[data-id="${currentPlayingId}"]`); if(el) { el.focus(); el.scrollIntoView({block: 'center', inline: 'center'}); } }, 100);
-                return;
-            }
-            if (document.getElementById('content-view').style.display !== 'none') {
-                document.getElementById('content-view').style.display = 'none';
-                switchScreen('home');
-                if (lastFocusedId) setTimeout(() => { const el = document.querySelector(`[data-id="${lastFocusedId}"]`); if(el) el.focus(); }, 200);
-                return;
-            }
-            if (document.getElementById('search-input')) { enterApp(); return; }
-            if (document.querySelector('.bottom-section').style.display === 'block') { switchScreen('profiles'); return; }
-            if (window.AndroidControl) AndroidControl.exitApp();
-        };
-
-        // --- פונקציה פנימית ל-JS בלבד ---
-        function closeVideo() { window.handleBackPress(); }
-
         function playNextEpisode() {
-            let s = seriesData.find(s => s.episodes && s.episodes.some(ep => ep.driveId === currentPlayingId));
-            if (s) {
-                const idx = s.episodes.findIndex(ep => ep.driveId === currentPlayingId);
-                if (idx !== -1 && idx < s.episodes.length - 1) {
-                    closeVideo(); setTimeout(() => playHD(s.episodes[idx + 1].driveId), 500);
-                } else closeVideo();
-            } else closeVideo();
+            let currentSeries = seriesData.find(s => s.episodes && s.episodes.some(ep => ep.driveId === currentPlayingId));
+            if (currentSeries) {
+                const currentIndex = currentSeries.episodes.findIndex(ep => ep.driveId === currentPlayingId);
+                if (currentIndex !== -1 && currentIndex < currentSeries.episodes.length - 1) {
+                    const nextEp = currentSeries.episodes[currentIndex + 1];
+                    closeVideo(); setTimeout(() => { playHD(nextEp.driveId); }, 500);
+                } else { closeVideo(); }
+            } else { closeVideo(); }
         }
 
         function automateDrive() {
@@ -397,6 +380,35 @@
                 if (checks++ > 20) clearInterval(det);
             }, 500);
         }
+
+        // --- הפונקציה הקריטית שנקראת מה-Java ---
+        window.handleBackPress = function() {
+            // 1. סגירת וידאו מיידית
+            const vidContainer = document.getElementById('video-container');
+            if(vidContainer.style.display === 'block') {
+                vidContainer.innerHTML = '';
+                vidContainer.style.display = 'none';
+                
+                document.getElementById('content-view').style.display = 'block';
+                if(currentPlayingId) setTimeout(() => { const el = document.querySelector(`[data-id="${currentPlayingId}"]`); if(el) { el.focus(); el.scrollIntoView({block:'center'}); } }, 100);
+                
+                if (typeof AndroidControl !== 'undefined') AndroidControl.setVideoMode(false);
+                return;
+            }
+            // 2. יציאה מתוכן
+            if (document.getElementById('content-view').style.display !== 'none') {
+                document.getElementById('content-view').style.display = 'none';
+                switchScreen('home');
+                if (lastFocusedId) setTimeout(() => { const el = document.querySelector(`[data-id="${lastFocusedId}"]`); if(el) el.focus(); }, 200);
+                return;
+            }
+            if (document.getElementById('search-input')) { enterApp(); return; }
+            if (document.querySelector('.bottom-section').style.display === 'block') { switchScreen('profiles'); return; }
+            if (window.AndroidControl) AndroidControl.exitApp();
+        };
+
+        // --- פונקציה פנימית ל-JS בלבד (למקרה שה-Java לא עובד) ---
+        function closeVideo() { window.handleBackPress(); }
 
         function switchScreen(name) {
             document.querySelectorAll('.screen').forEach(el => el.style.display = 'none');
@@ -414,7 +426,6 @@
                 document.querySelector('.bottom-section').style.display = 'block';
                 setTimeout(() => { const c=document.querySelector('.card'); if(c)c.focus(); }, 500);
             }
-            if (name === 'video') document.getElementById('video-container').style.display = 'block';
         }
     </script>
 </body>
