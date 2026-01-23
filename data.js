@@ -117,6 +117,24 @@ const seriesData = [
 
     
     // סדרות ילדים ונוער ---
+
+        {
+        id: "quest",
+        type: "series", 
+        category: "ילדים", 
+        genre: "הפקות המקור של HOT",
+        title: "קווסט",
+        description: "אבשה, נער נחוש ועקשן, מסתנן לתחרות גיימינג על אי בודד ומסתורי בתקווה למצוא את אביו, שמטוסו התרסק בסמוך לאי לפני כעשור. במשחק נרקמים סיפורי אהבה ויריבויות, והחיים עצמם מונחים על הכף.",
+        // 👇 וודא שיש לך קובץ בשם tsayar.jpg בתיקיית images
+        image: "./images/quest.jpg",
+        episodes: [
+            // אם יש לך תמונה לפרק, שים אותה בתיקייה ותעדכן כאן. אם אין, תשאיר גרשיים ריקים ""
+            { number: "1", desc: "פרק ראשון", image: "", driveId: "" },
+            { number: "2", desc: "פרק שני", image: "", driveId: "" }
+        ]
+    },
+
+    
     {
         id: "tsaiamearot",
         type: "series", 
