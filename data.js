@@ -6,7 +6,43 @@ const seriesData = [
 
     
     // סדרות חדשות ומומלצות ---
+{
 
+
+            id: "zaguri-new-season",
+        type: "series", 
+        category: "סדרות", 
+        genre: "חדש ב-VOD",
+        title: "זגורי אימפריה  - עונה חדשה",
+        description: "העונה החדשה! פרק חדש בכל יום ה' ב- 16:30 ב- VOD. זוכת פרס האקדמיה, הסדרה של מאור זגורי על המשפחה ששינתה את הטלוויזיה הישראלית: משפחת זגורי מבאר שבע, בת שבע נפשות. ועל האח אביאל, שחוזר הביתה אחרי שניסה להתכחש למי שהוא, ואחותו אבישג, שלעולם לא תיתן לו לשכוח מאיפה בא.",
+        // 👇 וודא שיש לך קובץ בשם tsayar.jpg בתיקיית images
+        image: "./images/zaguri.jpg",
+        episodes: [
+            // אם יש לך תמונה לפרק, שים אותה בתיקייה ותעדכן כאן. אם אין, תשאיר גרשיים ריקים ""
+            { number: "1", desc: "פרק ראשון", image: "", driveId: "" },
+            { number: "2", desc: "פרק שני", image: "", driveId: "" },
+            { number: "3", desc: "פרק שלישי", image: "", driveId: "" },
+            { number: "4", desc: "פרק רביעי", image: "", driveId: "" }
+        ]
+    },
+
+    {
+        id: "tolsaking-new-season",
+        type: "series", 
+        category: "סדרות", 
+        genre: "חדש ב-VOD",
+        title: "טולסה קינג - עונה חדשה",
+        description: "דוויט מנפרדי (סילבסטר סטאלון), מאפיונר ותיק שמשתחרר מהכלא ונשלח לנהל את עסקי המאפיה בעיירה נידחת: טולסה, אוקלהומה. מנפרדי נאלץ לנווט בין עולם הפשע המודרני לבין כללי המאפייה המסורתיים, כדי להפוך את טולסה לאימפריית פשע בשליטתו.",
+        // 👇 וודא שיש לך קובץ בשם tsayar.jpg בתיקיית images
+        image: "./images/tolsaking.jpg",
+        episodes: [
+            // אם יש לך תמונה לפרק, שים אותה בתיקייה ותעדכן כאן. אם אין, תשאיר גרשיים ריקים ""
+            { number: "1", desc: "פרק ראשון", image: "", driveId: "" },
+            { number: "2", desc: "פרק שני", image: "", driveId: "" },
+            { number: "3", desc: "פרק שלישי", image: "", driveId: "" },
+            { number: "4", desc: "פרק רביעי", image: "", driveId: "" }
+        ]
+    },
 
 
     
