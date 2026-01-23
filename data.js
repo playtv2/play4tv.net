@@ -37,7 +37,7 @@ const seriesData = [
         title: "ילד חרא",
         description: "קומדיה שחורה אפלה ומקורית. שי בן ה-12 סובל מהתעללות בבית ובבית הספר. כשהוא מגלה שאביו מנהל רומן, הוא מחליט לסחוט אותו בזהות בדויה. הסחיטה מדרדרת לשרשרת אירועים סוערת שמובילה לעימות בין-דורי ומערבת דמויות צבעוניות מהשכונה.",
         // 👇 וודא שיש לך קובץ בשם tsayar.jpg בתיקיית images
-        image: "./images/yeledhara.jpg",
+        image: "./images/yeledhara.jpeg",
         episodes: [
             // אם יש לך תמונה לפרק, שים אותה בתיקייה ותעדכן כאן. אם אין, תשאיר גרשיים ריקים ""
             { number: "1", desc: "פרק ראשון", image: "", driveId: "" },
