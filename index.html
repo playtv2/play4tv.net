@@ -98,14 +98,17 @@
 
         #video-container { position: fixed; inset: 0; background: #000; z-index: 50000; display: none; }
         
-        /* --- העיצוב החדש למסך הטעינה המיוחד --- */
+        /* --- התיקון הקריטי למסך הטעינה --- */
         #loader-overlay {
             position: fixed; inset: 0; background: #000; z-index: 50001; 
             display: none; align-items: center; justify-content: center;
-            transition: opacity 0.5s ease; /* פייד אאוט חלק */
+            transition: opacity 0.5s ease;
+            
+            /* >>> השורה החשובה ביותר: מאפשרת ללחיצות לעבור דרך המסך <<< */
+            pointer-events: none; 
         }
         #loader-overlay video {
-            width: 300px; height: 300px; object-fit: contain; /* התאמת גודל */
+            width: 300px; height: 300px; object-fit: contain;
         }
         /* --------------------------------------- */
 
@@ -213,7 +216,6 @@
             container.innerHTML = results.length > 0 ? renderRow(`תוצאות עבור "${query}"`, results) : `<div style="padding: 20px; color: #777;">לא נמצאו תוצאות...</div>`;
         }
 
-        // ... אירועי מקלדת (ללא שינוי) ...
         window.addEventListener('keydown', function(e) {
             const active = document.activeElement;
             if (active.id === 'search-input') {
@@ -348,7 +350,7 @@
             currentPlayingId = id;
             if (typeof AndroidControl !== 'undefined') AndroidControl.setVideoMode(true);
             
-            // 1. מציג את שכבת הטעינה מיד
+            // 1. מציג את שכבת הטעינה
             const loader = document.getElementById('loader-overlay');
             loader.style.opacity = '1';
             loader.style.display = 'flex';
@@ -383,29 +385,29 @@
                         setTimeout(function() { AndroidControl.triggerCenterClick(); }, 500); 
                         setTimeout(function() { AndroidControl.triggerCenterClick(); }, 1500);
                         
-                        // כאן התיקון: אחרי שהאוטומציה סיימה ללחוץ, מעלימים את מסך הטעינה
+                        // כאן: אחרי שהאוטומציה סיימה ללחוץ, מעלימים את מסך הטעינה
                         setTimeout(function() { 
                             AndroidControl.triggerCenterDoubleClick();
                             
                             // העלמת מסך טעינה בפייד אאוט
                             const loader = document.getElementById('loader-overlay');
                             loader.style.opacity = '0';
-                            setTimeout(() => { loader.style.display = 'none'; }, 500); // מחכים שהאנימציה תסתיים
+                            setTimeout(() => { loader.style.display = 'none'; }, 500);
                             
-                        }, 2500); // אחרי 2.5 שניות, כשהסרטון בטוח רץ
+                        }, 2500);
                     }
                 }
                 if (checks++ > 20) clearInterval(det);
             }, 500);
         }
 
-        // --- התיקון הקריטי לאיפוס מצב הניגון + העלמת מסך טעינה אם יוצאים באמצע ---
+        // --- פונקציית החזרה (הכוללת איפוס ניגון והסתרת מסך טעינה) ---
         window.handleBackPress = function() {
             if(document.getElementById('video-container').style.display === 'block') {
                 document.getElementById('video-container').innerHTML = '';
                 document.getElementById('video-container').style.display = 'none';
                 
-                // הסתרת מסך טעינה מיידית
+                // וודא שמסך הטעינה נעלם אם יוצאים באמצע
                 document.getElementById('loader-overlay').style.display = 'none';
                 
                 window.hpDone = false; 
