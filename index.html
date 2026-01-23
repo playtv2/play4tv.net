@@ -1,3 +1,5 @@
+קוד index:
+
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
@@ -70,7 +72,7 @@
             margin-bottom: -10px;
             overflow-x: auto; scroll-behavior: smooth; white-space: nowrap; 
             scroll-snap-type: x mandatory; 
-            /* רווח רק בסוף הגלילה בצד שמאל */
+            /* רווח רק בסוף הגלילה (שמאל) */
             padding-left: 50px; 
         }
         .row::-webkit-scrollbar { display: none; }
@@ -87,12 +89,10 @@
             transform-origin: center center;
         }
 
-        /* --- התיקון המיוחד לכרטיסייה הראשונה --- */
-        /* 1. גדלה רק שמאלה (פנימה) */
-        /* 2. מיקרו-שוליים של 2px כדי למנוע חיתוך של המסגרת הלבנה */
+        /* --- התיקון המוחלט: --- */
+        /* האלמנט הראשון תמיד יגדל שמאלה (פנימה) ולכן לא ייחתך בקצה המסך */
         .row .card:first-child {
             transform-origin: right center !important;
-            margin-right: 2px; 
         }
         /* האלמנט האחרון יגדל ימינה */
         .row .card:last-child {
@@ -240,6 +240,7 @@
                 }
                 if (active.classList.contains('card')) { const nextCard = active.nextElementSibling; if (nextCard && nextCard.classList.contains('card')) { e.preventDefault(); nextCard.focus(); } }
             }
+            // (ArrowDown/Up logic remains same as provided previously, condensed here for brevity)
             if (e.key === 'ArrowDown') {
                 const currentBlock = active.closest('.category-block');
                 if (currentBlock) {
@@ -353,7 +354,7 @@
             currentPlayingId = id;
             if (typeof AndroidControl !== 'undefined') AndroidControl.setVideoMode(true);
             const container = document.getElementById('video-container');
-            container.style.display = 'block'; 
+            container.style.display = 'block'; // חובה להציג לפני ששמים תוכן
             container.innerHTML = `<iframe src="https://drive.google.com/file/d/${id}/preview" allowfullscreen style="width:100%; height:100%; border:none;"></iframe>`;
             if (typeof AndroidControl !== 'undefined') automateDrive();
         }
@@ -391,7 +392,7 @@
                 vidContainer.style.display = 'none';
                 
                 document.getElementById('content-view').style.display = 'block';
-                if(currentPlayingId) setTimeout(() => { const el = document.querySelector(`[data-id="${currentPlayingId}"]`); if(el) { el.focus(); el.scrollIntoView({block:'center', inline:'center'}); } }, 100);
+                if(currentPlayingId) setTimeout(() => { const el = document.querySelector(`[data-id="${currentPlayingId}"]`); if(el) { el.focus(); el.scrollIntoView({block:'center'}); } }, 100);
                 
                 if (typeof AndroidControl !== 'undefined') AndroidControl.setVideoMode(false);
                 return;
