@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>HOT play</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth-compat.js"></script>
@@ -89,7 +90,7 @@
         
         .card.series { min-width: 200px; width: 200px; height: 112px; }
         .card.movie { min-width: 100px; width: 100px; height: 150px; }
-        .card img { width: 100%; height: 100%; object-fit: cover; }
+        .card img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
         
         .card:focus { transform: scale(1.15); z-index: 100; border-width: 2px; border-color: #ffffff; box-shadow: 0 10px 20px rgba(0,0,0,0.9); outline: none; }
         .card-title-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); padding: 5px; text-align: center; font-size: 11px; opacity: 0; transition: 0.2s; color: white; }
@@ -97,17 +98,15 @@
 
         #video-container { position: fixed; inset: 0; background: #000; z-index: 50000; display: none; }
         
-        /* --- תוספת: מסך הטעינה --- */
+        /* ה-Loading שקוף ללחיצות - חובה לאוטומציה */
         #loader-overlay {
             position: fixed; inset: 0; background: #000; z-index: 50001; 
             display: none; align-items: center; justify-content: center;
-            /* קריטי: זה מה שמאפשר לאוטומציה ללחוץ "דרך" הסרטון */
             pointer-events: none; 
         }
         #loader-overlay video {
             width: 300px; height: 300px; object-fit: contain;
         }
-        /* --- סוף תוספת --- */
 
         .search-container { padding: 20px 50px; }
         .search-input { width: 100%; max-width: 600px; background: #222; border: 2px solid #333; color: white; padding: 15px 20px; font-size: 20px; border-radius: 50px; outline: none; transition: 0.3s; margin-bottom: 30px; }
@@ -125,7 +124,7 @@
         .profile-box:focus .profile-img { border-color: var(--red); }
         .profile-name { font-size: 16px; color: #ccc; }
         
-        /* תוספת: קיבוע ה-iframe כדי שלא יזוז */
+        /* קיבוע ה-iframe כדי שלא יזוז עם החצים */
         iframe { width: 100%; height: 100%; border: none; overflow: hidden; }
     </style>
 </head>
@@ -133,7 +132,7 @@
 
     <div id="loading-screen" style="display: flex;"><h1 style="color: #444; font-size: 24px;">טוען...</h1></div>
 
-    <div id="loader-overlay" style="display: none;">
+    <div id="loader-overlay">
         <video src="loading.mp4" autoplay loop muted playsinline></video>
     </div>
 
@@ -221,7 +220,8 @@
                 return; 
             }
             if (!active) return;
-            if (e.key === 'Enter' && (active.classList.contains('card') || active.classList.contains('nav-item') || active.classList.contains('profile-box'))) { e.preventDefault(); active.click(); return; }
+            // הוספתי את login-btn לרשימה כדי שיוכלו ללחוץ עליו
+            if (e.key === 'Enter' && (active.classList.contains('card') || active.classList.contains('nav-item') || active.classList.contains('profile-box') || active.classList.contains('login-btn'))) { e.preventDefault(); active.click(); return; }
             if (e.key === 'ArrowRight' && active.classList.contains('card')) {
                 e.preventDefault(); const prevCard = active.previousElementSibling;
                 if (prevCard && prevCard.classList.contains('card')) prevCard.focus(); else document.querySelector('.nav-item').focus();
@@ -344,19 +344,18 @@
             setTimeout(() => { const b=detailView.querySelector('.login-btn')||detailView.querySelector('.card'); if(b)b.focus(); }, 200);
         }
 
-        // --- כאן הוספתי את סרטון הטעינה וקיבעתי את הוידאו ---
         function playHD(id) {
             currentPlayingId = id;
             if (typeof AndroidControl !== 'undefined') AndroidControl.setVideoMode(true);
             
-            // 1. הפעלת Loading (עם pointer-events: none ב-CSS)
+            // --- השינוי ל-Loading ל-10 שניות ---
             const loader = document.getElementById('loader-overlay');
             loader.style.display = 'flex';
-            setTimeout(() => { loader.style.display = 'none'; }, 5000); 
+            setTimeout(() => { loader.style.display = 'none'; }, 10000); 
 
-            // 2. הפעלת הנגן (עם scrolling="no" כדי למנוע תזוזה)
             const container = document.getElementById('video-container');
             container.style.display = 'block'; 
+            // הוספתי כאן scrolling="no" ו-overflow:hidden כדי למנוע תזוזה
             container.innerHTML = `<iframe src="https://drive.google.com/file/d/${id}/preview" allowfullscreen style="width:100%; height:100%; border:none; overflow:hidden;" scrolling="no"></iframe>`;
             
             if (typeof AndroidControl !== 'undefined') automateDrive();
@@ -372,31 +371,33 @@
             } else closeVideo();
         }
 
-        // --- האוטומציה המקורית שביקשת ---
+        // --- השינוי הקריטי לאוטומציה בסטרימר איטי ---
         function automateDrive() {
-            var checks = 0;
-            var det = setInterval(function() {
-                var f = document.querySelector('iframe');
-                if (f) {
-                    clearInterval(det);
-                    try { var style = document.createElement('style'); style.innerHTML = '.ndfHFb-c4YZDc-Wr97p { display: none !important; }'; f.contentDocument.head.appendChild(style); } catch(e) {}
-                    f.focus(); 
+            if(window.AndroidControl) {
+                // בדיקה פשוטה: מתחילים ללחוץ רק אחרי 4 שניות
+                setTimeout(function() { 
+                    AndroidControl.triggerCenterClick(); 
                     
-                    if(window.AndroidControl) {
-                        setTimeout(function() { AndroidControl.triggerCenterClick(); }, 500); 
-                        setTimeout(function() { AndroidControl.triggerCenterClick(); }, 1500);
-                        setTimeout(function() { AndroidControl.triggerCenterDoubleClick(); }, 2500);
-                    }
-                }
-                if (checks++ > 20) clearInterval(det);
-            }, 500);
+                    // גיבוי: לחיצה נוספת אחרי עוד 2 שניות
+                    setTimeout(function() {
+                        AndroidControl.triggerCenterClick();
+                    }, 2000);
+                    
+                    // גיבוי אחרון: לחיצה כפולה אחרי עוד שנייה
+                    setTimeout(function() {
+                        AndroidControl.triggerCenterDoubleClick();
+                    }, 3000);
+                    
+                }, 4000); 
+            }
         }
 
-        // --- איפוס hpDone ביציאה ---
         window.handleBackPress = function() {
             if(document.getElementById('video-container').style.display === 'block') {
                 document.getElementById('video-container').innerHTML = '';
                 document.getElementById('video-container').style.display = 'none';
+                
+                // הסתרת Loading אם יצאנו
                 document.getElementById('loader-overlay').style.display = 'none';
                 
                 window.hpDone = false; 
