@@ -10,6 +10,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth-compat.js"></script>
     <style>
         :root { --red: #ff0055; --bg: #000000; --sidebar-width: 70px; --sidebar-expanded: 220px; }
+        * { -webkit-tap-highlight-color: transparent !important; outline: none !important; }
         
         body { 
             background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; 
@@ -98,8 +99,7 @@
 
         #video-container { position: fixed; inset: 0; background: #000; z-index: 50000; display: none; }
         
-        /* --- זה מסך הטעינה החדש --- */
-        /* שים לב ל-pointer-events: none; - זה מה שמאפשר ללחיצות לעבור */
+        /* --- מסך הטעינה (שקוף ללחיצות) --- */
         #loader-overlay {
             position: fixed; inset: 0; background: #000; z-index: 50001; 
             display: none; align-items: center; justify-content: center;
@@ -108,7 +108,6 @@
         #loader-overlay video {
             width: 300px; height: 300px; object-fit: contain;
         }
-        /* -------------------------- */
 
         .search-container { padding: 20px 50px; }
         .search-input { width: 100%; max-width: 600px; background: #222; border: 2px solid #333; color: white; padding: 15px 20px; font-size: 20px; border-radius: 50px; outline: none; transition: 0.3s; margin-bottom: 30px; }
@@ -117,7 +116,10 @@
         .screen { display: none; }
         #loading-screen, #auth-screen { position: fixed; inset: 0; background: #000; z-index: 20000; display: flex; align-items: center; justify-content: center; }
         #auth-screen { flex-direction: column; z-index: 10000; }
-        .login-btn { background: var(--red); color: white; border: none; padding: 10px 30px; font-size: 20px; font-weight: bold; border-radius: 50px; margin-top: 20px; }
+        
+        .login-btn { background: var(--red); color: white; border: none; padding: 10px 30px; font-size: 20px; font-weight: bold; border-radius: 50px; margin-top: 20px; cursor: pointer; }
+        .login-btn:focus { transform: scale(1.1); outline: 3px solid white !important; }
+
         #profile-screen { position: fixed; inset: 0; background: #000; z-index: 9999; flex-direction: column; align-items: center; justify-content: center; }
         .profile-container { display: flex; gap: 25px; }
         .profile-box { text-align: center; padding: 10px; border-radius: 10px; transition: 0.2s; }
@@ -190,6 +192,12 @@
             if (user && user.email === "nitaylayish298@gmail.com") { switchScreen('profiles'); loadProfiles(); } else { switchScreen('auth'); }
         });
 
+        // --- התחברות גוגל ---
+        function login() { firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider()); }
+
+        function loadProfiles() { document.getElementById('profile-list').innerHTML = profilesData.map(p => `<div class="profile-box" tabindex="0" onclick="selectProfile('${p.n}')"><div class="profile-img" style="background-image: url('${p.i}')"></div><span class="profile-name">${p.n}</span></div>`).join(''); setTimeout(() => document.querySelector('.profile-box').focus(), 500); }
+        function selectProfile(name) { currentProfile = profilesData.find(p => p.n === name); updateSidebar(); enterApp(); }
+        function enterApp() { switchScreen('home'); renderHome(); }
         function updateSidebar() {
             const nav = document.getElementById('dynamic-nav');
             let html = `<div class="nav-item" tabindex="0" onclick="showSearch()"><span class="nav-icon">🔍</span><span class="nav-text">חיפוש</span></div>
@@ -197,14 +205,12 @@
             html += `<div class="nav-item" tabindex="0" style="margin-top:auto;" onclick="switchScreen('profiles')"><span class="nav-icon">🔄</span><span class="nav-text">החלף פרופיל</span></div>`;
             nav.innerHTML = html;
         }
-
         function showSearch() {
             const home = document.getElementById('home-view');
             document.querySelector('.top-section').style.display = 'none';
             home.innerHTML = `<div class="search-container"><input type="text" id="search-input" class="search-input" placeholder="מה בא לך לראות?" oninput="runSearch(this.value)"><div id="search-results"></div></div>`;
             setTimeout(() => document.getElementById('search-input').focus(), 100);
         }
-
         function runSearch(query) {
             const container = document.getElementById('search-results');
             if (!query || query.length < 2) { container.innerHTML = ''; return; }
@@ -215,60 +221,41 @@
 
         window.addEventListener('keydown', function(e) {
             const active = document.activeElement;
-            if (active.id === 'search-input') {
-                if (e.key === 'ArrowDown') { e.preventDefault(); const firstCard = document.querySelector('.card'); if (firstCard) firstCard.focus(); }
-                return; 
-            }
+            if (active.id === 'search-input') { if (e.key === 'ArrowDown') { e.preventDefault(); const f = document.querySelector('.card'); if (f) f.focus(); } return; }
             if (!active) return;
-            if (e.key === 'Enter' && (active.classList.contains('card') || active.classList.contains('nav-item') || active.classList.contains('profile-box'))) { e.preventDefault(); active.click(); return; }
-            if (e.key === 'ArrowRight' && active.classList.contains('card')) {
-                e.preventDefault(); const prevCard = active.previousElementSibling;
-                if (prevCard && prevCard.classList.contains('card')) prevCard.focus(); else document.querySelector('.nav-item').focus();
+            
+            // --- התיקון לכפתור ההתחברות ---
+            if (e.key === 'Enter' && (active.classList.contains('card') || active.classList.contains('nav-item') || active.classList.contains('profile-box') || active.classList.contains('login-btn'))) { 
+                e.preventDefault(); active.click(); return; 
             }
-            if (e.key === 'ArrowLeft') {
-                if (active.classList.contains('nav-item')) {
-                    e.preventDefault();
-                    if (lastFocusedId) { const el = document.querySelector(`[data-id="${lastFocusedId}"]`); if(el) el.focus(); else document.querySelector('.card').focus(); }
-                    else document.querySelector('.card').focus();
-                    return;
-                }
-                if (active.classList.contains('card')) { const nextCard = active.nextElementSibling; if (nextCard && nextCard.classList.contains('card')) { e.preventDefault(); nextCard.focus(); } }
+            
+            if (e.key === 'ArrowRight' && active.classList.contains('card')) { e.preventDefault(); const p = active.previousElementSibling; if (p && p.classList.contains('card')) p.focus(); else document.querySelector('.nav-item').focus(); }
+            if (e.key === 'ArrowLeft') { 
+                if (active.classList.contains('nav-item')) { e.preventDefault(); if (lastFocusedId) { const el = document.querySelector(`[data-id="${lastFocusedId}"]`); if(el) el.focus(); else document.querySelector('.card').focus(); } else document.querySelector('.card').focus(); return; }
+                if (active.classList.contains('card')) { const n = active.nextElementSibling; if (n && n.classList.contains('card')) { e.preventDefault(); n.focus(); } } 
             }
             if (e.key === 'ArrowDown') {
-                const currentBlock = active.closest('.category-block');
-                if (currentBlock) {
-                    e.preventDefault(); 
-                    const allBlocks = Array.from(document.querySelectorAll('.category-block'));
-                    const currentIndex = allBlocks.indexOf(currentBlock);
-                    if (currentIndex < allBlocks.length - 1) {
-                        const nextBlock = allBlocks[currentIndex + 1];
-                        const currentCard = active.closest('.card');
-                        const currentRowCards = Array.from(currentBlock.querySelectorAll('.card'));
-                        const cardIndex = currentRowCards.indexOf(currentCard);
-                        const nextRowCards = Array.from(nextBlock.querySelectorAll('.card'));
-                        let targetCard = nextRowCards[cardIndex];
-                        if (!targetCard) targetCard = nextRowCards[nextRowCards.length - 1];
-                        if (targetCard) { targetCard.scrollIntoView({ behavior: 'auto', block: 'center' }); setTimeout(() => { targetCard.focus(); }, 50); }
+                const b = active.closest('.category-block'); if(b) {
+                    e.preventDefault(); const all = Array.from(document.querySelectorAll('.category-block')); const i = all.indexOf(b);
+                    const targetBlock = e.key === 'ArrowDown' ? all[i+1] : all[i-1];
+                    if(targetBlock) {
+                        const currCards = Array.from(b.querySelectorAll('.card')); const idx = currCards.indexOf(active.closest('.card'));
+                        const nextCards = Array.from(targetBlock.querySelectorAll('.card'));
+                        let t = nextCards[idx] || nextCards[nextCards.length-1];
+                        if(t) { t.scrollIntoView({behavior:'auto',block:'center'}); setTimeout(()=>t.focus(),50); }
                     }
                 }
             }
             if (e.key === 'ArrowUp') {
-                const currentBlock = active.closest('.category-block');
-                if (currentBlock) {
-                    e.preventDefault();
-                    if (document.getElementById('search-input')) { document.getElementById('search-input').focus(); return; }
-                    const allBlocks = Array.from(document.querySelectorAll('.category-block'));
-                    const currentIndex = allBlocks.indexOf(currentBlock);
-                    if (currentIndex > 0) {
-                        const prevBlock = allBlocks[currentIndex - 1];
-                        const currentCard = active.closest('.card');
-                        const currentRowCards = Array.from(currentBlock.querySelectorAll('.card'));
-                        const cardIndex = currentRowCards.indexOf(currentCard);
-                        const prevRowCards = Array.from(prevBlock.querySelectorAll('.card'));
-                        let targetCard = prevRowCards[cardIndex];
-                        if (!targetCard) targetCard = prevRowCards[prevRowCards.length - 1];
-                        if (targetCard) { targetCard.scrollIntoView({ behavior: 'auto', block: 'center' }); setTimeout(() => { targetCard.focus(); }, 50); }
-                    }
+                const b = active.closest('.category-block'); if(b) {
+                    e.preventDefault(); const all = Array.from(document.querySelectorAll('.category-block')); const i = all.indexOf(b);
+                    const targetBlock = i > 0 ? all[i-1] : null;
+                    if(targetBlock) {
+                        const currCards = Array.from(b.querySelectorAll('.card')); const idx = currCards.indexOf(active.closest('.card'));
+                        const nextCards = Array.from(targetBlock.querySelectorAll('.card'));
+                        let t = nextCards[idx] || nextCards[nextCards.length-1];
+                        if(t) { t.scrollIntoView({behavior:'auto',block:'center'}); setTimeout(()=>t.focus(),50); }
+                    } else if (document.getElementById('search-input')) { document.getElementById('search-input').focus(); }
                 }
             }
         });
@@ -288,11 +275,6 @@
             }
         }, true);
 
-        function login() { firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider()); }
-        function loadProfiles() { document.getElementById('profile-list').innerHTML = profilesData.map(p => `<div class="profile-box" tabindex="0" onclick="selectProfile('${p.n}')"><div class="profile-img" style="background-image: url('${p.i}')"></div><span class="profile-name">${p.n}</span></div>`).join(''); setTimeout(() => document.querySelector('.profile-box').focus(), 500); }
-        function selectProfile(name) { currentProfile = profilesData.find(p => p.n === name); updateSidebar(); enterApp(); }
-        function enterApp() { switchScreen('home'); renderHome(); }
-        
         function addToHistory(item) { if (!currentProfile) return; const key = `history_${currentProfile.n}`; let h = JSON.parse(localStorage.getItem(key) || "[]"); h = h.filter(x => x.id !== item.id); h.unshift(item); if(h.length > 10) h.pop(); localStorage.setItem(key, JSON.stringify(h)); }
         function getHistory() { if (!currentProfile) return []; return JSON.parse(localStorage.getItem(`history_${currentProfile.n}`) || "[]"); }
 
@@ -343,19 +325,15 @@
             setTimeout(() => { const b=detailView.querySelector('.login-btn')||detailView.querySelector('.card'); if(b)b.focus(); }, 200);
         }
 
-        // --- הוספת ה-Loading ב-playHD ---
         function playHD(id) {
             currentPlayingId = id;
             if (typeof AndroidControl !== 'undefined') AndroidControl.setVideoMode(true);
             
-            // מראה את ה-Loading
+            // --- Loading ל-4 שניות ---
             const loader = document.getElementById('loader-overlay');
             loader.style.display = 'flex';
-            
-            // מעלים אחרי 4 שניות
-            setTimeout(() => {
-                loader.style.display = 'none';
-            }, 4000); 
+            setTimeout(() => { loader.style.display = 'none'; }, 4000);
+            // -------------------------
 
             const container = document.getElementById('video-container');
             container.style.display = 'block'; 
@@ -373,26 +351,17 @@
             } else closeVideo();
         }
 
+        // --- אוטומציה של לחיצה אחת בלבד ---
         function automateDrive() {
-            var checks = 0;
-            var det = setInterval(function() {
-                var f = document.querySelector('iframe');
-                if (f) {
-                    clearInterval(det);
-                    try { var style = document.createElement('style'); style.innerHTML = '.ndfHFb-c4YZDc-Wr97p { display: none !important; }'; f.contentDocument.head.appendChild(style); } catch(e) {}
-                    f.focus(); 
-                    
-                    if(window.AndroidControl) {
-                        setTimeout(function() { AndroidControl.triggerCenterClick(); }, 500); 
-                        setTimeout(function() { AndroidControl.triggerCenterClick(); }, 1500);
-                        setTimeout(function() { AndroidControl.triggerCenterDoubleClick(); }, 2500);
-                    }
-                }
-                if (checks++ > 20) clearInterval(det);
-            }, 500);
+            if(window.AndroidControl) {
+                // לחיצה בודדת ושקטה אחרי שניה וחצי
+                setTimeout(function() { 
+                    AndroidControl.triggerCenterClick(); 
+                }, 1500); 
+            }
         }
 
-        // --- העלמת ה-Loading ביציאה ---
+        // --- איפוס חשוב ביציאה ---
         window.handleBackPress = function() {
             if(document.getElementById('video-container').style.display === 'block') {
                 document.getElementById('video-container').innerHTML = '';
