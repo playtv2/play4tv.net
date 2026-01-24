@@ -11,13 +11,12 @@
     <style>
         :root { --red: #ff0055; --bg: #000000; --sidebar-width: 70px; --sidebar-expanded: 220px; }
         
-        * { -webkit-tap-highlight-color: transparent !important; outline: none !important; }
-        
         body { 
             background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; 
             margin: 0; padding: 0; width: 100vw; height: 100vh; 
             overflow: hidden; display: flex; position: fixed; inset: 0;
         }
+        *:focus { outline: none; }
         
         /* Sidebar */
         .sidebar { 
@@ -86,12 +85,12 @@
             transform-origin: center center;
         }
 
-        .row .card:first-child { transform-origin: right center !important; margin-right: 2px; }
+        .row .card:first-child { transform-origin: right center !important; }
         .row .card:last-child { transform-origin: left center !important; }
         
         .card.series { min-width: 200px; width: 200px; height: 112px; }
         .card.movie { min-width: 100px; width: 100px; height: 150px; }
-        .card img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+        .card img { width: 100%; height: 100%; object-fit: cover; }
         
         .card:focus { transform: scale(1.15); z-index: 100; border-width: 2px; border-color: #ffffff; box-shadow: 0 10px 20px rgba(0,0,0,0.9); outline: none; }
         .card-title-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); padding: 5px; text-align: center; font-size: 11px; opacity: 0; transition: 0.2s; color: white; }
@@ -99,14 +98,17 @@
 
         #video-container { position: fixed; inset: 0; background: #000; z-index: 50000; display: none; }
         
+        /* --- זה החלק החדש של ה-Loading --- */
         #loader-overlay {
             position: fixed; inset: 0; background: #000; z-index: 50001; 
             display: none; align-items: center; justify-content: center;
+            /* הפקודה הקריטית: לחיצות עוברות דרך זה! */
             pointer-events: none; 
         }
         #loader-overlay video {
             width: 300px; height: 300px; object-fit: contain;
         }
+        /* ---------------------------------- */
 
         .search-container { padding: 20px 50px; }
         .search-input { width: 100%; max-width: 600px; background: #222; border: 2px solid #333; color: white; padding: 15px 20px; font-size: 20px; border-radius: 50px; outline: none; transition: 0.3s; margin-bottom: 30px; }
@@ -188,22 +190,22 @@
             if (user && user.email === "nitaylayish298@gmail.com") { switchScreen('profiles'); loadProfiles(); } else { switchScreen('auth'); }
         });
 
-        // ... (קוד הפרופילים והחיפוש ללא שינוי) ...
-        function loadProfiles() { document.getElementById('profile-list').innerHTML = profilesData.map(p => `<div class="profile-box" tabindex="0" onclick="selectProfile('${p.n}')"><div class="profile-img" style="background-image: url('${p.i}')"></div><span class="profile-name">${p.n}</span></div>`).join(''); setTimeout(() => document.querySelector('.profile-box').focus(), 500); }
-        function selectProfile(name) { currentProfile = profilesData.find(p => p.n === name); updateSidebar(); enterApp(); }
-        function enterApp() { switchScreen('home'); renderHome(); }
+        // ... כל פונקציות הניווט והפרופילים נשארו בדיוק כמו בקוד המקורי ...
         function updateSidebar() {
             const nav = document.getElementById('dynamic-nav');
-            nav.innerHTML = `<div class="nav-item" tabindex="0" onclick="showSearch()"><span class="nav-icon">🔍</span><span class="nav-text">חיפוש</span></div>
-                        <div class="nav-item" tabindex="0" onclick="renderHome()"><span class="nav-icon">🏠</span><span class="nav-text">ראשי</span></div>
-                        <div class="nav-item" tabindex="0" style="margin-top:auto;" onclick="switchScreen('profiles')"><span class="nav-icon">🔄</span><span class="nav-text">החלף פרופיל</span></div>`;
+            let html = `<div class="nav-item" tabindex="0" onclick="showSearch()"><span class="nav-icon">🔍</span><span class="nav-text">חיפוש</span></div>
+                        <div class="nav-item" tabindex="0" onclick="renderHome()"><span class="nav-icon">🏠</span><span class="nav-text">ראשי</span></div>`;
+            html += `<div class="nav-item" tabindex="0" style="margin-top:auto;" onclick="switchScreen('profiles')"><span class="nav-icon">🔄</span><span class="nav-text">החלף פרופיל</span></div>`;
+            nav.innerHTML = html;
         }
+
         function showSearch() {
             const home = document.getElementById('home-view');
             document.querySelector('.top-section').style.display = 'none';
             home.innerHTML = `<div class="search-container"><input type="text" id="search-input" class="search-input" placeholder="מה בא לך לראות?" oninput="runSearch(this.value)"><div id="search-results"></div></div>`;
             setTimeout(() => document.getElementById('search-input').focus(), 100);
         }
+
         function runSearch(query) {
             const container = document.getElementById('search-results');
             if (!query || query.length < 2) { container.innerHTML = ''; return; }
@@ -212,10 +214,9 @@
             container.innerHTML = results.length > 0 ? renderRow(`תוצאות עבור "${query}"`, results) : `<div style="padding: 20px; color: #777;">לא נמצאו תוצאות...</div>`;
         }
 
-        // ... (קוד הניווט ללא שינוי) ...
         window.addEventListener('keydown', function(e) {
             const active = document.activeElement;
-            if (active.id === 'search-input') { if (e.key === 'ArrowDown') { e.preventDefault(); const f = document.querySelector('.card'); if (f) f.focus(); } return; }
+            if (active.id === 'search-input') { if (e.key === 'ArrowDown') { e.preventDefault(); const firstCard = document.querySelector('.card'); if (firstCard) firstCard.focus(); } return; }
             if (!active) return;
             if (e.key === 'Enter' && (active.classList.contains('card') || active.classList.contains('nav-item') || active.classList.contains('profile-box'))) { e.preventDefault(); active.click(); return; }
             if (e.key === 'ArrowRight' && active.classList.contains('card')) { e.preventDefault(); const p = active.previousElementSibling; if (p && p.classList.contains('card')) p.focus(); else document.querySelector('.nav-item').focus(); }
@@ -252,6 +253,10 @@
             }
         }, true);
 
+        function loadProfiles() { document.getElementById('profile-list').innerHTML = profilesData.map(p => `<div class="profile-box" tabindex="0" onclick="selectProfile('${p.n}')"><div class="profile-img" style="background-image: url('${p.i}')"></div><span class="profile-name">${p.n}</span></div>`).join(''); setTimeout(() => document.querySelector('.profile-box').focus(), 500); }
+        function selectProfile(name) { currentProfile = profilesData.find(p => p.n === name); updateSidebar(); enterApp(); }
+        function enterApp() { switchScreen('home'); renderHome(); }
+        
         function addToHistory(item) { if (!currentProfile) return; const key = `history_${currentProfile.n}`; let h = JSON.parse(localStorage.getItem(key) || "[]"); h = h.filter(x => x.id !== item.id); h.unshift(item); if(h.length > 10) h.pop(); localStorage.setItem(key, JSON.stringify(h)); }
         function getHistory() { if (!currentProfile) return []; return JSON.parse(localStorage.getItem(`history_${currentProfile.n}`) || "[]"); }
 
@@ -302,42 +307,65 @@
             setTimeout(() => { const b=detailView.querySelector('.login-btn')||detailView.querySelector('.card'); if(b)b.focus(); }, 200);
         }
 
-        // --- התיקון הקריטי: 4 שניות + לחיצה חכמה ---
         function playHD(id) {
             currentPlayingId = id;
             if (typeof AndroidControl !== 'undefined') AndroidControl.setVideoMode(true);
             
+            // 1. מפעיל את מסך הטעינה
             const loader = document.getElementById('loader-overlay');
             loader.style.display = 'flex';
             
-            // טיימר קשיח ל-4 שניות
+            // 2. קובע שהוא ייעלם אחרי 10 שניות בדיוק
             setTimeout(() => {
                 loader.style.display = 'none';
-            }, 4000);
-            
+            }, 10000); 
+
             const container = document.getElementById('video-container');
             container.style.display = 'block'; 
             container.innerHTML = `<iframe src="https://drive.google.com/file/d/${id}/preview" allowfullscreen style="width:100%; height:100%; border:none;"></iframe>`;
-            
             if (typeof AndroidControl !== 'undefined') automateDrive();
         }
 
-        function automateDrive() {
-            if(window.AndroidControl) {
-                // לחיצה חכמה שמפעילה את כל המקשים האפשריים אחרי 1.5 שניות
-                setTimeout(function() { 
-                    AndroidControl.triggerSmartPlay(); 
-                }, 1500); 
-            }
+        function playNextEpisode() {
+            let s = seriesData.find(s => s.episodes && s.episodes.some(ep => ep.driveId === currentPlayingId));
+            if (s) {
+                const idx = s.episodes.findIndex(ep => ep.driveId === currentPlayingId);
+                if (idx !== -1 && idx < s.episodes.length - 1) {
+                    closeVideo(); setTimeout(() => playHD(s.episodes[idx + 1].driveId), 500);
+                } else closeVideo();
+            } else closeVideo();
         }
 
-        // --- איפוס חשוב ביציאה ---
+        function automateDrive() {
+            // זה הקוד המקורי שלך שעובד בסטרימר
+            var checks = 0;
+            var det = setInterval(function() {
+                var f = document.querySelector('iframe');
+                if (f) {
+                    clearInterval(det);
+                    try { var style = document.createElement('style'); style.innerHTML = '.ndfHFb-c4YZDc-Wr97p { display: none !important; }'; f.contentDocument.head.appendChild(style); } catch(e) {}
+                    f.focus(); 
+                    
+                    if(window.AndroidControl) {
+                        setTimeout(function() { AndroidControl.triggerCenterClick(); }, 500); 
+                        setTimeout(function() { AndroidControl.triggerCenterClick(); }, 1500);
+                        setTimeout(function() { AndroidControl.triggerCenterDoubleClick(); }, 2500);
+                    }
+                }
+                if (checks++ > 20) clearInterval(det);
+            }, 500);
+        }
+
+        // --- התיקון היחיד והחשוב: איפוס hpDone ---
         window.handleBackPress = function() {
             if(document.getElementById('video-container').style.display === 'block') {
                 document.getElementById('video-container').innerHTML = '';
                 document.getElementById('video-container').style.display = 'none';
                 
+                // מסתיר את מסך הטעינה אם יוצאים באמצע
                 document.getElementById('loader-overlay').style.display = 'none';
+                
+                // >>>>>> האיפוס שגורם לזה לעבוד תמיד <<<<<<
                 window.hpDone = false; 
                 
                 document.getElementById('content-view').style.display = 'block';
