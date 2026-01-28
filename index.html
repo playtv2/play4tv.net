@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>HOT play</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth-compat.js"></script>
@@ -99,16 +98,15 @@
 
         #video-container { position: fixed; inset: 0; background: #000; z-index: 50000; display: none; }
         
-        /* --- זה התיקון לסרטון הטעינה (שקוף ללחיצות) --- */
+        /* --- Loading שקוף ללחיצות (pointer-events: none) --- */
         #loader-overlay {
             position: fixed; inset: 0; background: #000; z-index: 50001; 
             display: none; align-items: center; justify-content: center;
-            pointer-events: none; /* קריטי: מאפשר ללחיצות לעבור לנגן */
+            pointer-events: none; 
         }
         #loader-overlay video {
             width: 300px; height: 300px; object-fit: contain;
         }
-        /* --------------------------------------------- */
 
         .search-container { padding: 20px 50px; }
         .search-input { width: 100%; max-width: 600px; background: #222; border: 2px solid #333; color: white; padding: 15px 20px; font-size: 20px; border-radius: 50px; outline: none; transition: 0.3s; margin-bottom: 30px; }
@@ -126,7 +124,7 @@
         .profile-box:focus .profile-img { border-color: var(--red); }
         .profile-name { font-size: 16px; color: #ccc; }
         
-        /* --- זה התיקון לתזוזת המסך עם החצים --- */
+        /* iframe מקובע */
         iframe { width: 100%; height: 100%; border: none; overflow: hidden; }
     </style>
 </head>
@@ -134,7 +132,7 @@
 
     <div id="loading-screen" style="display: flex;"><h1 style="color: #444; font-size: 24px;">טוען...</h1></div>
 
-    <div id="loader-overlay">
+    <div id="loader-overlay" style="display: none;">
         <video src="loading.mp4" autoplay loop muted playsinline></video>
     </div>
 
@@ -222,7 +220,6 @@
                 return; 
             }
             if (!active) return;
-            // הוספתי את login-btn כדי שהשלט יוכל ללחוץ עליו
             if (e.key === 'Enter' && (active.classList.contains('card') || active.classList.contains('nav-item') || active.classList.contains('profile-box') || active.classList.contains('login-btn'))) { e.preventDefault(); active.click(); return; }
             if (e.key === 'ArrowRight' && active.classList.contains('card')) {
                 e.preventDefault(); const prevCard = active.previousElementSibling;
@@ -300,7 +297,10 @@
         function getHistory() { if (!currentProfile) return []; return JSON.parse(localStorage.getItem(`history_${currentProfile.n}`) || "[]"); }
 
         function renderHome() {
+            // הוספתי בדיקה קטנה: אם כבר יש תוכן, אל תבנה אותו מחדש! זה ימנע איבוד פוקוס.
             const home = document.getElementById('home-view');
+            if (home.innerHTML.trim() !== '') return; 
+
             document.querySelector('.top-section').style.display = 'block';
             home.innerHTML = '';
             const history = getHistory();
@@ -311,25 +311,7 @@
                 const items = allItems.filter(s => (s.genre || s.category) === g);
                 if(items.length > 0) home.innerHTML += renderRow(g, items);
             });
-            
-            // --- זה התיקון לפוקוס הנעלם ---
-            // במקום לנסות מיד, מחכים 300ms ואז מוודאים שיש מיקוד.
-            setTimeout(() => { 
-                if (lastFocusedId) {
-                    const el = document.querySelector(`[data-id="${lastFocusedId}"]`);
-                    if (el) {
-                        el.focus();
-                        el.scrollIntoView({block: 'center', inline: 'center'});
-                    } else {
-                        // אם לא נמצא, לך לראשון
-                        const c = document.querySelector('.card'); 
-                        if(c) c.focus();
-                    }
-                } else {
-                    const c = document.querySelector('.card'); 
-                    if(c) c.focus();
-                }
-            }, 300); // הזמן המורחב (300) קריטי לסטרימר
+            if (lastFocusedId) setTimeout(() => { const el = document.querySelector(`[data-id="${lastFocusedId}"]`); if(el) { el.focus(); el.scrollIntoView({block: 'center', inline: 'center'}); } }, 100);
         }
 
         function renderRow(title, items, forceUniform = false) {
@@ -364,12 +346,12 @@
             setTimeout(() => { const b=detailView.querySelector('.login-btn')||detailView.querySelector('.card'); if(b)b.focus(); }, 200);
         }
 
-        // --- Loading ל-10 שניות וקיבוע מסך ---
+        // --- הוספת Loading ל-10 שניות וקיבוע סרטון ---
         function playHD(id) {
             currentPlayingId = id;
             if (typeof AndroidControl !== 'undefined') AndroidControl.setVideoMode(true);
             
-            // הצגת Loading
+            // Loading ל-10 שניות
             const loader = document.getElementById('loader-overlay');
             loader.style.display = 'flex';
             setTimeout(() => { loader.style.display = 'none'; }, 10000); 
@@ -392,7 +374,7 @@
             } else closeVideo();
         }
 
-        // --- אוטומציה עם דיליי לסטרימר ---
+        // --- אוטומציה עם דיליי של 4 שניות לסטרימר ---
         function automateDrive() {
             if(window.AndroidControl) {
                 setTimeout(function() { 
@@ -403,36 +385,33 @@
             }
         }
 
+        // --- כאן התיקון הגדול לפוקוס: לא מוחקים את האתר, רק מחליפים תצוגה ---
         window.handleBackPress = function() {
-            // יציאה מוידאו
             if(document.getElementById('video-container').style.display === 'block') {
                 document.getElementById('video-container').innerHTML = '';
                 document.getElementById('video-container').style.display = 'none';
+                
                 document.getElementById('loader-overlay').style.display = 'none';
                 
                 window.hpDone = false; 
                 
                 document.getElementById('content-view').style.display = 'block';
-                // החזרת פוקוס לפרק האחרון
-                if(currentPlayingId) {
-                    setTimeout(() => { 
-                        let el = document.querySelector(`[data-id="${currentPlayingId}"]`);
-                        if(el) { el.focus(); el.scrollIntoView({block: 'center', inline: 'center'}); }
-                        else { const btn = document.querySelector('.login-btn'); if(btn) btn.focus(); }
-                    }, 100);
-                }
+                if(currentPlayingId) setTimeout(() => { const el = document.querySelector(`[data-id="${currentPlayingId}"]`); if(el) { el.focus(); el.scrollIntoView({block: 'center', inline: 'center'}); } }, 100);
                 
                 if (typeof AndroidControl !== 'undefined') AndroidControl.setVideoMode(false);
                 return;
             }
-            
-            // יציאה מדף סדרה לבית
             if (document.getElementById('content-view').style.display !== 'none') {
                 document.getElementById('content-view').style.display = 'none';
-                switchScreen('home'); // זה מפעיל את renderHome עם המנגנון החדש
+                // לא קוראים ל-switchScreen שבונה מחדש, אלא רק מציגים את הקיים!
+                document.querySelector('.top-section').style.display = 'block';
+                document.querySelector('.bottom-section').style.display = 'block';
+                document.getElementById('sidebar').style.display = 'flex';
+                
+                // ומשחזרים פוקוס לכרטיס האחרון שנשמר
+                if (lastFocusedId) setTimeout(() => { const el = document.querySelector(`[data-id="${lastFocusedId}"]`); if(el) el.focus(); }, 100);
                 return;
             }
-            
             if (document.getElementById('search-input')) { enterApp(); return; }
             if (document.querySelector('.bottom-section').style.display === 'block') { switchScreen('profiles'); return; }
             if (window.AndroidControl) AndroidControl.exitApp();
@@ -449,14 +428,11 @@
 
             if (name === 'auth') document.getElementById('auth-screen').style.display = 'flex';
             if (name === 'profiles') document.getElementById('profile-screen').style.display = 'flex';
-            
             if (name === 'home') {
                 document.getElementById('sidebar').style.display = 'flex';
                 document.getElementById('app').style.display = 'flex';
-                document.querySelector('.top-section').style.display = 'block';
-                document.querySelector('.bottom-section').style.display = 'block';
-                
-                renderHome(); // כאן קורה הקסם של שחזור הפוקוס
+                // כאן אנחנו נותנים ל-renderHome לבנות פעם ראשונה
+                renderHome();
             }
         }
     </script>
