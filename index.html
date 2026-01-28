@@ -23,7 +23,7 @@
         }
         *:focus { outline: none; }
         
-        /* Sidebar */
+        /* Sidebar - תמיד עליון */
         .sidebar { 
             width: var(--sidebar-width); background: #000; 
             display: flex; flex-direction: column; padding: 15px 5px; 
@@ -47,7 +47,7 @@
         .sidebar:focus-within .nav-text, .sidebar:hover .nav-text { opacity: 1; visibility: visible; }
         .nav-item:focus { background: var(--red); color: white; transform: scale(1.05); }
 
-        /* Layout */
+        /* Layout - חזרנו למבנה הישן והטוב */
         .main-content { flex: 1; height: 100vh; display: flex; flex-direction: column; position: relative; background: #000; overflow: hidden; }
 
         .top-section { height: 55%; width: 100%; position: relative; flex-shrink: 0; z-index: 1; }
@@ -55,22 +55,21 @@
         .hero-bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, #000000 5%, rgba(0,0,0,0.6) 50%, transparent 100%); }
         .hero-text { position: absolute; bottom: 20px; right: 50px; left: 50px; z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; }
         
-        /* כותרת ראשית - עכשיו דקה יותר (700) */
+        /* כותרת ראשית */
         .hero-title { font-size: 60px; font-weight: 700; margin-bottom: 10px; text-shadow: 2px 2px 15px black; line-height: 1; color: white; }
         
-        /* המחלקה המיוחדת לכותרת ירוקה - זהה בשני המקומות */
+        /* מחלקה מיוחדת לטקסט ירוק הדרגתי (ימין בהיר -> שמאל כהה) */
         .text-gradient-kids {
             background: linear-gradient(to left, #6bf299, #1e8f58);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             display: inline-block;
-            /* הצללית הזו נותנת את אפקט ה"שחור בפנים" שאהבת */
-            filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.9)); 
+            filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.9));
         }
 
         .hero-desc { font-size: 20px; color: #ddd; line-height: 1.3; text-shadow: 1px 1px 5px black; max-width: 60%; max-height: 80px; overflow: hidden; font-weight: 300; }
 
-        /* Scroll Area */
+        /* Bottom Section - אחוזים קבועים (הכי בטוח) */
         .bottom-section { 
             height: 45%; flex-grow: 1; width: 100%; background: #000000; 
             overflow-y: auto; overflow-x: hidden; 
@@ -80,8 +79,7 @@
         .bottom-section::-webkit-scrollbar { display: none; }
 
         .category-block { margin-bottom: 5px; padding-right: 40px; display: block; }
-        
-        /* כותרות קטגוריה - דקות מאוד (300) */
+        /* כותרות קטגוריה דקות */
         .category-title { font-size: 22px; margin-bottom: 5px; font-weight: 300; color: #e0e0e0; letter-spacing: 0.5px; }
         
         .row { 
@@ -97,7 +95,7 @@
         
         .card { 
             display: inline-block; position: relative; cursor: pointer; 
-            border-radius: 6px; overflow: visible; 
+            border-radius: 6px; overflow: visible; /* וודא שזה visible */
             box-shadow: 0 4px 10px rgba(0,0,0,0.5); 
             border: 3px solid transparent; 
             transition: transform 0.2s, border-color 0.2s; 
@@ -117,10 +115,16 @@
         .card-title-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); padding: 5px; text-align: center; font-size: 11px; opacity: 0; transition: 0.2s; color: white; border-bottom-left-radius: 4px; border-bottom-right-radius: 4px; }
         .card:focus .card-title-overlay { opacity: 1; }
 
-        /* --- Content View --- */
+        /* --- CONTENT OVERLAY (החלון הצף) --- */
         #content-view {
-            position: fixed; inset: 0; background: #000; z-index: 5000; 
-            overflow-y: auto; display: none; padding: 0;
+            position: fixed; 
+            top: 0; bottom: 0; left: 0; 
+            right: var(--sidebar-width); /* לא מסתיר תפריט */
+            background: #000; 
+            z-index: 5000; 
+            overflow-y: auto; 
+            display: none; 
+            padding: 0;
         }
         
         .content-hero {
@@ -133,7 +137,7 @@
         }
         .content-details { position: absolute; bottom: 10px; right: 50px; left: 50px; z-index: 2; }
         
-        /* כותרת פנימית - גם היא 700 */
+        /* כותרת פנימית */
         .content-title { font-size: 70px; font-weight: 700; margin: 0; line-height: 1; color: white; }
         
         .meta-tags { font-size: 20px; color: #aaa; margin-top: 10px; font-weight: 400; }
@@ -148,7 +152,7 @@
         .tab-item.active { color: #fff; border-bottom-color: #ff0055; }
         .tab-item:focus { color: #fff; border-bottom-color: #ff0055; outline: none; transform: scale(1.1); }
         
-        /* ריפוד ענק לפרקים */
+        /* ריפוד ענק לפרקים - מונע חיתוך */
         .episodes-area { padding: 0 50px 50px 50px; }
         .episodes-area .row { 
             padding-top: 50px; 
@@ -282,6 +286,7 @@
                 if (prevCard && prevCard.classList.contains('card')) prevCard.focus(); else document.querySelector('.nav-item').focus();
             }
             if (e.key === 'ArrowRight' && active.classList.contains('tab-item')) {
+                // אין לאן ללכת ימינה בטאב בודד
                 e.preventDefault();
             }
             if (e.key === 'ArrowLeft') {
@@ -293,18 +298,19 @@
                 }
                 if (active.classList.contains('tab-item')) {
                     e.preventDefault(); 
-                    document.querySelector('.nav-item').focus();
+                    document.querySelector('.nav-item').focus(); // חזרה לתפריט
                     return;
                 }
                 if (active.classList.contains('card')) { const nextCard = active.nextElementSibling; if (nextCard && nextCard.classList.contains('card')) { e.preventDefault(); nextCard.focus(); } }
             }
             
             if (e.key === 'ArrowUp') {
+                // Overlay ניווט לטאב
                 if (document.getElementById('content-view').style.display === 'block') {
                     if (active.classList.contains('card')) {
                         e.preventDefault();
-                        const activeTab = document.querySelector('.tab-item.active');
-                        if (activeTab) activeTab.focus();
+                        const tabBtn = document.querySelector('.tab-item');
+                        if (tabBtn) tabBtn.focus();
                     }
                     return;
                 }
@@ -327,6 +333,7 @@
                 }
             }
             if (e.key === 'ArrowDown') {
+                // Overlay ירידה מטאב
                 if (active.classList.contains('tab-item')) {
                     e.preventDefault();
                     const firstEp = document.getElementById('content-view').querySelector('.card');
@@ -354,6 +361,7 @@
 
         document.addEventListener('focus', function(e) {
             if (e.target.classList.contains('card')) {
+                // רק אם ה-Overlay סגור
                 if (document.getElementById('content-view').style.display === 'none') {
                     e.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
                     const id = e.target.getAttribute('data-id');
@@ -366,7 +374,7 @@
                         const heroTitle = document.getElementById('hero-title');
                         heroTitle.innerText = item.title;
                         
-                        // --- כותרת ירוקה לילדים בבית ---
+                        // --- החלפת צבע כותרת לפי קטגוריה בזמן אמת ---
                         if (item.category === 'ילדים') {
                             heroTitle.classList.add('text-gradient-kids');
                         } else {
@@ -396,6 +404,7 @@
 
         function renderHome() {
             const home = document.getElementById('home-view');
+            // אם כבר יש תוכן, לא בונים מחדש
             if (home.innerHTML.trim() !== '') {
                 document.querySelector('.top-section').style.display = 'block';
                 return;
@@ -423,6 +432,7 @@
             return `<div class="category-block"><div class="category-title">${title}</div><div class="row">${cardsHtml}</div></div>`;
         }
 
+        // --- Overlay: פתיחת השכבה המעוצבת ---
         function openContent(id) {
             let item = seriesData.find(x => x.id === id);
             if (!item) { const history = getHistory(); item = history.find(h => h.id === id); }
@@ -434,8 +444,8 @@
             const detailView = document.getElementById('content-view');
             detailView.style.display = 'block';
             
-            // כותרת ירוקה גם בתוך דף הסדרה
             const isKids = item.category === 'ילדים';
+            // הוספת ה-Class המיוחד לכותרת ירוקה
             const titleClass = isKids ? 'content-title text-gradient-kids' : 'content-title';
             
             let html = `
