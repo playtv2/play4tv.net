@@ -97,9 +97,20 @@
         .card-title-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); padding: 5px; text-align: center; font-size: 11px; opacity: 0; transition: 0.2s; color: white; }
         .card:focus .card-title-overlay { opacity: 1; }
 
+        /* --- Plan B: השינוי הגדול - Content View הוא שכבה צפה --- */
+        #content-view { 
+            position: fixed; 
+            inset: 0; 
+            z-index: 2000; /* מעל הכל */
+            background: #000; 
+            overflow-y: auto;
+            display: none; /* מוסתר בהתחלה */
+            padding: 30px;
+        }
+        
         #video-container { position: fixed; inset: 0; background: #000; z-index: 50000; display: none; }
         
-        /* Loading - שקוף ללחיצות (קריטי) */
+        /* Loading - שקוף ללחיצות */
         #loader-overlay {
             position: fixed; inset: 0; background: #000; z-index: 50001; 
             display: none; align-items: center; justify-content: center;
@@ -125,7 +136,7 @@
         .profile-box:focus .profile-img { border-color: var(--red); }
         .profile-name { font-size: 16px; color: #ccc; }
         
-        /* iframe מקובע */
+        /* קיבוע */
         iframe { width: 100%; height: 100%; border: none; overflow: hidden; }
     </style>
 </head>
@@ -162,8 +173,9 @@
             </div>
         </div>
         <div class="bottom-section" id="home-view"></div>
-        <div id="content-view" style="display: none; padding: 30px; position: absolute; inset: 0; z-index: 20; background: #000; overflow-y: auto;"></div>
     </div>
+    
+    <div id="content-view"></div>
 
     <div id="video-container"></div>
 
@@ -173,7 +185,7 @@
         firebase.initializeApp(firebaseConfig);
 
         let currentProfile = null;
-        let lastFocusedId = null;
+        let savedFocusElement = null; // משתנה לשמירת האלמנט האחרון
         let currentPlayingId = null; 
 
         const profilesData = [
@@ -200,6 +212,7 @@
         }
 
         function showSearch() {
+            // בחיפוש אנחנו עדיין משתמשים בשיטה הישנה של החלפה בתוך הבית
             const home = document.getElementById('home-view');
             document.querySelector('.top-section').style.display = 'none';
             home.innerHTML = `<div class="search-container"><input type="text" id="search-input" class="search-input" placeholder="מה בא לך לראות?" oninput="runSearch(this.value)"><div id="search-results"></div></div>`;
@@ -229,8 +242,9 @@
             if (e.key === 'ArrowLeft') {
                 if (active.classList.contains('nav-item')) {
                     e.preventDefault();
-                    if (lastFocusedId) { const el = document.querySelector(`[data-id="${lastFocusedId}"]`); if(el) el.focus(); else document.querySelector('.card').focus(); }
-                    else document.querySelector('.card').focus();
+                    // בשיטה הזו, אין צורך ב-lastFocusedId מורכב
+                    const firstCard = document.querySelector('.card');
+                    if (firstCard) firstCard.focus();
                     return;
                 }
                 if (active.classList.contains('card')) { const nextCard = active.nextElementSibling; if (nextCard && nextCard.classList.contains('card')) { e.preventDefault(); nextCard.focus(); } }
@@ -276,30 +290,24 @@
 
         document.addEventListener('focus', function(e) {
             if (e.target.classList.contains('card')) {
-                lastFocusedId = e.target.getAttribute('data-id');
-                e.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
-                const id = lastFocusedId;
-                let item = seriesData.find(s => s.id === id) || seriesData.find(s => s.episodes && s.episodes.some(ep => ep.driveId === id));
-                if (!item) { const history = getHistory(); item = history.find(h => h.id === id); }
-                if (item && document.querySelector('.top-section').style.display !== 'none') {
-                    document.getElementById('hero-bg').style.backgroundImage = `url('${item.image}')`;
-                    document.getElementById('hero-title').innerText = item.title;
-                    document.getElementById('hero-desc').innerText = item.description || "";
+                // רק אם אנחנו במסך הראשי אנחנו משנים את הרקע
+                if (document.getElementById('content-view').style.display !== 'block' && document.querySelector('.top-section').style.display !== 'none') {
+                    e.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                    const id = e.target.getAttribute('data-id');
+                    let item = seriesData.find(s => s.id === id) || seriesData.find(s => s.episodes && s.episodes.some(ep => ep.driveId === id));
+                    if (!item) { const history = getHistory(); item = history.find(h => h.id === id); }
+                    if (item) {
+                        document.getElementById('hero-bg').style.backgroundImage = `url('${item.image}')`;
+                        document.getElementById('hero-title').innerText = item.title;
+                        document.getElementById('hero-desc').innerText = item.description || "";
+                    }
                 }
             }
         }, true);
 
         function login() { firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider()); }
         function loadProfiles() { document.getElementById('profile-list').innerHTML = profilesData.map(p => `<div class="profile-box" tabindex="0" onclick="selectProfile('${p.n}')"><div class="profile-img" style="background-image: url('${p.i}')"></div><span class="profile-name">${p.n}</span></div>`).join(''); setTimeout(() => document.querySelector('.profile-box').focus(), 500); }
-        
-        function selectProfile(name) { 
-            currentProfile = profilesData.find(p => p.n === name); 
-            // מרוקנים את הבית כדי לבנות אותו מחדש לפרופיל החדש
-            document.getElementById('home-view').innerHTML = '';
-            updateSidebar(); 
-            enterApp(); 
-        }
-        
+        function selectProfile(name) { currentProfile = profilesData.find(p => p.n === name); updateSidebar(); enterApp(); }
         function enterApp() { switchScreen('home'); renderHome(); }
         
         function addToHistory(item) { if (!currentProfile) return; const key = `history_${currentProfile.n}`; let h = JSON.parse(localStorage.getItem(key) || "[]"); h = h.filter(x => x.id !== item.id); h.unshift(item); if(h.length > 10) h.pop(); localStorage.setItem(key, JSON.stringify(h)); }
@@ -307,21 +315,11 @@
 
         function renderHome() {
             const home = document.getElementById('home-view');
-            
-            // >>> התיקון הגדול: אם הבית כבר קיים, לא מוחקים אותו! <<<
-            if (home.children.length > 0) {
-                // רק מחזירים תצוגה
+            // אם כבר יש תוכן, לא בונים מחדש!
+            if (home.innerHTML.trim() !== '') {
                 document.querySelector('.top-section').style.display = 'block';
-                // ומחזירים פוקוס לכרטיס האחרון
-                if (lastFocusedId) {
-                    setTimeout(() => {
-                        const el = document.querySelector(`[data-id="${lastFocusedId}"]`);
-                        if (el) { el.focus(); el.scrollIntoView({block: 'center', inline: 'center'}); }
-                    }, 150);
-                }
-                return; // יוצאים, לא בונים מחדש
+                return;
             }
-            // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
             document.querySelector('.top-section').style.display = 'block';
             home.innerHTML = '';
@@ -333,7 +331,7 @@
                 const items = allItems.filter(s => (s.genre || s.category) === g);
                 if(items.length > 0) home.innerHTML += renderRow(g, items);
             });
-            if (lastFocusedId) setTimeout(() => { const el = document.querySelector(`[data-id="${lastFocusedId}"]`); if(el) { el.focus(); el.scrollIntoView({block: 'center', inline: 'center'}); } }, 100);
+            setTimeout(() => { const el = document.querySelector('.card'); if(el) el.focus(); }, 100);
         }
 
         function renderRow(title, items, forceUniform = false) {
@@ -345,17 +343,21 @@
             return `<div class="category-block"><div class="category-title">${title}</div><div class="row">${cardsHtml}</div></div>`;
         }
 
+        // --- השינוי המרכזי: פתיחת תוכן בשכבה עליונה (Overlay) ---
         function openContent(id) {
             let item = seriesData.find(x => x.id === id);
             if (!item) { const history = getHistory(); item = history.find(h => h.id === id); }
             if (!item) return;
             
-            lastFocusedId = id; // שומרים את ה-ID
+            // 1. שומרים את האלמנט הנוכחי שהיינו עליו (הכרטיסייה)
+            savedFocusElement = document.activeElement;
             
             addToHistory(item);
+            
             const detailView = document.getElementById('content-view');
-            document.querySelector('.top-section').style.display = 'none'; document.querySelector('.bottom-section').style.display = 'none';
+            // 2. לא מכבים את ה-top/bottom section! רק מציגים את ה-content מעל
             detailView.style.display = 'block';
+            
             let html = '';
             if (item.type === 'movie' || item.category === 'סרטים') {
                 html = `<div style="min-height:80vh; display:flex; flex-direction:column; justify-content:center; background: linear-gradient(to right, black, transparent), url('${item.image}') no-repeat center/cover; padding:60px;">
@@ -371,7 +373,6 @@
             setTimeout(() => { const b=detailView.querySelector('.login-btn')||detailView.querySelector('.card'); if(b)b.focus(); }, 200);
         }
 
-        // --- Loading ל-10 שניות ---
         function playHD(id) {
             currentPlayingId = id;
             if (typeof AndroidControl !== 'undefined') AndroidControl.setVideoMode(true);
@@ -382,7 +383,6 @@
 
             const container = document.getElementById('video-container');
             container.style.display = 'block'; 
-            // קיבוע iframe
             container.innerHTML = `<iframe src="https://drive.google.com/file/d/${id}/preview" allowfullscreen style="width:100%; height:100%; border:none; overflow:hidden;" scrolling="no"></iframe>`;
             
             if (typeof AndroidControl !== 'undefined') automateDrive();
@@ -398,7 +398,6 @@
             } else closeVideo();
         }
 
-        // --- אוטומציה 4 שניות ---
         function automateDrive() {
             if(window.AndroidControl) {
                 setTimeout(function() { 
@@ -409,8 +408,8 @@
             }
         }
 
+        // --- התיקון הגדול לחזרה ---
         window.handleBackPress = function() {
-            // יציאה מוידאו
             if(document.getElementById('video-container').style.display === 'block') {
                 document.getElementById('video-container').innerHTML = '';
                 document.getElementById('video-container').style.display = 'none';
@@ -418,26 +417,31 @@
                 
                 window.hpDone = false; 
                 
-                document.getElementById('content-view').style.display = 'block';
-                if(currentPlayingId) {
-                    setTimeout(() => { 
-                        let el = document.querySelector(`[data-id="${currentPlayingId}"]`);
-                        if(el) { el.focus(); el.scrollIntoView({block: 'center', inline: 'center'}); }
-                        else {
-                             const btn = document.querySelector('.login-btn');
-                             if(btn) btn.focus();
-                        }
-                    }, 100);
+                // בודקים אם content-view פתוח, אם כן מחזירים פוקוס אליו
+                if (document.getElementById('content-view').style.display === 'block') {
+                    if(currentPlayingId) {
+                        setTimeout(() => { 
+                            let el = document.querySelector(`[data-id="${currentPlayingId}"]`);
+                            if(el) { el.focus(); el.scrollIntoView({block: 'center', inline: 'center'}); }
+                            else { const btn = document.querySelector('.login-btn'); if(btn) btn.focus(); }
+                        }, 100);
+                    }
                 }
                 
                 if (typeof AndroidControl !== 'undefined') AndroidControl.setVideoMode(false);
                 return;
             }
             
-            // יציאה מדף סדרה לבית
-            if (document.getElementById('content-view').style.display !== 'none') {
+            // --- יציאה מדף סדרה לדף הבית ---
+            if (document.getElementById('content-view').style.display === 'block') {
+                // פשוט מסתירים את השכבה!
                 document.getElementById('content-view').style.display = 'none';
-                switchScreen('home'); // זה רק יחזיר את התצוגה ויפקס את הכרטיס האחרון
+                
+                // והכי חשוב: מחזירים את הפוקוס לאלמנט ששמרנו!
+                if (savedFocusElement) {
+                    savedFocusElement.focus();
+                    savedFocusElement.scrollIntoView({block: 'center', inline: 'center'});
+                }
                 return;
             }
             
@@ -460,7 +464,7 @@
             if (name === 'home') {
                 document.getElementById('sidebar').style.display = 'flex';
                 document.getElementById('app').style.display = 'flex';
-                // לא בונים מחדש, רק מוודאים תצוגה
+                // בונים רק פעם אחת
                 renderHome();
             }
         }
