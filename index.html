@@ -99,7 +99,7 @@
 
         #video-container { position: fixed; inset: 0; background: #000; z-index: 50000; display: none; }
         
-        /* Loader Overlay - pointer-events: none is CRITICAL */
+        /* ה-Loading עם pointer-events: none (קריטי לניגון אוטומטי) */
         #loader-overlay {
             position: fixed; inset: 0; background: #000; z-index: 50001; 
             display: none; align-items: center; justify-content: center;
@@ -125,7 +125,7 @@
         .profile-box:focus .profile-img { border-color: var(--red); }
         .profile-name { font-size: 16px; color: #ccc; }
         
-        /* Fix for iframe movement */
+        /* iframe מקובע כדי שלא יזוז */
         iframe { width: 100%; height: 100%; border: none; overflow: hidden; }
     </style>
 </head>
@@ -173,7 +173,7 @@
         firebase.initializeApp(firebaseConfig);
 
         let currentProfile = null;
-        let lastFocusedId = null;
+        let lastFocusedId = null; // זוכר את המיקום האחרון
         let currentPlayingId = null; 
 
         const profilesData = [
@@ -221,7 +221,7 @@
                 return; 
             }
             if (!active) return;
-            // Added login-btn to allowed enter keys
+            // הוספת login-btn לרשימת הכפתורים הלחיצים
             if (e.key === 'Enter' && (active.classList.contains('card') || active.classList.contains('nav-item') || active.classList.contains('profile-box') || active.classList.contains('login-btn'))) { e.preventDefault(); active.click(); return; }
             if (e.key === 'ArrowRight' && active.classList.contains('card')) {
                 e.preventDefault(); const prevCard = active.previousElementSibling;
@@ -298,6 +298,7 @@
         function addToHistory(item) { if (!currentProfile) return; const key = `history_${currentProfile.n}`; let h = JSON.parse(localStorage.getItem(key) || "[]"); h = h.filter(x => x.id !== item.id); h.unshift(item); if(h.length > 10) h.pop(); localStorage.setItem(key, JSON.stringify(h)); }
         function getHistory() { if (!currentProfile) return []; return JSON.parse(localStorage.getItem(`history_${currentProfile.n}`) || "[]"); }
 
+        // --- תיקון הפוקוס ב-renderHome ---
         function renderHome() {
             const home = document.getElementById('home-view');
             document.querySelector('.top-section').style.display = 'block';
@@ -311,7 +312,7 @@
                 if(items.length > 0) home.innerHTML += renderRow(g, items);
             });
             
-            // --- תיקון הפוקוס: ווידוא שהפוקוס חוזר לכרטיס הנכון ---
+            // המנגנון המיוחד: מנסים להתמקד באחרון, אם לא - לראשון.
             if (lastFocusedId) {
                 setTimeout(() => { 
                     const el = document.querySelector(`[data-id="${lastFocusedId}"]`); 
@@ -319,13 +320,13 @@
                         el.focus(); 
                         el.scrollIntoView({block: 'center', inline: 'center'}); 
                     } else {
-                        // גיבוי למקרה שהכרטיס לא נמצא (למשל קטגוריה שהשתנתה)
+                        // אם הסרט לא נמצא (למשל נמחק), לך לראשון
                         const first = document.querySelector('.card');
                         if(first) first.focus();
                     }
-                }, 200); // 200ms נותן זמן ל-DOM להיבנות
+                }, 150); // דיליי קטן כדי לתת ל-HTML להיווצר
             } else {
-               setTimeout(() => { const c=document.querySelector('.card'); if(c)c.focus(); }, 500);
+                setTimeout(() => { const c=document.querySelector('.card'); if(c)c.focus(); }, 150);
             }
         }
 
@@ -343,7 +344,7 @@
             if (!item) { const history = getHistory(); item = history.find(h => h.id === id); }
             if (!item) return;
             
-            lastFocusedId = id; // שומרים את ה-ID לפני שיוצאים מהמסך
+            lastFocusedId = id; // שומרים את המיקום!
             
             addToHistory(item);
             const detailView = document.getElementById('content-view');
@@ -364,18 +365,19 @@
             setTimeout(() => { const b=detailView.querySelector('.login-btn')||detailView.querySelector('.card'); if(b)b.focus(); }, 200);
         }
 
+        // --- הוספת Loading ל-10 שניות ---
         function playHD(id) {
             currentPlayingId = id;
             if (typeof AndroidControl !== 'undefined') AndroidControl.setVideoMode(true);
             
-            // --- Loading ל-10 שניות ---
+            // מפעיל את ה-Loading
             const loader = document.getElementById('loader-overlay');
             loader.style.display = 'flex';
             setTimeout(() => { loader.style.display = 'none'; }, 10000); 
 
             const container = document.getElementById('video-container');
             container.style.display = 'block'; 
-            // Scrolling=no ו-Overflow:hidden כדי למנוע תזוזה
+            // Scrolling=no ו-Overflow:hidden כדי למנוע תזוזה עם החצים
             container.innerHTML = `<iframe src="https://drive.google.com/file/d/${id}/preview" allowfullscreen style="width:100%; height:100%; border:none; overflow:hidden;" scrolling="no"></iframe>`;
             
             if (typeof AndroidControl !== 'undefined') automateDrive();
@@ -391,56 +393,46 @@
             } else closeVideo();
         }
 
-        // --- אוטומציה עם דיליי של 4 שניות לסטרימר איטי ---
+        // --- אוטומציה מותאמת לסטרימר (מחכה 4 שניות ואז לוחצת) ---
         function automateDrive() {
             if(window.AndroidControl) {
                 setTimeout(function() { 
                     AndroidControl.triggerCenterClick(); 
-                    
-                    setTimeout(function() {
-                        AndroidControl.triggerCenterClick();
-                    }, 2000);
-                    
-                    setTimeout(function() {
-                        AndroidControl.triggerCenterDoubleClick();
-                    }, 3000);
-                    
-                }, 4000); // מחכים 4 שניות לטעינת הנגן
+                    setTimeout(function() { AndroidControl.triggerCenterClick(); }, 2000);
+                    setTimeout(function() { AndroidControl.triggerCenterDoubleClick(); }, 3000);
+                }, 4000); 
             }
         }
 
-        // --- תיקון כפול ל-handleBackPress: גם סגירת וידאו וגם חזרה לדף הראשי ---
+        // --- תיקון כפתור חזרה (ESC) ---
         window.handleBackPress = function() {
-            // מקרה 1: סגירת וידאו
+            // אם וידאו פתוח - סגור אותו
             if(document.getElementById('video-container').style.display === 'block') {
                 document.getElementById('video-container').innerHTML = '';
                 document.getElementById('video-container').style.display = 'none';
-                
                 document.getElementById('loader-overlay').style.display = 'none';
+                
                 window.hpDone = false; 
                 
                 document.getElementById('content-view').style.display = 'block';
-                // מחזירים פוקוס לפרק שניגנו (או ללחצן Play בסרט)
-                if(currentPlayingId) {
-                    setTimeout(() => { 
-                        let el = document.querySelector(`[data-id="${currentPlayingId}"]`);
-                        if(el) { el.focus(); el.scrollIntoView({block: 'center', inline: 'center'}); }
-                        else {
-                             // אם זה סרט ואין ID לכרטיס (כי זה כפתור נגן), נחפש את הכפתור
-                             el = document.querySelector('.login-btn');
-                             if(el) el.focus();
-                        }
-                    }, 100);
-                }
+                // מחזיר פוקוס לפרק שניגנו
+                if(currentPlayingId) setTimeout(() => { 
+                    const el = document.querySelector(`[data-id="${currentPlayingId}"]`); 
+                    if(el) { el.focus(); el.scrollIntoView({block: 'center', inline: 'center'}); }
+                    else {
+                        const btn = document.querySelector('.login-btn');
+                        if(btn) btn.focus();
+                    }
+                }, 100);
                 
                 if (typeof AndroidControl !== 'undefined') AndroidControl.setVideoMode(false);
                 return;
             }
             
-            // מקרה 2: חזרה מדף סדרה לדף הבית
+            // אם אנחנו בדף סדרה - חזור לבית ושחזר פוקוס
             if (document.getElementById('content-view').style.display !== 'none') {
                 document.getElementById('content-view').style.display = 'none';
-                switchScreen('home'); // כאן renderHome ייקרא וישתמש ב-lastFocusedId
+                switchScreen('home'); // זה יקרא ל-renderHome וישחזר את הפוקוס
                 return;
             }
             
@@ -460,13 +452,14 @@
 
             if (name === 'auth') document.getElementById('auth-screen').style.display = 'flex';
             if (name === 'profiles') document.getElementById('profile-screen').style.display = 'flex';
+            
             if (name === 'home') {
                 document.getElementById('sidebar').style.display = 'flex';
                 document.getElementById('app').style.display = 'flex';
                 document.querySelector('.top-section').style.display = 'block';
                 document.querySelector('.bottom-section').style.display = 'block';
                 
-                // קריאה ל-renderHome שתטפל בפוקוס
+                // קריאה ל-renderHome שתטפל בפוקוס באופן חכם
                 renderHome();
             }
         }
