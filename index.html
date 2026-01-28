@@ -99,7 +99,7 @@
 
         #video-container { position: fixed; inset: 0; background: #000; z-index: 50000; display: none; }
         
-        /* Loading - שקוף ללחיצות */
+        /* Loading - שקוף ללחיצות (קריטי) */
         #loader-overlay {
             position: fixed; inset: 0; background: #000; z-index: 50001; 
             display: none; align-items: center; justify-content: center;
@@ -125,7 +125,7 @@
         .profile-box:focus .profile-img { border-color: var(--red); }
         .profile-name { font-size: 16px; color: #ccc; }
         
-        /* קיבוע וידאו */
+        /* iframe מקובע */
         iframe { width: 100%; height: 100%; border: none; overflow: hidden; }
     </style>
 </head>
@@ -291,30 +291,37 @@
 
         function login() { firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider()); }
         function loadProfiles() { document.getElementById('profile-list').innerHTML = profilesData.map(p => `<div class="profile-box" tabindex="0" onclick="selectProfile('${p.n}')"><div class="profile-img" style="background-image: url('${p.i}')"></div><span class="profile-name">${p.n}</span></div>`).join(''); setTimeout(() => document.querySelector('.profile-box').focus(), 500); }
-        function selectProfile(name) { currentProfile = profilesData.find(p => p.n === name); updateSidebar(); enterApp(); }
+        
+        function selectProfile(name) { 
+            currentProfile = profilesData.find(p => p.n === name); 
+            // מרוקנים את הבית כדי לבנות אותו מחדש לפרופיל החדש
+            document.getElementById('home-view').innerHTML = '';
+            updateSidebar(); 
+            enterApp(); 
+        }
+        
         function enterApp() { switchScreen('home'); renderHome(); }
         
         function addToHistory(item) { if (!currentProfile) return; const key = `history_${currentProfile.n}`; let h = JSON.parse(localStorage.getItem(key) || "[]"); h = h.filter(x => x.id !== item.id); h.unshift(item); if(h.length > 10) h.pop(); localStorage.setItem(key, JSON.stringify(h)); }
         function getHistory() { if (!currentProfile) return []; return JSON.parse(localStorage.getItem(`history_${currentProfile.n}`) || "[]"); }
 
         function renderHome() {
-            // >>> זה התיקון הקריטי: אם יש תוכן, לא בונים מחדש, רק מוודאים פוקוס <<<
             const home = document.getElementById('home-view');
-            if (home.innerHTML.trim() !== '') {
-                // רק אם האתר כבר בנוי - אנחנו לא בונים אותו שוב!
-                // אבל חובה להחזיר את הפוקוס
+            
+            // >>> התיקון הגדול: אם הבית כבר קיים, לא מוחקים אותו! <<<
+            if (home.children.length > 0) {
+                // רק מחזירים תצוגה
+                document.querySelector('.top-section').style.display = 'block';
+                // ומחזירים פוקוס לכרטיס האחרון
                 if (lastFocusedId) {
-                    setTimeout(() => { 
+                    setTimeout(() => {
                         const el = document.querySelector(`[data-id="${lastFocusedId}"]`);
-                        if (el) { 
-                            el.focus(); 
-                            el.scrollIntoView({block: 'center', inline: 'center'}); 
-                        } 
-                    }, 100);
+                        if (el) { el.focus(); el.scrollIntoView({block: 'center', inline: 'center'}); }
+                    }, 150);
                 }
-                return; // יוצאים מהפונקציה ולא בונים מחדש
+                return; // יוצאים, לא בונים מחדש
             }
-            // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+            // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
             document.querySelector('.top-section').style.display = 'block';
             home.innerHTML = '';
@@ -342,7 +349,10 @@
             let item = seriesData.find(x => x.id === id);
             if (!item) { const history = getHistory(); item = history.find(h => h.id === id); }
             if (!item) return;
-            lastFocusedId = id; addToHistory(item);
+            
+            lastFocusedId = id; // שומרים את ה-ID
+            
+            addToHistory(item);
             const detailView = document.getElementById('content-view');
             document.querySelector('.top-section').style.display = 'none'; document.querySelector('.bottom-section').style.display = 'none';
             detailView.style.display = 'block';
@@ -361,18 +371,18 @@
             setTimeout(() => { const b=detailView.querySelector('.login-btn')||detailView.querySelector('.card'); if(b)b.focus(); }, 200);
         }
 
+        // --- Loading ל-10 שניות ---
         function playHD(id) {
             currentPlayingId = id;
             if (typeof AndroidControl !== 'undefined') AndroidControl.setVideoMode(true);
             
-            // Loading 10s
             const loader = document.getElementById('loader-overlay');
             loader.style.display = 'flex';
             setTimeout(() => { loader.style.display = 'none'; }, 10000); 
 
             const container = document.getElementById('video-container');
             container.style.display = 'block'; 
-            // Scrolling=no
+            // קיבוע iframe
             container.innerHTML = `<iframe src="https://drive.google.com/file/d/${id}/preview" allowfullscreen style="width:100%; height:100%; border:none; overflow:hidden;" scrolling="no"></iframe>`;
             
             if (typeof AndroidControl !== 'undefined') automateDrive();
@@ -400,6 +410,7 @@
         }
 
         window.handleBackPress = function() {
+            // יציאה מוידאו
             if(document.getElementById('video-container').style.display === 'block') {
                 document.getElementById('video-container').innerHTML = '';
                 document.getElementById('video-container').style.display = 'none';
@@ -408,16 +419,28 @@
                 window.hpDone = false; 
                 
                 document.getElementById('content-view').style.display = 'block';
-                if(currentPlayingId) setTimeout(() => { const el = document.querySelector(`[data-id="${currentPlayingId}"]`); if(el) { el.focus(); el.scrollIntoView({block: 'center', inline: 'center'}); } }, 100);
+                if(currentPlayingId) {
+                    setTimeout(() => { 
+                        let el = document.querySelector(`[data-id="${currentPlayingId}"]`);
+                        if(el) { el.focus(); el.scrollIntoView({block: 'center', inline: 'center'}); }
+                        else {
+                             const btn = document.querySelector('.login-btn');
+                             if(btn) btn.focus();
+                        }
+                    }, 100);
+                }
                 
                 if (typeof AndroidControl !== 'undefined') AndroidControl.setVideoMode(false);
                 return;
             }
+            
+            // יציאה מדף סדרה לבית
             if (document.getElementById('content-view').style.display !== 'none') {
                 document.getElementById('content-view').style.display = 'none';
-                switchScreen('home'); // הקריאה ל-renderHome תחזיר פוקוס בלי לרענן
+                switchScreen('home'); // זה רק יחזיר את התצוגה ויפקס את הכרטיס האחרון
                 return;
             }
+            
             if (document.getElementById('search-input')) { enterApp(); return; }
             if (document.querySelector('.bottom-section').style.display === 'block') { switchScreen('profiles'); return; }
             if (window.AndroidControl) AndroidControl.exitApp();
@@ -437,9 +460,7 @@
             if (name === 'home') {
                 document.getElementById('sidebar').style.display = 'flex';
                 document.getElementById('app').style.display = 'flex';
-                document.querySelector('.top-section').style.display = 'block';
-                document.querySelector('.bottom-section').style.display = 'block';
-                
+                // לא בונים מחדש, רק מוודאים תצוגה
                 renderHome();
             }
         }
