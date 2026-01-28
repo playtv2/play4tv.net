@@ -23,13 +23,12 @@
         }
         *:focus { outline: none; }
         
-        /* Sidebar - חזרנו ל-Flex רגיל */
+        /* Sidebar */
         .sidebar { 
             width: var(--sidebar-width); background: #000; 
             display: flex; flex-direction: column; padding: 15px 5px; 
-            border-left: 1px solid #222; height: 100%; 
-            z-index: 6000; flex-shrink: 0;
-            transition: width 0.3s ease; 
+            border-left: 1px solid #222; height: 100%; z-index: 1000; 
+            transition: width 0.3s ease; flex-shrink: 0; 
             overflow: hidden; white-space: nowrap;
         }
         .sidebar:focus-within, .sidebar:hover { width: var(--sidebar-expanded); }
@@ -47,25 +46,24 @@
         .sidebar:focus-within .nav-text, .sidebar:hover .nav-text { opacity: 1; visibility: visible; }
         .nav-item:focus { background: var(--red); color: white; transform: scale(1.05); }
 
-        /* Layout - חזרה למבנה הבסיסי שעבד */
-        .main-content { 
-            flex: 1; height: 100vh; display: flex; flex-direction: column; 
-            position: relative; background: #000; overflow: hidden; 
-        }
+        /* Layout */
+        .main-content { flex: 1; height: 100vh; display: flex; flex-direction: column; position: relative; background: #000; overflow: hidden; }
 
-        .top-section { height: 55%; width: 100%; position: relative; flex-shrink: 0; z-index: 1; }
+        /* Top Section (Hero) */
+        .top-section { height: 55%; width: 100%; position: relative; flex-shrink: 0; z-index: 1; display: block; }
         .hero-bg { position: absolute; inset: 0; background-size: cover; background-position: top center; transition: background-image 0.4s ease-out; }
         .hero-bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, #000000 5%, rgba(0,0,0,0.6) 50%, transparent 100%); }
         .hero-text { position: absolute; bottom: 20px; right: 50px; left: 50px; z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; }
         .hero-title { font-size: 60px; font-weight: 900; margin-bottom: 10px; text-shadow: 2px 2px 15px black; line-height: 1; }
-        .hero-desc { font-size: 20px; color: #ddd; line-height: 1.3; text-shadow: 1px 1px 5px black; max-width: 60%; max-height: 80px; overflow: hidden; font-weight: 300; }
+        .hero-desc { font-size: 22px; color: #ddd; line-height: 1.3; text-shadow: 1px 1px 5px black; max-width: 60%; max-height: 80px; overflow: hidden; font-weight: 300; }
 
-        /* Bottom Section - חזרה לגובה באחוזים שעבד */
+        /* Scroll Area - Home */
         .bottom-section { 
             height: 45%; flex-grow: 1; width: 100%; background: #000000; 
             overflow-y: auto; overflow-x: hidden; 
             padding-top: 10px; padding-bottom: 100px; box-sizing: border-box; z-index: 2; 
             scroll-behavior: smooth; 
+            display: block; /* וודא שזה מוצג */
         }
         .bottom-section::-webkit-scrollbar { display: none; }
 
@@ -85,9 +83,9 @@
         
         .card { 
             display: inline-block; position: relative; cursor: pointer; 
-            border-radius: 6px; overflow: visible; 
+            border-radius: 6px; overflow: hidden; 
             box-shadow: 0 4px 10px rgba(0,0,0,0.5); 
-            border: 3px solid transparent; 
+            border: 2px solid transparent; 
             transition: transform 0.2s, border-color 0.2s; 
             scroll-snap-align: start; flex-shrink: 0; 
             z-index: 1;
@@ -99,20 +97,16 @@
         
         .card.series { min-width: 200px; width: 200px; height: 112px; }
         .card.movie { min-width: 100px; width: 100px; height: 150px; }
-        .card img { width: 100%; height: 100%; object-fit: cover; object-position: top center; border-radius: 4px; }
+        .card img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
         
-        .card:focus { transform: scale(1.15); z-index: 100; border-color: #ffffff; box-shadow: 0 10px 30px rgba(0,0,0,0.9); outline: none; }
-        .card-title-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); padding: 5px; text-align: center; font-size: 11px; opacity: 0; transition: 0.2s; color: white; border-bottom-left-radius: 4px; border-bottom-right-radius: 4px; }
+        .card:focus { transform: scale(1.15); z-index: 100; border-width: 2px; border-color: #ffffff; box-shadow: 0 10px 20px rgba(0,0,0,0.9); outline: none; }
+        .card-title-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); padding: 5px; text-align: center; font-size: 11px; opacity: 0; transition: 0.2s; color: white; }
         .card:focus .card-title-overlay { opacity: 1; }
 
-        /* --- שכבת ה-Overlay (חשוב: left: 70px) --- */
+        /* --- OVERLAY - שכבת התוכן המעוצבת --- */
         #content-view {
-            position: fixed; top: 0; bottom: 0; left: 0; right: 0; /* נתפרס על הכל */
-            margin-right: 70px; /* אבל משאיר מקום לתפריט מימין (RTL) */
-            background: #000; 
-            z-index: 5000; 
-            overflow-y: auto; 
-            display: none; padding: 0;
+            position: fixed; inset: 0; background: #000; z-index: 5000; 
+            overflow-y: auto; display: none; padding: 0;
         }
         
         .content-hero {
@@ -123,33 +117,39 @@
             content: ''; position: absolute; inset: 0;
             background: linear-gradient(to bottom, transparent 0%, #000 90%);
         }
+        
         .content-details { position: absolute; bottom: 10px; right: 50px; left: 50px; z-index: 2; }
         
-        /* כותרות */
+        /* כותרת ירוקה לילדים */
         .title-kids {
             font-size: 70px; font-weight: 900; margin: 0; line-height: 1;
-            background: linear-gradient(to left, #6bf299 0%, #1e8f58 100%);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.8));
+            background: linear-gradient(90deg, #25D366 0%, #128C7E 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0px 5px 15px rgba(0,0,0,0.5);
         }
-        .title-regular { font-size: 70px; font-weight: 900; margin: 0; line-height: 1; color: white; }
+        /* כותרת רגילה */
+        .title-regular {
+            font-size: 70px; font-weight: 900; margin: 0; line-height: 1; color: white;
+        }
         
         .meta-tags { font-size: 20px; color: #aaa; margin-top: 10px; font-weight: 400; }
         .desc-area { font-size: 22px; color: #ddd; margin-top: 15px; max-width: 60%; line-height: 1.4; font-weight: 300; }
 
-        /* טאבים */
+        /* שורת טאבים מעוצבת */
         .tabs-strip {
             display: flex; gap: 30px; margin-top: 30px; margin-right: 50px; margin-bottom: 20px;
-            font-size: 22px; font-weight: 700; color: #666;
+            font-size: 20px; font-weight: 700; color: #666;
         }
-        .tab-item { cursor: pointer; transition: 0.2s; border-bottom: 3px solid transparent; padding-bottom: 5px; }
-        .tab-item.active { color: #fff; border-bottom-color: #ff0055; }
-        .tab-item:focus { color: #fff; transform: scale(1.1); outline: none; }
+        .tab-item { cursor: pointer; transition: 0.2s; }
+        .tab-item.active { color: #fff; border-bottom: 3px solid #ff0055; padding-bottom: 5px; }
         
         .episodes-area { padding: 0 50px 50px 50px; }
-        .episodes-area .row { padding-top: 40px; padding-bottom: 40px; margin-top: -20px; }
 
+        /* נגן וידאו */
         #video-container { position: fixed; inset: 0; background: #000; z-index: 60000; display: none; }
+        
+        /* Loading - שקוף ללחיצות */
         #loader-overlay {
             position: fixed; inset: 0; background: #000; z-index: 60001; 
             display: none; align-items: center; justify-content: center;
@@ -221,7 +221,7 @@
         firebase.initializeApp(firebaseConfig);
 
         let currentProfile = null;
-        let savedElement = null; 
+        let savedElement = null; // המשתנה ששומר את הפוקוס
         let currentPlayingId = null; 
 
         const profilesData = [
@@ -274,36 +274,34 @@
                 e.preventDefault(); const prevCard = active.previousElementSibling;
                 if (prevCard && prevCard.classList.contains('card')) prevCard.focus(); else document.querySelector('.nav-item').focus();
             }
-            if (e.key === 'ArrowRight' && active.classList.contains('tab-item')) {
-                e.preventDefault(); const nextTab = active.nextElementSibling;
-                if(nextTab && nextTab.classList.contains('tab-item')) nextTab.focus();
-            }
             if (e.key === 'ArrowLeft') {
                 if (active.classList.contains('nav-item')) {
                     e.preventDefault();
-                    if (savedElement && document.getElementById('content-view').style.display === 'none') savedElement.focus(); 
+                    if (savedElement) savedElement.focus();
                     else { const c = document.querySelector('.card'); if(c) c.focus(); }
-                    return;
-                }
-                if (active.classList.contains('tab-item')) {
-                    e.preventDefault(); const prevTab = active.previousElementSibling;
-                    if(prevTab && prevTab.classList.contains('tab-item')) prevTab.focus();
-                    else document.querySelector('.nav-item').focus();
                     return;
                 }
                 if (active.classList.contains('card')) { const nextCard = active.nextElementSibling; if (nextCard && nextCard.classList.contains('card')) { e.preventDefault(); nextCard.focus(); } }
             }
-            
-            if (e.key === 'ArrowUp') {
-                // אם אנחנו ב-Overlay - ניווט לטאבים
-                if (document.getElementById('content-view').style.display === 'block') {
-                    if (active.classList.contains('card')) {
-                        e.preventDefault();
-                        const activeTab = document.querySelector('.tab-item.active');
-                        if (activeTab) activeTab.focus();
+            if (e.key === 'ArrowDown') {
+                const currentBlock = active.closest('.category-block');
+                if (currentBlock) {
+                    e.preventDefault(); 
+                    const allBlocks = Array.from(document.querySelectorAll('.category-block'));
+                    const currentIndex = allBlocks.indexOf(currentBlock);
+                    if (currentIndex < allBlocks.length - 1) {
+                        const nextBlock = allBlocks[currentIndex + 1];
+                        const currentCard = active.closest('.card');
+                        const currentRowCards = Array.from(currentBlock.querySelectorAll('.card'));
+                        const cardIndex = currentRowCards.indexOf(currentCard);
+                        const nextRowCards = Array.from(nextBlock.querySelectorAll('.card'));
+                        let targetCard = nextRowCards[cardIndex];
+                        if (!targetCard) targetCard = nextRowCards[nextRowCards.length - 1];
+                        if (targetCard) { targetCard.scrollIntoView({ behavior: 'auto', block: 'center' }); setTimeout(() => { targetCard.focus(); }, 50); }
                     }
-                    return;
                 }
+            }
+            if (e.key === 'ArrowUp') {
                 const currentBlock = active.closest('.category-block');
                 if (currentBlock) {
                     e.preventDefault();
@@ -322,35 +320,11 @@
                     }
                 }
             }
-            if (e.key === 'ArrowDown') {
-                // אם אנחנו בטאבים ב-Overlay
-                if (active.classList.contains('tab-item')) {
-                    e.preventDefault();
-                    const firstEp = document.getElementById('content-view').querySelector('.card');
-                    if (firstEp) firstEp.focus();
-                    return;
-                }
-                const currentBlock = active.closest('.category-block');
-                if (currentBlock) {
-                    e.preventDefault(); 
-                    const allBlocks = Array.from(document.querySelectorAll('.category-block'));
-                    const currentIndex = allBlocks.indexOf(currentBlock);
-                    if (currentIndex < allBlocks.length - 1) {
-                        const nextBlock = allBlocks[currentIndex + 1];
-                        const currentCard = active.closest('.card');
-                        const currentRowCards = Array.from(currentBlock.querySelectorAll('.card'));
-                        const cardIndex = currentRowCards.indexOf(currentCard);
-                        const nextRowCards = Array.from(nextBlock.querySelectorAll('.card'));
-                        let targetCard = nextRowCards[cardIndex];
-                        if (!targetCard) targetCard = nextRowCards[nextRowCards.length - 1];
-                        if (targetCard) { targetCard.scrollIntoView({ behavior: 'auto', block: 'center' }); setTimeout(() => { targetCard.focus(); }, 50); }
-                    }
-                }
-            }
         });
 
         document.addEventListener('focus', function(e) {
             if (e.target.classList.contains('card')) {
+                // רק אם ה-Overlay סגור
                 if (document.getElementById('content-view').style.display === 'none') {
                     e.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
                     const id = e.target.getAttribute('data-id');
@@ -361,8 +335,6 @@
                         document.getElementById('hero-title').innerText = item.title;
                         document.getElementById('hero-desc').innerText = item.description || "";
                     }
-                } else {
-                    e.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
                 }
             }
         }, true);
@@ -371,8 +343,8 @@
         function loadProfiles() { document.getElementById('profile-list').innerHTML = profilesData.map(p => `<div class="profile-box" tabindex="0" onclick="selectProfile('${p.n}')"><div class="profile-img" style="background-image: url('${p.i}')"></div><span class="profile-name">${p.n}</span></div>`).join(''); setTimeout(() => document.querySelector('.profile-box').focus(), 500); }
         function selectProfile(name) { 
             currentProfile = profilesData.find(p => p.n === name); 
-            // איפוס מלא כדי לאלץ בנייה מחדש
-            document.getElementById('home-view').innerHTML = ''; 
+            // איפוס מלא של הבית במעבר פרופיל
+            document.getElementById('home-view').innerHTML = '';
             updateSidebar(); 
             enterApp(); 
         }
@@ -383,7 +355,7 @@
 
         function renderHome() {
             const home = document.getElementById('home-view');
-            // אם כבר יש תוכן (למשל, חזרנו מ-Overlay), אנחנו רק מציגים את ה-Top Section
+            // אם כבר יש תוכן, לא בונים מחדש
             if (home.innerHTML.trim() !== '') {
                 document.querySelector('.top-section').style.display = 'block';
                 return;
@@ -391,23 +363,14 @@
 
             document.querySelector('.top-section').style.display = 'block';
             home.innerHTML = '';
-            
             const history = getHistory();
             if (history.length > 0) home.innerHTML += renderRow("המשך צפייה", history, true);
-            
             let allowedCats = currentProfile.type === 'kids' ? ['ילדים'] : ['סדרות', 'סרטים'];
             const allItems = seriesData.filter(s => allowedCats.includes(s.category));
-            
             [...new Set(allItems.map(s => s.genre || s.category))].forEach(g => {
                 const items = allItems.filter(s => (s.genre || s.category) === g);
                 if(items.length > 0) home.innerHTML += renderRow(g, items);
             });
-            
-            // אם עדיין אין כלום (תקלה), נציג הודעה
-            if (home.innerHTML === '') {
-                home.innerHTML = '<div style="padding: 20px;">אין תוכן להצגה...</div>';
-            }
-
             setTimeout(() => { const el = document.querySelector('.card'); if(el) el.focus(); }, 100);
         }
 
@@ -420,15 +383,17 @@
             return `<div class="category-block"><div class="category-title">${title}</div><div class="row">${cardsHtml}</div></div>`;
         }
 
-        // --- פתיחת Overlay (Plan B) ---
+        // --- Overlay: פתיחת השכבה המעוצבת ---
         function openContent(id) {
             let item = seriesData.find(x => x.id === id);
             if (!item) { const history = getHistory(); item = history.find(h => h.id === id); }
             if (!item) return;
             
-            savedElement = document.activeElement; // שומרים את הכפתור הנוכחי
+            // 1. שומרים את הכפתור הנוכחי
+            savedElement = document.activeElement;
             addToHistory(item);
             
+            // 2. פותחים שכבה
             const detailView = document.getElementById('content-view');
             detailView.style.display = 'block';
             
@@ -451,9 +416,9 @@
             if (item.type !== 'movie' && item.category !== 'סרטים') {
                 html += `
                     <div class="tabs-strip">
-                        <div class="tab-item" tabindex="0">עונות</div>
-                        <div class="tab-item active" tabindex="0">${item.title} - הפרקים - חדש</div>
-                        <div class="tab-item" tabindex="0">מאחורי הקלעים</div>
+                        <div class="tab-item">עונות</div>
+                        <div class="tab-item active">${item.title} - הפרקים - חדש</div>
+                        <div class="tab-item">מאחורי הקלעים</div>
                     </div>
                     <div class="episodes-area">
                         <div class="row" style="padding: 0;">
@@ -475,6 +440,7 @@
             }
 
             detailView.innerHTML = html;
+            
             setTimeout(() => { 
                 const first = detailView.querySelector('.card') || detailView.querySelector('.login-btn');
                 if(first) first.focus(); 
@@ -517,14 +483,13 @@
         }
 
         window.handleBackPress = function() {
-            // יציאה מוידאו
+            // סגירת וידאו
             if(document.getElementById('video-container').style.display === 'block') {
                 document.getElementById('video-container').innerHTML = '';
                 document.getElementById('video-container').style.display = 'none';
                 document.getElementById('loader-overlay').style.display = 'none';
                 window.hpDone = false; 
                 
-                // החזרת פוקוס ל-Overlay (אם פתוח)
                 if (document.getElementById('content-view').style.display === 'block') {
                     if(currentPlayingId) {
                         setTimeout(() => {
@@ -539,14 +504,14 @@
                 return;
             }
             
-            // יציאה מ-Overlay חזרה לבית
+            // סגירת ה-Overlay וחזרה למקום (הקסם)
             if (document.getElementById('content-view').style.display === 'block') {
                 document.getElementById('content-view').style.display = 'none';
                 
-                // החזרת פוקוס לכרטיס ששמרנו!
+                // חוזרים בדיוק לאיפה שהיינו!
                 if (savedElement) {
                     savedElement.focus();
-                    // לא צריך scrollIntoView כי הדף לא זז
+                    // לא צריך scrollIntoView כי הדף מעולם לא זז!
                 }
                 return;
             }
@@ -570,6 +535,8 @@
             if (name === 'home') {
                 document.getElementById('sidebar').style.display = 'flex';
                 document.getElementById('app').style.display = 'flex';
+                document.querySelector('.top-section').style.display = 'block';
+                document.querySelector('.bottom-section').style.display = 'block';
                 renderHome();
             }
         }
