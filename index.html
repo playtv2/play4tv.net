@@ -23,11 +23,12 @@
         }
         *:focus { outline: none; }
         
-        /* Sidebar */
+        /* Sidebar - תמיד עליון */
         .sidebar { 
             width: var(--sidebar-width); background: #000; 
             display: flex; flex-direction: column; padding: 15px 5px; 
-            border-left: 1px solid #222; height: 100%; z-index: 1000; 
+            border-left: 1px solid #222; height: 100%; 
+            z-index: 6000; /* מעל הכל */
             transition: width 0.3s ease; flex-shrink: 0; 
             overflow: hidden; white-space: nowrap;
         }
@@ -54,8 +55,17 @@
         .hero-bg { position: absolute; inset: 0; background-size: cover; background-position: top center; transition: background-image 0.4s ease-out; }
         .hero-bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, #000000 5%, rgba(0,0,0,0.6) 50%, transparent 100%); }
         .hero-text { position: absolute; bottom: 20px; right: 50px; left: 50px; z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; }
+        
         .hero-title { font-size: 60px; font-weight: 900; margin-bottom: 10px; text-shadow: 2px 2px 15px black; line-height: 1; }
-        .hero-desc { font-size: 22px; color: #ddd; line-height: 1.3; text-shadow: 1px 1px 5px black; max-width: 60%; max-height: 80px; overflow: hidden; font-weight: 300; }
+        .hero-desc { font-size: 20px; color: #ddd; line-height: 1.3; text-shadow: 1px 1px 5px black; max-width: 60%; max-height: 80px; overflow: hidden; font-weight: 300; }
+
+        /* עיצוב כותרת ירוקה הדרגתית */
+        .text-gradient-kids {
+            background: linear-gradient(to left, #6bf299, #1e8f58); /* ירוק בהיר לירוק כהה */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+        }
 
         /* Scroll Area - Home */
         .bottom-section { 
@@ -63,7 +73,7 @@
             overflow-y: auto; overflow-x: hidden; 
             padding-top: 10px; padding-bottom: 100px; box-sizing: border-box; z-index: 2; 
             scroll-behavior: smooth; 
-            display: block; /* וודא שזה מוצג */
+            display: block; 
         }
         .bottom-section::-webkit-scrollbar { display: none; }
 
@@ -103,10 +113,16 @@
         .card-title-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); padding: 5px; text-align: center; font-size: 11px; opacity: 0; transition: 0.2s; color: white; }
         .card:focus .card-title-overlay { opacity: 1; }
 
-        /* --- OVERLAY - שכבת התוכן המעוצבת --- */
+        /* --- OVERLAY - עיצוב דף הסדרה --- */
         #content-view {
-            position: fixed; inset: 0; background: #000; z-index: 5000; 
-            overflow-y: auto; display: none; padding: 0;
+            position: fixed; 
+            top: 0; bottom: 0; left: 0; 
+            right: var(--sidebar-width); /* השארת מקום לתפריט */
+            background: #000; 
+            z-index: 5000; 
+            overflow-y: auto; 
+            display: none; 
+            padding: 0;
         }
         
         .content-hero {
@@ -117,39 +133,28 @@
             content: ''; position: absolute; inset: 0;
             background: linear-gradient(to bottom, transparent 0%, #000 90%);
         }
-        
         .content-details { position: absolute; bottom: 10px; right: 50px; left: 50px; z-index: 2; }
         
-        /* כותרת ירוקה לילדים */
-        .title-kids {
-            font-size: 70px; font-weight: 900; margin: 0; line-height: 1;
-            background: linear-gradient(90deg, #25D366 0%, #128C7E 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0px 5px 15px rgba(0,0,0,0.5);
-        }
-        /* כותרת רגילה */
-        .title-regular {
-            font-size: 70px; font-weight: 900; margin: 0; line-height: 1; color: white;
-        }
-        
+        /* כותרת בתוך דף הסדרה */
+        .content-title { font-size: 70px; font-weight: 900; margin: 0; line-height: 1; }
         .meta-tags { font-size: 20px; color: #aaa; margin-top: 10px; font-weight: 400; }
         .desc-area { font-size: 22px; color: #ddd; margin-top: 15px; max-width: 60%; line-height: 1.4; font-weight: 300; }
 
-        /* שורת טאבים מעוצבת */
+        /* שורת טאבים (רק עונות) */
         .tabs-strip {
             display: flex; gap: 30px; margin-top: 30px; margin-right: 50px; margin-bottom: 20px;
-            font-size: 20px; font-weight: 700; color: #666;
+            font-size: 22px; font-weight: 700; color: #666;
         }
-        .tab-item { cursor: pointer; transition: 0.2s; }
-        .tab-item.active { color: #fff; border-bottom: 3px solid #ff0055; padding-bottom: 5px; }
+        .tab-item { cursor: pointer; transition: 0.2s; padding-bottom: 5px; color: #888; }
+        /* כפתור פוקוס של טאבים */
+        .tab-item:focus { color: #fff; border-bottom: 3px solid #ff0055; outline: none; transform: scale(1.1); }
         
         .episodes-area { padding: 0 50px 50px 50px; }
+        /* מרווח למניעת חיתוך */
+        .episodes-area .row { padding-top: 40px; padding-bottom: 40px; margin-top: -20px; }
 
-        /* נגן וידאו */
         #video-container { position: fixed; inset: 0; background: #000; z-index: 60000; display: none; }
         
-        /* Loading - שקוף ללחיצות */
         #loader-overlay {
             position: fixed; inset: 0; background: #000; z-index: 60001; 
             display: none; align-items: center; justify-content: center;
@@ -221,7 +226,7 @@
         firebase.initializeApp(firebaseConfig);
 
         let currentProfile = null;
-        let savedElement = null; // המשתנה ששומר את הפוקוס
+        let savedElement = null; 
         let currentPlayingId = null; 
 
         const profilesData = [
@@ -274,34 +279,36 @@
                 e.preventDefault(); const prevCard = active.previousElementSibling;
                 if (prevCard && prevCard.classList.contains('card')) prevCard.focus(); else document.querySelector('.nav-item').focus();
             }
+            if (e.key === 'ArrowRight' && active.classList.contains('tab-item')) {
+                // אין טאבים אחרים, אז לא עושים כלום
+                e.preventDefault();
+            }
             if (e.key === 'ArrowLeft') {
                 if (active.classList.contains('nav-item')) {
                     e.preventDefault();
-                    if (savedElement) savedElement.focus();
+                    if (savedElement && document.getElementById('content-view').style.display === 'none') savedElement.focus(); 
                     else { const c = document.querySelector('.card'); if(c) c.focus(); }
+                    return;
+                }
+                if (active.classList.contains('tab-item')) {
+                    e.preventDefault(); 
+                    document.querySelector('.nav-item').focus(); // חזרה לתפריט
                     return;
                 }
                 if (active.classList.contains('card')) { const nextCard = active.nextElementSibling; if (nextCard && nextCard.classList.contains('card')) { e.preventDefault(); nextCard.focus(); } }
             }
-            if (e.key === 'ArrowDown') {
-                const currentBlock = active.closest('.category-block');
-                if (currentBlock) {
-                    e.preventDefault(); 
-                    const allBlocks = Array.from(document.querySelectorAll('.category-block'));
-                    const currentIndex = allBlocks.indexOf(currentBlock);
-                    if (currentIndex < allBlocks.length - 1) {
-                        const nextBlock = allBlocks[currentIndex + 1];
-                        const currentCard = active.closest('.card');
-                        const currentRowCards = Array.from(currentBlock.querySelectorAll('.card'));
-                        const cardIndex = currentRowCards.indexOf(currentCard);
-                        const nextRowCards = Array.from(nextBlock.querySelectorAll('.card'));
-                        let targetCard = nextRowCards[cardIndex];
-                        if (!targetCard) targetCard = nextRowCards[nextRowCards.length - 1];
-                        if (targetCard) { targetCard.scrollIntoView({ behavior: 'auto', block: 'center' }); setTimeout(() => { targetCard.focus(); }, 50); }
-                    }
-                }
-            }
+            
+            // --- ניווט טאבים (למעלה ולמטה) ---
             if (e.key === 'ArrowUp') {
+                // אם אנחנו ב-Overlay - ניווט לטאב "עונות"
+                if (document.getElementById('content-view').style.display === 'block') {
+                    if (active.classList.contains('card')) {
+                        e.preventDefault();
+                        const tabBtn = document.querySelector('.tab-item');
+                        if (tabBtn) tabBtn.focus();
+                    }
+                    return;
+                }
                 const currentBlock = active.closest('.category-block');
                 if (currentBlock) {
                     e.preventDefault();
@@ -320,11 +327,36 @@
                     }
                 }
             }
+            if (e.key === 'ArrowDown') {
+                // אם אנחנו בטאב "עונות" - יורדים לפרק הראשון
+                if (active.classList.contains('tab-item')) {
+                    e.preventDefault();
+                    const firstEp = document.getElementById('content-view').querySelector('.card');
+                    if (firstEp) firstEp.focus();
+                    return;
+                }
+                const currentBlock = active.closest('.category-block');
+                if (currentBlock) {
+                    e.preventDefault(); 
+                    const allBlocks = Array.from(document.querySelectorAll('.category-block'));
+                    const currentIndex = allBlocks.indexOf(currentBlock);
+                    if (currentIndex < allBlocks.length - 1) {
+                        const nextBlock = allBlocks[currentIndex + 1];
+                        const currentCard = active.closest('.card');
+                        const currentRowCards = Array.from(currentBlock.querySelectorAll('.card'));
+                        const cardIndex = currentRowCards.indexOf(currentCard);
+                        const nextRowCards = Array.from(nextBlock.querySelectorAll('.card'));
+                        let targetCard = nextRowCards[cardIndex];
+                        if (!targetCard) targetCard = nextRowCards[nextRowCards.length - 1];
+                        if (targetCard) { targetCard.scrollIntoView({ behavior: 'auto', block: 'center' }); setTimeout(() => { targetCard.focus(); }, 50); }
+                    }
+                }
+            }
         });
 
         document.addEventListener('focus', function(e) {
             if (e.target.classList.contains('card')) {
-                // רק אם ה-Overlay סגור
+                // רק אם ה-Overlay סגור (אנחנו בבית), משנים רקע וכותרת
                 if (document.getElementById('content-view').style.display === 'none') {
                     e.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
                     const id = e.target.getAttribute('data-id');
@@ -332,9 +364,21 @@
                     if (!item) { const history = getHistory(); item = history.find(h => h.id === id); }
                     if (item && document.querySelector('.top-section').style.display !== 'none') {
                         document.getElementById('hero-bg').style.backgroundImage = `url('${item.image}')`;
-                        document.getElementById('hero-title').innerText = item.title;
+                        
+                        const heroTitle = document.getElementById('hero-title');
+                        heroTitle.innerText = item.title;
+                        
+                        // בדיקת ילדים ושינוי צבע כותרת ב-Hero
+                        if (item.category === 'ילדים') {
+                            heroTitle.classList.add('text-gradient-kids');
+                        } else {
+                            heroTitle.classList.remove('text-gradient-kids');
+                        }
+
                         document.getElementById('hero-desc').innerText = item.description || "";
                     }
+                } else {
+                    e.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
                 }
             }
         }, true);
@@ -343,8 +387,7 @@
         function loadProfiles() { document.getElementById('profile-list').innerHTML = profilesData.map(p => `<div class="profile-box" tabindex="0" onclick="selectProfile('${p.n}')"><div class="profile-img" style="background-image: url('${p.i}')"></div><span class="profile-name">${p.n}</span></div>`).join(''); setTimeout(() => document.querySelector('.profile-box').focus(), 500); }
         function selectProfile(name) { 
             currentProfile = profilesData.find(p => p.n === name); 
-            // איפוס מלא של הבית במעבר פרופיל
-            document.getElementById('home-view').innerHTML = '';
+            document.getElementById('home-view').innerHTML = ''; 
             updateSidebar(); 
             enterApp(); 
         }
@@ -383,27 +426,27 @@
             return `<div class="category-block"><div class="category-title">${title}</div><div class="row">${cardsHtml}</div></div>`;
         }
 
-        // --- Overlay: פתיחת השכבה המעוצבת ---
+        // --- Overlay (Plan B) ---
         function openContent(id) {
             let item = seriesData.find(x => x.id === id);
             if (!item) { const history = getHistory(); item = history.find(h => h.id === id); }
             if (!item) return;
             
-            // 1. שומרים את הכפתור הנוכחי
-            savedElement = document.activeElement;
+            savedElement = document.activeElement; 
             addToHistory(item);
             
-            // 2. פותחים שכבה
             const detailView = document.getElementById('content-view');
             detailView.style.display = 'block';
             
+            // לוגיקה לכותרת
             const isKids = item.category === 'ילדים';
-            const titleClass = isKids ? 'title-kids' : 'title-regular';
+            const titleClass = isKids ? 'text-gradient-kids' : ''; 
+            // text-gradient-kids כבר מוגדר ב-CSS כ-class שמחיל את הגרדיינט
             
             let html = `
                 <div class="content-hero" style="background-image: url('${item.image}')">
                     <div class="content-details">
-                        <h1 class="${titleClass}">${item.title}</h1>
+                        <h1 class="content-title ${titleClass}">${item.title}</h1>
                         <div class="meta-tags">
                             <span>${item.genre || item.category}</span>
                             ${item.type === 'series' ? ' | עונה 1' : ''}
@@ -416,9 +459,7 @@
             if (item.type !== 'movie' && item.category !== 'סרטים') {
                 html += `
                     <div class="tabs-strip">
-                        <div class="tab-item">עונות</div>
-                        <div class="tab-item active">${item.title} - הפרקים - חדש</div>
-                        <div class="tab-item">מאחורי הקלעים</div>
+                        <div class="tab-item" tabindex="0">עונות</div>
                     </div>
                     <div class="episodes-area">
                         <div class="row" style="padding: 0;">
@@ -440,7 +481,6 @@
             }
 
             detailView.innerHTML = html;
-            
             setTimeout(() => { 
                 const first = detailView.querySelector('.card') || detailView.querySelector('.login-btn');
                 if(first) first.focus(); 
@@ -483,7 +523,6 @@
         }
 
         window.handleBackPress = function() {
-            // סגירת וידאו
             if(document.getElementById('video-container').style.display === 'block') {
                 document.getElementById('video-container').innerHTML = '';
                 document.getElementById('video-container').style.display = 'none';
@@ -499,19 +538,17 @@
                         }, 100);
                     }
                 }
-                
                 if (typeof AndroidControl !== 'undefined') AndroidControl.setVideoMode(false);
                 return;
             }
             
-            // סגירת ה-Overlay וחזרה למקום (הקסם)
+            // יציאה מ-Overlay חזרה לבית
             if (document.getElementById('content-view').style.display === 'block') {
                 document.getElementById('content-view').style.display = 'none';
                 
-                // חוזרים בדיוק לאיפה שהיינו!
+                // החזרת פוקוס לכרטיס ששמרנו!
                 if (savedElement) {
                     savedElement.focus();
-                    // לא צריך scrollIntoView כי הדף מעולם לא זז!
                 }
                 return;
             }
