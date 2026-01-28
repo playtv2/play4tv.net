@@ -99,7 +99,7 @@
 
         #video-container { position: fixed; inset: 0; background: #000; z-index: 50000; display: none; }
         
-        /* Loader Overlay */
+        /* Loader Overlay - pointer-events: none is CRITICAL */
         #loader-overlay {
             position: fixed; inset: 0; background: #000; z-index: 50001; 
             display: none; align-items: center; justify-content: center;
@@ -125,6 +125,7 @@
         .profile-box:focus .profile-img { border-color: var(--red); }
         .profile-name { font-size: 16px; color: #ccc; }
         
+        /* Fix for iframe movement */
         iframe { width: 100%; height: 100%; border: none; overflow: hidden; }
     </style>
 </head>
@@ -220,6 +221,7 @@
                 return; 
             }
             if (!active) return;
+            // Added login-btn to allowed enter keys
             if (e.key === 'Enter' && (active.classList.contains('card') || active.classList.contains('nav-item') || active.classList.contains('profile-box') || active.classList.contains('login-btn'))) { e.preventDefault(); active.click(); return; }
             if (e.key === 'ArrowRight' && active.classList.contains('card')) {
                 e.preventDefault(); const prevCard = active.previousElementSibling;
@@ -309,17 +311,22 @@
                 if(items.length > 0) home.innerHTML += renderRow(g, items);
             });
             
-            // --- התיקון הקריטי להחזרת הפוקוס לכרטיס האחרון ---
+            // --- תיקון הפוקוס: ווידוא שהפוקוס חוזר לכרטיס הנכון ---
             if (lastFocusedId) {
                 setTimeout(() => { 
                     const el = document.querySelector(`[data-id="${lastFocusedId}"]`); 
                     if(el) { 
                         el.focus(); 
                         el.scrollIntoView({block: 'center', inline: 'center'}); 
-                    } 
-                }, 150);
+                    } else {
+                        // גיבוי למקרה שהכרטיס לא נמצא (למשל קטגוריה שהשתנתה)
+                        const first = document.querySelector('.card');
+                        if(first) first.focus();
+                    }
+                }, 200); // 200ms נותן זמן ל-DOM להיבנות
+            } else {
+               setTimeout(() => { const c=document.querySelector('.card'); if(c)c.focus(); }, 500);
             }
-            // ---------------------------------------------------
         }
 
         function renderRow(title, items, forceUniform = false) {
@@ -336,8 +343,7 @@
             if (!item) { const history = getHistory(); item = history.find(h => h.id === id); }
             if (!item) return;
             
-            // שומרים את ה-ID האחרון לפני שפותחים
-            lastFocusedId = id; 
+            lastFocusedId = id; // שומרים את ה-ID לפני שיוצאים מהמסך
             
             addToHistory(item);
             const detailView = document.getElementById('content-view');
@@ -362,13 +368,14 @@
             currentPlayingId = id;
             if (typeof AndroidControl !== 'undefined') AndroidControl.setVideoMode(true);
             
-            // Loading ל-10 שניות
+            // --- Loading ל-10 שניות ---
             const loader = document.getElementById('loader-overlay');
             loader.style.display = 'flex';
             setTimeout(() => { loader.style.display = 'none'; }, 10000); 
 
             const container = document.getElementById('video-container');
             container.style.display = 'block'; 
+            // Scrolling=no ו-Overflow:hidden כדי למנוע תזוזה
             container.innerHTML = `<iframe src="https://drive.google.com/file/d/${id}/preview" allowfullscreen style="width:100%; height:100%; border:none; overflow:hidden;" scrolling="no"></iframe>`;
             
             if (typeof AndroidControl !== 'undefined') automateDrive();
@@ -384,18 +391,27 @@
             } else closeVideo();
         }
 
-        // --- התיקון לאוטומציה (לחיצה אחרי 4 שניות) ---
+        // --- אוטומציה עם דיליי של 4 שניות לסטרימר איטי ---
         function automateDrive() {
             if(window.AndroidControl) {
                 setTimeout(function() { 
                     AndroidControl.triggerCenterClick(); 
-                    setTimeout(function() { AndroidControl.triggerCenterClick(); }, 2000);
-                    setTimeout(function() { AndroidControl.triggerCenterDoubleClick(); }, 3000);
-                }, 4000); 
+                    
+                    setTimeout(function() {
+                        AndroidControl.triggerCenterClick();
+                    }, 2000);
+                    
+                    setTimeout(function() {
+                        AndroidControl.triggerCenterDoubleClick();
+                    }, 3000);
+                    
+                }, 4000); // מחכים 4 שניות לטעינת הנגן
             }
         }
 
+        // --- תיקון כפול ל-handleBackPress: גם סגירת וידאו וגם חזרה לדף הראשי ---
         window.handleBackPress = function() {
+            // מקרה 1: סגירת וידאו
             if(document.getElementById('video-container').style.display === 'block') {
                 document.getElementById('video-container').innerHTML = '';
                 document.getElementById('video-container').style.display = 'none';
@@ -404,16 +420,30 @@
                 window.hpDone = false; 
                 
                 document.getElementById('content-view').style.display = 'block';
-                if(currentPlayingId) setTimeout(() => { const el = document.querySelector(`[data-id="${currentPlayingId}"]`); if(el) { el.focus(); el.scrollIntoView({block: 'center', inline: 'center'}); } }, 100);
+                // מחזירים פוקוס לפרק שניגנו (או ללחצן Play בסרט)
+                if(currentPlayingId) {
+                    setTimeout(() => { 
+                        let el = document.querySelector(`[data-id="${currentPlayingId}"]`);
+                        if(el) { el.focus(); el.scrollIntoView({block: 'center', inline: 'center'}); }
+                        else {
+                             // אם זה סרט ואין ID לכרטיס (כי זה כפתור נגן), נחפש את הכפתור
+                             el = document.querySelector('.login-btn');
+                             if(el) el.focus();
+                        }
+                    }, 100);
+                }
                 
                 if (typeof AndroidControl !== 'undefined') AndroidControl.setVideoMode(false);
                 return;
             }
+            
+            // מקרה 2: חזרה מדף סדרה לדף הבית
             if (document.getElementById('content-view').style.display !== 'none') {
                 document.getElementById('content-view').style.display = 'none';
-                switchScreen('home');
+                switchScreen('home'); // כאן renderHome ייקרא וישתמש ב-lastFocusedId
                 return;
             }
+            
             if (document.getElementById('search-input')) { enterApp(); return; }
             if (document.querySelector('.bottom-section').style.display === 'block') { switchScreen('profiles'); return; }
             if (window.AndroidControl) AndroidControl.exitApp();
@@ -430,19 +460,14 @@
 
             if (name === 'auth') document.getElementById('auth-screen').style.display = 'flex';
             if (name === 'profiles') document.getElementById('profile-screen').style.display = 'flex';
-            
             if (name === 'home') {
                 document.getElementById('sidebar').style.display = 'flex';
                 document.getElementById('app').style.display = 'flex';
                 document.querySelector('.top-section').style.display = 'block';
                 document.querySelector('.bottom-section').style.display = 'block';
                 
-                // התיקון כאן: רק אם אין מיקוד קודם, הולכים לראשון. אחרת - renderHome יטפל בזה.
-                if (!lastFocusedId) {
-                    setTimeout(() => { const c=document.querySelector('.card'); if(c)c.focus(); }, 500);
-                } else {
-                    renderHome();
-                }
+                // קריאה ל-renderHome שתטפל בפוקוס
+                renderHome();
             }
         }
     </script>
