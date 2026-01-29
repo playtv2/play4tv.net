@@ -28,7 +28,7 @@
             width: var(--sidebar-width); background: #000; 
             display: flex; flex-direction: column; padding: 15px 5px; 
             border-left: 1px solid #222; height: 100%; 
-            z-index: 6000; 
+            z-index: 6000; /* Sidebar תמיד עליון */
             transition: width 0.3s ease; flex-shrink: 0; 
             overflow: hidden; white-space: nowrap;
         }
@@ -56,7 +56,6 @@
         .hero-text { position: absolute; bottom: 20px; right: 50px; left: 50px; z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; }
         
         .hero-title { font-size: 60px; font-weight: 700; margin-bottom: 10px; text-shadow: 2px 2px 15px black; line-height: 1; color: white; }
-        
         .text-gradient-kids {
             background: linear-gradient(to left, #6bf299, #1e8f58);
             -webkit-background-clip: text;
@@ -64,7 +63,6 @@
             display: inline-block;
             filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.9)); 
         }
-        
         .hero-desc { font-size: 20px; color: #ddd; line-height: 1.3; text-shadow: 1px 1px 5px black; max-width: 60%; max-height: 80px; overflow: hidden; font-weight: 300; }
 
         /* Bottom Section */
@@ -112,7 +110,7 @@
         .card-title-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); padding: 5px; text-align: center; font-size: 11px; opacity: 0; transition: 0.2s; color: white; border-bottom-left-radius: 4px; border-bottom-right-radius: 4px; }
         .card:focus .card-title-overlay { opacity: 1; }
 
-        /* --- Overlay --- */
+        /* --- Overlay (שכבה צפה) --- */
         #content-view {
             position: fixed;
             top: 0; bottom: 0; left: 0;
@@ -125,24 +123,18 @@
         }
 
         .content-hero {
-            height: 60vh; width: 100%; position: relative;
-            background-size: cover; background-position: center top;
+            position: absolute; top: 0; left: 0; right: 0; height: 60%;
+            background-size: cover; background-position: center top; z-index: 1;
         }
-        
-        /* הכהינו קצת את הרקע למעלה כדי שהטקסט יהיה קריא */
+        /* כהה יותר כדי שהטקסט למעלה ייראה טוב */
         .content-hero::after {
             content: ''; position: absolute; inset: 0;
             background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 40%, #000 95%);
         }
         
-        /* --- זה השינוי: הזזת הטקסט למעלה --- */
+        /* טקסט למעלה */
         .content-details { 
-            position: absolute; 
-            top: 10%; /* היה bottom: 10px, עכשיו זה למעלה */
-            right: 50px; 
-            width: 50%; /* חצי רוחב כדי לא לתפוס את כל המסך */
-            z-index: 2; 
-            text-align: right;
+            position: absolute; top: 10%; right: 50px; width: 50%; z-index: 2; text-align: right;
         }
         
         .content-title { font-size: 70px; font-weight: 700; margin: 0; line-height: 1; color: white; }
@@ -309,16 +301,22 @@
         window.addEventListener('keydown', function(e) {
             const active = document.activeElement;
             
+            // --- תיקון: חזרה מהתפריט לתוכן (שמאלה) ---
             if (e.key === 'ArrowLeft' && active.classList.contains('nav-item')) {
                 e.preventDefault();
+                // אם היינו ב-Overlay
                 if (document.getElementById('content-view').style.display === 'block') {
-                    if (savedElement && document.body.contains(savedElement)) {
+                    // נסה לחזור לפוקוס שמור בתוך ה-Overlay
+                    if (savedElement && document.getElementById('content-view').contains(savedElement)) {
                         savedElement.focus();
                     } else {
-                        const first = document.querySelector('.card.series') || document.querySelector('.play-movie-btn');
+                        // אחרת, תפוס את הכפתור הראשון או הפרק הראשון
+                        const first = document.getElementById('content-view').querySelector('.play-movie-btn') || 
+                                      document.getElementById('content-view').querySelector('.card');
                         if(first) first.focus();
                     }
                 } else {
+                    // אם היינו בבית, חזור לכרטיס
                     const firstCard = document.querySelector('.card');
                     if (firstCard) firstCard.focus();
                 }
@@ -423,7 +421,7 @@
                     }
                 } else {
                     // --- Overlay ---
-                    lastFocusedEpisode = e.target;
+                    savedElement = e.target; 
                     e.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
                     
                     const epId = e.target.getAttribute('data-id');
@@ -445,7 +443,7 @@
                     }
                 }
             } else if (e.target.classList.contains('play-movie-btn')) {
-                lastFocusedEpisode = e.target;
+                savedElement = e.target;
             }
         }, true);
 
@@ -501,7 +499,7 @@
             if (!item) { const history = getHistory(); item = history.find(h => h.id === id); }
             if (!item) return;
             
-            // המפתח לתיקון: שמירת הכרטיס הספציפי שעליו לחצנו
+            // המפתח: שמירת הכרטיס בבית *לפני* שפותחים את ה-Overlay
             savedElement = document.activeElement; 
             addToHistory(item);
             
@@ -544,7 +542,7 @@
                 
                 setTimeout(() => { 
                     const first = episodesList.querySelector('.card');
-                    if(first) { first.focus(); lastFocusedEpisode = first; } 
+                    if(first) { first.focus(); } 
                 }, 200);
 
             } else {
@@ -554,7 +552,7 @@
                 
                 setTimeout(() => { 
                     const btn = movieActionArea.querySelector('.play-movie-btn');
-                    if(btn) { btn.focus(); lastFocusedEpisode = btn; }
+                    if(btn) { btn.focus(); }
                 }, 200);
             }
         }
@@ -624,7 +622,7 @@
                 // התיקון האולטימטיבי:
                 // אם יש אלמנט שמור והוא עדיין קיים בדף הבית (הוא תמיד קיים כי לא ריעננו)
                 // תחזור אליו!
-                if (savedElement && document.body.contains(savedElement)) {
+                if (savedElement && document.getElementById('home-view').contains(savedElement)) {
                     savedElement.focus();
                     savedElement.scrollIntoView({block: 'center', inline: 'center'});
                 } else {
