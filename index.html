@@ -56,6 +56,7 @@
         .hero-text { position: absolute; bottom: 20px; right: 50px; left: 50px; z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; }
         
         .hero-title { font-size: 60px; font-weight: 700; margin-bottom: 10px; text-shadow: 2px 2px 15px black; line-height: 1; color: white; }
+        
         .text-gradient-kids {
             background: linear-gradient(to left, #6bf299, #1e8f58);
             -webkit-background-clip: text;
@@ -63,6 +64,7 @@
             display: inline-block;
             filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.9)); 
         }
+        
         .hero-desc { font-size: 20px; color: #ddd; line-height: 1.3; text-shadow: 1px 1px 5px black; max-width: 60%; max-height: 80px; overflow: hidden; font-weight: 300; }
 
         /* Bottom Section */
@@ -126,18 +128,19 @@
             height: 60vh; width: 100%; position: relative;
             background-size: cover; background-position: center top;
         }
-        /* רקע כהה יותר כדי שהטקסט למעלה יבלוט */
+        
+        /* הכהינו קצת את הרקע למעלה כדי שהטקסט יהיה קריא */
         .content-hero::after {
             content: ''; position: absolute; inset: 0;
             background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 40%, #000 95%);
         }
         
-        /* --- התיקון שביקשת: הזזת הטקסט למעלה --- */
+        /* --- זה השינוי: הזזת הטקסט למעלה --- */
         .content-details { 
             position: absolute; 
-            top: 10%; /* עכשיו זה למעלה! */
+            top: 10%; /* היה bottom: 10px, עכשיו זה למעלה */
             right: 50px; 
-            width: 50%; /* שלא יימרח על כל המסך */
+            width: 50%; /* חצי רוחב כדי לא לתפוס את כל המסך */
             z-index: 2; 
             text-align: right;
         }
@@ -420,7 +423,7 @@
                     }
                 } else {
                     // --- Overlay ---
-                    savedElement = e.target; 
+                    lastFocusedEpisode = e.target;
                     e.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
                     
                     const epId = e.target.getAttribute('data-id');
@@ -442,7 +445,7 @@
                     }
                 }
             } else if (e.target.classList.contains('play-movie-btn')) {
-                savedElement = e.target;
+                lastFocusedEpisode = e.target;
             }
         }, true);
 
@@ -498,6 +501,7 @@
             if (!item) { const history = getHistory(); item = history.find(h => h.id === id); }
             if (!item) return;
             
+            // המפתח לתיקון: שמירת הכרטיס הספציפי שעליו לחצנו
             savedElement = document.activeElement; 
             addToHistory(item);
             
@@ -540,7 +544,7 @@
                 
                 setTimeout(() => { 
                     const first = episodesList.querySelector('.card');
-                    if(first) { first.focus(); savedElement = first; } 
+                    if(first) { first.focus(); lastFocusedEpisode = first; } 
                 }, 200);
 
             } else {
@@ -550,7 +554,7 @@
                 
                 setTimeout(() => { 
                     const btn = movieActionArea.querySelector('.play-movie-btn');
-                    if(btn) { btn.focus(); savedElement = btn; }
+                    if(btn) { btn.focus(); lastFocusedEpisode = btn; }
                 }, 200);
             }
         }
@@ -616,8 +620,11 @@
             // יציאה מסדרה לבית
             if (document.getElementById('content-view').style.display === 'block') {
                 document.getElementById('content-view').style.display = 'none';
-                // חוזרים לאלמנט ששמרנו בבית (בלי לרענן!)
-                if (savedElement && document.getElementById('home-view').contains(savedElement)) {
+                
+                // התיקון האולטימטיבי:
+                // אם יש אלמנט שמור והוא עדיין קיים בדף הבית (הוא תמיד קיים כי לא ריעננו)
+                // תחזור אליו!
+                if (savedElement && document.body.contains(savedElement)) {
                     savedElement.focus();
                     savedElement.scrollIntoView({block: 'center', inline: 'center'});
                 } else {
