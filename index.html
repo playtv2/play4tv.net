@@ -112,31 +112,32 @@
 
         /* --- Overlay --- */
         #content-view {
-            position: fixed;
-            top: 0; bottom: 0; left: 0;
-            right: var(--sidebar-width); 
-            background: #000;
-            z-index: 5000;
-            overflow-y: auto;
-            display: none;
-            padding: 0;
+            position: fixed; top: 0; bottom: 0; left: 0; right: var(--sidebar-width); 
+            background: #000; z-index: 5000; overflow-y: auto; display: none; padding: 0;
         }
 
         .content-hero {
-            position: absolute; top: 0; left: 0; right: 0; height: 60%; 
-            background-size: cover; background-position: center top; z-index: 1;
+            height: 60vh; width: 100%; position: relative;
+            background-size: cover; background-position: center top;
         }
         .content-hero::after {
             content: ''; position: absolute; inset: 0;
             background: linear-gradient(to bottom, transparent 0%, #000 95%);
         }
-        .content-details { 
-            position: absolute; top: 15%; right: 50px; width: 50%; z-index: 2; text-align: right;
-        }
+        .content-details { position: absolute; bottom: 10px; right: 50px; left: 50px; z-index: 2; }
         
         .content-title { font-size: 70px; font-weight: 700; margin: 0; line-height: 1; color: white; }
         .meta-tags { font-size: 20px; color: #aaa; margin-top: 10px; font-weight: 400; }
         .desc-area { font-size: 22px; color: #ddd; margin-top: 15px; line-height: 1.4; font-weight: 300; max-height: 150px; overflow: hidden; }
+
+        /* כפתור נגן סרט (חדש - יושב למעלה) */
+        .play-movie-btn {
+            margin-top: 20px;
+            background: var(--red); color: white; border: none; 
+            padding: 12px 35px; font-size: 22px; font-weight: bold; 
+            border-radius: 50px; cursor: pointer; display: inline-block;
+        }
+        .play-movie-btn:focus { transform: scale(1.1); box-shadow: 0 0 15px var(--red); outline: none; }
 
         .episodes-section {
             position: absolute; bottom: 0; left: 0; right: 0; height: 40%; 
@@ -226,9 +227,13 @@
                 <span id="content-meta"></span>
             </div>
             <p class="desc-area" id="content-desc"></p>
+            <div id="movie-action-area" style="display: none;"></div>
         </div>
-        <div class="episodes-section">
-            <div class="tabs-strip" id="tabs-strip"></div> <div class="episodes-scroll" id="episodes-list"></div>
+        <div class="episodes-section" id="episodes-section">
+            <div class="tabs-strip">
+                <div class="tab-item active" tabindex="0">עונות</div>
+            </div>
+            <div class="episodes-scroll" id="episodes-list"></div>
         </div>
     </div>
 
@@ -268,9 +273,7 @@
         }
 
         function showSearch() {
-            // סוגרים סדרות אם פתוח
             document.getElementById('content-view').style.display = 'none';
-            
             const home = document.getElementById('home-view');
             document.querySelector('.top-section').style.display = 'none';
             home.innerHTML = `<div class="search-container"><input type="text" id="search-input" class="search-input" placeholder="מה בא לך לראות?" oninput="runSearch(this.value)"><div id="search-results"></div></div>`;
@@ -288,15 +291,16 @@
         window.addEventListener('keydown', function(e) {
             const active = document.activeElement;
             
-            // --- תיקון: חזרה מהתפריט לתוכן (שמאלה מהתפריט) ---
+            // --- תיקון: חזרה מהתפריט לתוכן (שמאלה) ---
             if (e.key === 'ArrowLeft' && active.classList.contains('nav-item')) {
                 e.preventDefault();
-                // אם היינו בסדרה, חוזרים אליה
+                // אם היינו בסדרה/סרט, חוזרים אליו
                 if (document.getElementById('content-view').style.display === 'block') {
-                    if (savedElement && document.body.contains(savedElement)) savedElement.focus();
-                    else {
-                        // ברירת מחדל: פרק ראשון או כפתור ניגון
-                        const first = document.getElementById('content-view').querySelector('.card') || document.getElementById('content-view').querySelector('.login-btn');
+                    if (savedElement && document.body.contains(savedElement)) {
+                        savedElement.focus(); // יכול להיות פרק או כפתור סרט
+                    } else {
+                        // ברירת מחדל: פרק ראשון או כפתור סרט
+                        const first = document.querySelector('.card.series') || document.querySelector('.play-movie-btn');
                         if(first) first.focus();
                     }
                 } else {
@@ -308,25 +312,37 @@
             }
 
             if (active.id === 'search-input') {
+                if (e.key === 'Escape') { window.handleBackPress(); return; } // חזרה מחיפוש ב-Esc
                 if (e.key === 'ArrowDown') { e.preventDefault(); const firstCard = document.querySelector('.card'); if (firstCard) firstCard.focus(); }
                 return; 
             }
             if (!active) return;
+            
+            // כפתור Play Movie
+            if (e.key === 'Enter' && active.classList.contains('play-movie-btn')) { e.preventDefault(); active.click(); return; }
+
             if (e.key === 'Enter' && (active.classList.contains('card') || active.classList.contains('nav-item') || active.classList.contains('profile-box') || active.classList.contains('login-btn') || active.classList.contains('tab-item'))) { e.preventDefault(); active.click(); return; }
             
             if (e.key === 'ArrowRight' && active.classList.contains('card')) {
                 e.preventDefault(); const prevCard = active.previousElementSibling;
                 if (prevCard && prevCard.classList.contains('card')) prevCard.focus(); else document.querySelector('.nav-item').focus();
             }
+            
+            // ספציפית לכפתור הסרט
+            if (e.key === 'ArrowRight' && active.classList.contains('play-movie-btn')) {
+                e.preventDefault(); 
+                document.querySelector('.nav-item').focus(); // הולכים לתפריט
+            }
+
             if (e.key === 'ArrowRight' && active.classList.contains('tab-item')) {
                 e.preventDefault(); // אין עוד טאבים מימין
                 document.querySelector('.nav-item').focus(); // הולכים לתפריט
             }
             
             if (e.key === 'ArrowLeft') {
-                if (active.classList.contains('tab-item')) {
+                if (active.classList.contains('tab-item') || active.classList.contains('play-movie-btn')) {
                     e.preventDefault(); 
-                    // אין טאבים משמאל
+                    // אין כלום משמאל
                     return;
                 }
                 if (active.classList.contains('card')) { const nextCard = active.nextElementSibling; if (nextCard && nextCard.classList.contains('card')) { e.preventDefault(); nextCard.focus(); } }
@@ -396,6 +412,7 @@
                     
                     if (item && document.querySelector('.top-section').style.display !== 'none') {
                         document.getElementById('hero-bg').style.backgroundImage = `url('${item.image}')`;
+                        
                         const heroTitle = document.getElementById('hero-title');
                         heroTitle.innerText = item.title;
                         
@@ -409,13 +426,11 @@
                     }
                 } else {
                     // --- דף סדרה (Overlay) ---
+                    savedElement = e.target; // עדכון אלמנט שמור
                     e.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
                     
                     // --- עדכון תקציר לפי פרק ---
                     const epId = e.target.getAttribute('data-id');
-                    // מוצאים את הסדרה (אנחנו יודעים שהיא פתוחה)
-                    // טריק: נשתמש ב-savedElement כדי לדעת מאיפה באנו, או נחפש שוב
-                    // חיפוש גלובלי מהיר:
                     let parentSeries = null;
                     let foundEpisode = null;
                     
@@ -431,10 +446,11 @@
                     }
                     
                     if (parentSeries && foundEpisode) {
-                        // אם יש תיאור לפרק - תציג אותו. אם לא, תציג את תיאור הסדרה.
                         document.getElementById('content-desc').innerText = foundEpisode.desc || parentSeries.description;
                     }
                 }
+            } else if (e.target.classList.contains('play-movie-btn')) {
+                savedElement = e.target; // שמירת כפתור הסרט
             }
         }, true);
 
@@ -491,7 +507,7 @@
             if (!item) { const history = getHistory(); item = history.find(h => h.id === id); }
             if (!item) return;
             
-            savedElement = document.activeElement; 
+            // savedElement כבר מעודכן מהפוקוס האחרון
             addToHistory(item);
             
             const detailView = document.getElementById('content-view');
@@ -510,15 +526,18 @@
             document.getElementById('content-meta').innerText = `${item.genre || item.category} ${item.type === 'series' ? ' | עונה 1' : ''}`;
             document.getElementById('content-desc').innerText = item.description || "";
 
-            const tabsContainer = document.getElementById('tabs-strip');
+            const episodesSection = document.getElementById('episodes-section');
             const episodesList = document.getElementById('episodes-list');
+            const movieActionArea = document.getElementById('movie-action-area');
+            
             episodesList.innerHTML = ''; 
+            movieActionArea.innerHTML = '';
 
-            // --- הפרדה בין סרט לסדרה ---
+            // --- טיפול נפרד לסרט ולסדרה ---
             if (item.type !== 'movie' && item.category !== 'סרטים') {
-                // סדרה: מציגים טאב עונות ופרקים
-                tabsContainer.style.display = 'flex';
-                tabsContainer.innerHTML = `<div class="tab-item active" tabindex="0">עונות</div>`;
+                // סדרה: מציגים אזור פרקים, מסתירים כפתור סרט
+                episodesSection.style.display = 'flex';
+                movieActionArea.style.display = 'none';
                 
                 let html = '<div class="row">';
                 html += item.episodes.map(ep => `
@@ -529,16 +548,23 @@
                 `).join('');
                 html += '</div>';
                 episodesList.innerHTML = html;
-            } else {
-                // סרט: מסתירים טאבים, מציגים רק כפתור ניגון
-                tabsContainer.style.display = 'none';
-                episodesList.innerHTML = `<div style="padding: 50px;"><button class="login-btn" tabindex="0" onclick="playHD('${item.driveId}')">▶ נגן סרט</button></div>`;
-            }
+                
+                setTimeout(() => { 
+                    const first = episodesList.querySelector('.card');
+                    if(first) { first.focus(); savedElement = first; } 
+                }, 200);
 
-            setTimeout(() => { 
-                const first = episodesList.querySelector('.card') || episodesList.querySelector('.login-btn');
-                if(first) first.focus(); 
-            }, 200);
+            } else {
+                // סרט: מסתירים פרקים, מציגים כפתור סרט למעלה
+                episodesSection.style.display = 'none';
+                movieActionArea.style.display = 'block';
+                movieActionArea.innerHTML = `<button class="play-movie-btn" onclick="playHD('${item.driveId}')">▶ נגן סרט</button>`;
+                
+                setTimeout(() => { 
+                    const btn = movieActionArea.querySelector('.play-movie-btn');
+                    if(btn) { btn.focus(); savedElement = btn; }
+                }, 200);
+            }
         }
 
         function playHD(id) {
@@ -577,6 +603,7 @@
         }
 
         window.handleBackPress = function() {
+            // סגירת וידאו
             if(document.getElementById('video-container').style.display === 'block') {
                 document.getElementById('video-container').innerHTML = '';
                 document.getElementById('video-container').style.display = 'none';
@@ -586,9 +613,13 @@
                 if (document.getElementById('content-view').style.display === 'block') {
                     if(currentPlayingId) {
                         setTimeout(() => {
-                            let el = document.getElementById('content-view').querySelector(`[data-id="${currentPlayingId}"]`);
+                            // מנסה למצוא את האלמנט, אם לא מוצא (כמו בסרט) חוזר לכפתור
+                            let el = document.querySelector(`[data-id="${currentPlayingId}"]`);
                             if(el) { el.focus(); el.scrollIntoView({block: 'center', inline: 'center'}); }
-                            else { const btn = document.querySelector('.login-btn'); if(btn) btn.focus(); }
+                            else { 
+                                const btn = document.querySelector('.play-movie-btn'); 
+                                if(btn) btn.focus(); 
+                            }
                         }, 100);
                     }
                 }
@@ -597,15 +628,24 @@
                 return;
             }
             
+            // יציאה מחיפוש (חזרה לבית)
+            if (document.getElementById('search-input')) {
+                enterApp();
+                return;
+            }
+
+            // יציאה מדף סדרה לבית
             if (document.getElementById('content-view').style.display === 'block') {
                 document.getElementById('content-view').style.display = 'none';
-                if (savedElement) {
-                    savedElement.focus();
+                // חוזרים לכרטיס הראשי בבית
+                const homeCard = document.querySelector(`.card[data-id="${lastFocusedEpisode ? lastFocusedEpisode.getAttribute('data-id') : ''}"]`) || document.querySelector('.card');
+                if (homeCard) {
+                    homeCard.focus();
+                    homeCard.scrollIntoView({block: 'center', inline: 'center'});
                 }
                 return;
             }
             
-            if (document.getElementById('search-input')) { enterApp(); return; }
             if (document.querySelector('.bottom-section').style.display === 'block') { switchScreen('profiles'); return; }
             if (window.AndroidControl) AndroidControl.exitApp();
         };
