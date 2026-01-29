@@ -23,7 +23,7 @@
         }
         *:focus { outline: none; }
         
-        /* Sidebar - חלק מהאתר */
+        /* Sidebar (חזר להיות בתוך האתר) */
         .sidebar { 
             width: var(--sidebar-width); background: #000; 
             display: flex; flex-direction: column; padding: 15px 5px; 
@@ -39,19 +39,11 @@
             background-image: url('./images/logo.png'); 
         }
         
-        .nav-item { 
-            padding: 15px; font-size: 24px; border-radius: 8px; 
-            margin-bottom: 10px; cursor: pointer; display: flex; 
-            align-items: center; justify-content: center;
-            color: #888; transition: 0.2s; 
-        }
+        .nav-item { padding: 15px; font-size: 24px; border-radius: 8px; margin-bottom: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #888; transition: 0.2s; }
         .nav-item:focus { background: var(--red); color: white; transform: scale(1.1); }
 
         /* Layout */
-        .main-content { 
-            flex: 1; height: 100vh; display: flex; flex-direction: column; 
-            position: relative; background: #000; overflow: hidden; 
-        }
+        .main-content { flex: 1; height: 100vh; display: flex; flex-direction: column; position: relative; background: #000; overflow: hidden; }
 
         .top-section { height: 55%; width: 100%; position: relative; flex-shrink: 0; z-index: 1; }
         .hero-bg { position: absolute; inset: 0; background-size: cover; background-position: top center; transition: background-image 0.4s ease-out; }
@@ -59,7 +51,6 @@
         .hero-text { position: absolute; bottom: 20px; right: 50px; left: 50px; z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; }
         
         .hero-title { font-size: 60px; font-weight: 700; margin-bottom: 10px; text-shadow: 2px 2px 15px black; line-height: 1; color: white; }
-        
         .text-gradient-kids {
             background: linear-gradient(to left, #6bf299, #1e8f58);
             -webkit-background-clip: text;
@@ -67,7 +58,6 @@
             display: inline-block;
             filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.9)); 
         }
-        
         .hero-desc { font-size: 20px; color: #ddd; line-height: 1.3; text-shadow: 1px 1px 5px black; max-width: 60%; max-height: 80px; overflow: hidden; font-weight: 300; }
 
         /* Bottom Section */
@@ -115,11 +105,12 @@
         .card-title-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); padding: 5px; text-align: center; font-size: 11px; opacity: 0; transition: 0.2s; color: white; border-bottom-left-radius: 4px; border-bottom-right-radius: 4px; }
         .card:focus .card-title-overlay { opacity: 1; }
 
-        /* --- Overlay (דף סדרה/סרט) --- */
+        /* --- Overlay --- */
         #content-view {
             position: fixed;
             top: 0; bottom: 0; left: 0;
-            right: var(--sidebar-width); /* לא מסתיר את התפריט */
+            /* התיקון: משאירים מקום לתפריט ה-HTML */
+            right: var(--sidebar-width); 
             background: #000;
             z-index: 5000;
             overflow-y: hidden;
@@ -128,15 +119,15 @@
         }
 
         .content-hero {
-            position: absolute; top: 0; left: 0; right: 0; height: 65%;
+            position: absolute; top: 0; left: 0; right: 0; height: 60%;
             background-size: cover; background-position: center top; z-index: 1;
         }
         .content-hero::after {
             content: ''; position: absolute; inset: 0;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, transparent 40%, #000 95%);
+            background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 40%, #000 95%);
         }
         
-        /* הטקסט למעלה */
+        /* הכותרת למעלה! */
         .content-details { 
             position: absolute; top: 10%; right: 50px; width: 50%; z-index: 2; text-align: right;
         }
@@ -153,9 +144,8 @@
         }
         .play-movie-btn:focus { transform: scale(1.1); box-shadow: 0 0 15px var(--red); outline: none; }
 
-        /* אזור הפרקים למטה */
         .episodes-section {
-            position: absolute; bottom: 0; left: 0; right: 0; height: 35%; 
+            position: absolute; bottom: 0; left: 0; right: 0; height: 40%; 
             padding: 0 50px; display: flex; flex-direction: column; justify-content: flex-end; z-index: 3;
         }
 
@@ -169,7 +159,7 @@
         
         .episodes-scroll {
             width: 100%; overflow-x: auto; white-space: nowrap;
-            padding-bottom: 60px; padding-top: 60px; margin-bottom: -30px;
+            padding-bottom: 50px; padding-top: 50px; margin-bottom: -20px;
         }
         .episodes-scroll::-webkit-scrollbar { display: none; }
 
@@ -220,7 +210,8 @@
 
     <div class="sidebar screen" id="sidebar">
         <div class="logo"></div>
-        <div id="dynamic-nav"></div>
+        <div id="dynamic-nav">
+             </div>
     </div>
 
     <div class="main-content screen" id="app">
@@ -262,6 +253,7 @@
         let currentProfile = null;
         let savedElement = null; 
         let currentPlayingId = null; 
+        let lastFocusedEpisode = null;
 
         const profilesData = [
             { n: 'ניתאי', i: 'https://img.freepik.com/free-psd/3d-illustration-person-with-sunglasses_23-2149436188.jpg', type: 'kids' },
@@ -307,21 +299,21 @@
         window.addEventListener('keydown', function(e) {
             const active = document.activeElement;
             
-            // יציאה מהתפריט שמאלה
+            // --- התיקון הקריטי: יציאה מהתפריט שמאלה ---
             if (e.key === 'ArrowLeft' && active.classList.contains('nav-item')) {
                 e.preventDefault();
-                // אם שכבת התוכן פתוחה - חוזרים אליה
                 if (document.getElementById('content-view').style.display === 'block') {
+                    // אם סדרה פתוחה - נסה לחזור לפוקוס האחרון בה
                     if (savedElement && document.getElementById('content-view').contains(savedElement)) {
                         savedElement.focus();
                     } else {
-                        // ברירת מחדל: פרק או כפתור סרט
+                        // ברירת מחדל
                         const first = document.getElementById('content-view').querySelector('.card') || 
                                       document.getElementById('content-view').querySelector('.play-movie-btn');
                         if(first) first.focus();
                     }
                 } else {
-                    // אם אנחנו בבית - חוזרים לכרטיס
+                    // אם אנחנו בבית
                     const firstCard = document.querySelector('.card');
                     if (firstCard) firstCard.focus();
                 }
@@ -405,8 +397,8 @@
 
         document.addEventListener('focus', function(e) {
             if (e.target.classList.contains('card')) {
-                // בית
                 if (document.getElementById('content-view').style.display === 'none') {
+                    // --- בית ---
                     e.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
                     const id = e.target.getAttribute('data-id');
                     let item = seriesData.find(s => s.id === id) || seriesData.find(s => s.episodes && s.episodes.some(ep => ep.driveId === id));
@@ -415,22 +407,32 @@
                         document.getElementById('hero-bg').style.backgroundImage = `url('${item.image}')`;
                         const heroTitle = document.getElementById('hero-title');
                         heroTitle.innerText = item.title;
-                        if (item.category === 'ילדים') heroTitle.className = 'hero-title text-gradient-kids';
-                        else heroTitle.className = 'hero-title';
+                        
+                        if (item.category === 'ילדים') {
+                            heroTitle.className = 'hero-title text-gradient-kids';
+                        } else {
+                            heroTitle.className = 'hero-title';
+                        }
+                        
                         document.getElementById('hero-desc').innerText = item.description || "";
                     }
-                } 
-                // סדרה
-                else {
-                    savedElement = e.target; // שומרים את הפרק הנוכחי
+                } else {
+                    // --- Overlay ---
+                    savedElement = e.target; 
                     e.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
                     
                     const epId = e.target.getAttribute('data-id');
-                    let parentSeries = null, foundEpisode = null;
+                    let parentSeries = null;
+                    let foundEpisode = null;
+                    
                     for(let s of seriesData) {
                         if(s.episodes) {
                             let ep = s.episodes.find(x => x.driveId === epId);
-                            if(ep) { parentSeries = s; foundEpisode = ep; break; }
+                            if(ep) {
+                                parentSeries = s;
+                                foundEpisode = ep;
+                                break;
+                            }
                         }
                     }
                     if (parentSeries && foundEpisode) {
@@ -461,7 +463,7 @@
 
         function renderHome() {
             const home = document.getElementById('home-view');
-            // אם כבר יש תוכן - לא לגעת! זה שומר את הגלילה
+            // אם כבר יש תוכן - לא לגעת! זה מה ששומר על הגלילה!
             if (home.innerHTML.trim() !== '') {
                 document.querySelector('.top-section').style.display = 'block';
                 return;
@@ -494,7 +496,7 @@
             if (!item) { const history = getHistory(); item = history.find(h => h.id === id); }
             if (!item) return;
             
-            // שומרים את האלמנט בבית לפני שפותחים את ה-Overlay
+            // שומרים את האלמנט בבית כדי לחזור אליו
             savedElement = document.activeElement; 
             addToHistory(item);
             
@@ -505,8 +507,11 @@
             
             const titleEl = document.getElementById('content-title');
             titleEl.innerText = item.title;
-            if (item.category === 'ילדים') titleEl.className = 'content-title text-gradient-kids';
-            else titleEl.className = 'content-title';
+            if (item.category === 'ילדים') {
+                titleEl.className = 'content-title text-gradient-kids';
+            } else {
+                titleEl.className = 'content-title';
+            }
             
             document.getElementById('content-meta').innerText = `${item.genre || item.category} ${item.type === 'series' ? ' | עונה 1' : ''}`;
             document.getElementById('content-desc').innerText = item.description || "";
@@ -534,7 +539,7 @@
                 
                 setTimeout(() => { 
                     const first = episodesList.querySelector('.card');
-                    if(first) { first.focus(); savedElement = first; } // שומרים פוקוס בתוך ה-Overlay
+                    if(first) { first.focus(); savedElement = first; } 
                 }, 200);
 
             } else {
@@ -611,7 +616,7 @@
             if (document.getElementById('content-view').style.display === 'block') {
                 document.getElementById('content-view').style.display = 'none';
                 
-                // כאן הקסם: אם יש אלמנט שמור והוא בבית - חוזרים אליו
+                // --- התיקון האולטימטיבי: חזרה למיקום ---
                 if (savedElement && document.getElementById('home-view').contains(savedElement)) {
                     savedElement.focus();
                     savedElement.scrollIntoView({block: 'center', inline: 'center'});
