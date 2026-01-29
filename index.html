@@ -112,8 +112,14 @@
 
         /* --- Overlay --- */
         #content-view {
-            position: fixed; top: 0; bottom: 0; left: 0; right: var(--sidebar-width); 
-            background: #000; z-index: 5000; overflow-y: hidden; display: none; padding: 0;
+            position: fixed;
+            top: 0; bottom: 0; left: 0;
+            right: var(--sidebar-width); 
+            background: #000;
+            z-index: 5000;
+            overflow-y: hidden;
+            display: none;
+            padding: 0;
         }
 
         .content-hero {
@@ -244,7 +250,7 @@
         firebase.initializeApp(firebaseConfig);
 
         let currentProfile = null;
-        let lastHomeFocusId = null; // המשתנה החדש ששומר ID במקום אלמנט
+        let savedElement = null; 
         let currentPlayingId = null; 
         let lastFocusedEpisode = null;
 
@@ -385,9 +391,6 @@
             if (e.target.classList.contains('card')) {
                 if (document.getElementById('content-view').style.display === 'none') {
                     // --- בית ---
-                    // שמירת ה-ID במקום האלמנט עצמו
-                    lastHomeFocusId = e.target.getAttribute('data-id');
-                    
                     e.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
                     const id = e.target.getAttribute('data-id');
                     let item = seriesData.find(s => s.id === id) || seriesData.find(s => s.episodes && s.episodes.some(ep => ep.driveId === id));
@@ -485,8 +488,8 @@
             if (!item) { const history = getHistory(); item = history.find(h => h.id === id); }
             if (!item) return;
             
-            // שומרים ID ולא אלמנט כדי להבטיח חזרה מדויקת
-            lastHomeFocusId = id;
+            // המפתח לתיקון: שמירת הכרטיס הספציפי שעליו לחצנו
+            savedElement = document.activeElement; 
             addToHistory(item);
             
             const detailView = document.getElementById('content-view');
@@ -579,7 +582,6 @@
         }
 
         window.handleBackPress = function() {
-            // יציאה מוידאו
             if(document.getElementById('video-container').style.display === 'block') {
                 document.getElementById('video-container').innerHTML = '';
                 document.getElementById('video-container').style.display = 'none';
@@ -600,27 +602,21 @@
                 return;
             }
             
-            // יציאה מחיפוש
-            if (document.getElementById('search-input')) {
-                enterApp();
-                return;
-            }
+            if (document.getElementById('search-input')) { enterApp(); return; }
 
-            // יציאה מדף סדרה לבית (עם הפוקוס החכם)
+            // יציאה מסדרה לבית
             if (document.getElementById('content-view').style.display === 'block') {
                 document.getElementById('content-view').style.display = 'none';
                 
-                // התיקון הקריטי: מחפש את הכרטיס לפי ID ועושה עליו פוקוס
-                if (lastHomeFocusId) {
-                    const cardToFocus = document.querySelector(`.card[data-id="${lastHomeFocusId}"]`);
-                    if (cardToFocus) {
-                        cardToFocus.focus();
-                        cardToFocus.scrollIntoView({block: 'center', inline: 'center'});
-                    } else {
-                        // אם לא נמצא (נדיר), תפוס את הראשון
-                        const homeCard = document.querySelector('.card');
-                        if(homeCard) homeCard.focus();
-                    }
+                // התיקון האולטימטיבי:
+                // אם יש אלמנט שמור והוא עדיין קיים בדף הבית (הוא תמיד קיים כי לא ריעננו)
+                // תחזור אליו!
+                if (savedElement && document.body.contains(savedElement)) {
+                    savedElement.focus();
+                    savedElement.scrollIntoView({block: 'center', inline: 'center'});
+                } else {
+                    const homeCard = document.querySelector('.card');
+                    if(homeCard) homeCard.focus();
                 }
                 return;
             }
