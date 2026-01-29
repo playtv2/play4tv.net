@@ -55,10 +55,7 @@
         .hero-bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, #000000 5%, rgba(0,0,0,0.6) 50%, transparent 100%); }
         .hero-text { position: absolute; bottom: 20px; right: 50px; left: 50px; z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; }
         
-        /* כותרת ראשית */
         .hero-title { font-size: 60px; font-weight: 700; margin-bottom: 10px; text-shadow: 2px 2px 15px black; line-height: 1; color: white; }
-        
-        /* ירוק הדרגתי לילדים */
         .text-gradient-kids {
             background: linear-gradient(to left, #6bf299, #1e8f58);
             -webkit-background-clip: text;
@@ -66,7 +63,6 @@
             display: inline-block;
             filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.9)); 
         }
-
         .hero-desc { font-size: 20px; color: #ddd; line-height: 1.3; text-shadow: 1px 1px 5px black; max-width: 60%; max-height: 80px; overflow: hidden; font-weight: 300; }
 
         /* Bottom Section */
@@ -114,56 +110,41 @@
         .card-title-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); padding: 5px; text-align: center; font-size: 11px; opacity: 0; transition: 0.2s; color: white; border-bottom-left-radius: 4px; border-bottom-right-radius: 4px; }
         .card:focus .card-title-overlay { opacity: 1; }
 
-        /* --- OVERLAY - עיצוב סופי --- */
+        /* --- Overlay --- */
         #content-view {
             position: fixed;
             top: 0; bottom: 0; left: 0;
             right: var(--sidebar-width); 
             background: #000;
             z-index: 5000;
-            overflow-y: hidden; /* מבטל גלילה של כל המסך */
+            overflow-y: auto;
             display: none;
+            padding: 0;
         }
 
         .content-hero {
-            position: absolute; top: 0; left: 0; right: 0; height: 60%; /* תופס 60% עליון */
-            background-size: cover; background-position: center top;
-            z-index: 1;
+            position: absolute; top: 0; left: 0; right: 0; height: 60%; 
+            background-size: cover; background-position: center top; z-index: 1;
         }
         .content-hero::after {
             content: ''; position: absolute; inset: 0;
             background: linear-gradient(to bottom, transparent 0%, #000 95%);
         }
-        
-        /* הטקסט - ממוקם אבסולוטית כדי שלא יידחף */
         .content-details { 
-            position: absolute; 
-            top: 15%; /* מתחיל קצת למטה מהקצה */
-            right: 50px; 
-            width: 50%; /* לוקח חצי מסך */
-            z-index: 2; 
-            text-align: right;
+            position: absolute; top: 15%; right: 50px; width: 50%; z-index: 2; text-align: right;
         }
         
         .content-title { font-size: 70px; font-weight: 700; margin: 0; line-height: 1; color: white; }
         .meta-tags { font-size: 20px; color: #aaa; margin-top: 10px; font-weight: 400; }
-        .desc-area { 
-            font-size: 22px; color: #ddd; margin-top: 15px; 
-            line-height: 1.4; font-weight: 300;
-            max-height: 150px; overflow: hidden; /* הגנה מפני טקסט ארוך מדי */
-        }
+        .desc-area { font-size: 22px; color: #ddd; margin-top: 15px; line-height: 1.4; font-weight: 300; max-height: 150px; overflow: hidden; }
 
-        /* אזור הפרקים - יושב למטה קבוע */
         .episodes-section {
-            position: absolute; bottom: 0; left: 0; right: 0; height: 40%; /* 40% תחתון */
-            padding: 0 50px;
-            display: flex; flex-direction: column; justify-content: flex-end;
-            z-index: 3;
+            position: absolute; bottom: 0; left: 0; right: 0; height: 40%; 
+            padding: 0 50px; display: flex; flex-direction: column; justify-content: flex-end; z-index: 3;
         }
 
         .tabs-strip {
-            display: flex; gap: 30px; 
-            margin-bottom: 20px; /* רווח מעל הפרקים */
+            display: flex; gap: 30px; margin-bottom: 20px; 
             font-size: 22px; font-weight: 700; color: #666;
         }
         .tab-item { cursor: pointer; transition: 0.2s; border-bottom: 3px solid transparent; padding-bottom: 5px; }
@@ -171,20 +152,15 @@
         .tab-item:focus { color: #fff; border-bottom-color: #ff0055; outline: none; transform: scale(1.1); }
         
         .episodes-scroll {
-            width: 100%;
-            overflow-x: auto;
-            white-space: nowrap;
-            padding-bottom: 50px; /* ריפוד תחתון נדיב למניעת חיתוך */
-            padding-top: 50px;    /* ריפוד עליון נדיב למניעת חיתוך */
-            margin-bottom: -20px;
+            width: 100%; overflow-x: auto; white-space: nowrap;
+            padding-bottom: 50px; padding-top: 50px; margin-bottom: -20px;
         }
         .episodes-scroll::-webkit-scrollbar { display: none; }
 
         #video-container { position: fixed; inset: 0; background: #000; z-index: 60000; display: none; }
         #loader-overlay {
             position: fixed; inset: 0; background: #000; z-index: 60001; 
-            display: none; align-items: center; justify-content: center;
-            pointer-events: none; 
+            display: none; align-items: center; justify-content: center; pointer-events: none; 
         }
         #loader-overlay video { width: 300px; height: 300px; object-fit: contain; }
 
@@ -252,10 +228,7 @@
             <p class="desc-area" id="content-desc"></p>
         </div>
         <div class="episodes-section">
-            <div class="tabs-strip">
-                <div class="tab-item active" tabindex="0">עונות</div>
-            </div>
-            <div class="episodes-scroll" id="episodes-list"></div>
+            <div class="tabs-strip" id="tabs-strip"></div> <div class="episodes-scroll" id="episodes-list"></div>
         </div>
     </div>
 
@@ -269,7 +242,7 @@
         let currentProfile = null;
         let savedElement = null; 
         let currentPlayingId = null; 
-        let lastFocusedEpisode = null; // משתנה לשמירת הפרק האחרון בפוקוס
+        let lastFocusedEpisode = null;
 
         const profilesData = [
             { n: 'ניתאי', i: 'https://img.freepik.com/free-psd/3d-illustration-person-with-sunglasses_23-2149436188.jpg', type: 'kids' },
@@ -295,7 +268,9 @@
         }
 
         function showSearch() {
+            // סוגרים סדרות אם פתוח
             document.getElementById('content-view').style.display = 'none';
+            
             const home = document.getElementById('home-view');
             document.querySelector('.top-section').style.display = 'none';
             home.innerHTML = `<div class="search-container"><input type="text" id="search-input" class="search-input" placeholder="מה בא לך לראות?" oninput="runSearch(this.value)"><div id="search-results"></div></div>`;
@@ -313,17 +288,19 @@
         window.addEventListener('keydown', function(e) {
             const active = document.activeElement;
             
-            // --- תיקון החזרה מהתפריט לפרק האחרון ---
-            if (e.key === 'ArrowRight' && active.classList.contains('nav-item')) {
+            // --- תיקון: חזרה מהתפריט לתוכן (שמאלה מהתפריט) ---
+            if (e.key === 'ArrowLeft' && active.classList.contains('nav-item')) {
                 e.preventDefault();
+                // אם היינו בסדרה, חוזרים אליה
                 if (document.getElementById('content-view').style.display === 'block') {
-                    if (lastFocusedEpisode && document.body.contains(lastFocusedEpisode)) {
-                        lastFocusedEpisode.focus();
-                    } else {
-                        const first = document.getElementById('episodes-list').querySelector('.card');
+                    if (savedElement && document.body.contains(savedElement)) savedElement.focus();
+                    else {
+                        // ברירת מחדל: פרק ראשון או כפתור ניגון
+                        const first = document.getElementById('content-view').querySelector('.card') || document.getElementById('content-view').querySelector('.login-btn');
                         if(first) first.focus();
                     }
                 } else {
+                    // אם היינו בבית, חוזרים לכרטיס
                     const firstCard = document.querySelector('.card');
                     if (firstCard) firstCard.focus();
                 }
@@ -336,20 +313,20 @@
             }
             if (!active) return;
             if (e.key === 'Enter' && (active.classList.contains('card') || active.classList.contains('nav-item') || active.classList.contains('profile-box') || active.classList.contains('login-btn') || active.classList.contains('tab-item'))) { e.preventDefault(); active.click(); return; }
+            
             if (e.key === 'ArrowRight' && active.classList.contains('card')) {
                 e.preventDefault(); const prevCard = active.previousElementSibling;
                 if (prevCard && prevCard.classList.contains('card')) prevCard.focus(); else document.querySelector('.nav-item').focus();
             }
             if (e.key === 'ArrowRight' && active.classList.contains('tab-item')) {
-                e.preventDefault();
+                e.preventDefault(); // אין עוד טאבים מימין
+                document.querySelector('.nav-item').focus(); // הולכים לתפריט
             }
+            
             if (e.key === 'ArrowLeft') {
-                if (active.classList.contains('nav-item')) {
-                    e.preventDefault(); return;
-                }
                 if (active.classList.contains('tab-item')) {
                     e.preventDefault(); 
-                    document.querySelector('.nav-item').focus();
+                    // אין טאבים משמאל
                     return;
                 }
                 if (active.classList.contains('card')) { const nextCard = active.nextElementSibling; if (nextCard && nextCard.classList.contains('card')) { e.preventDefault(); nextCard.focus(); } }
@@ -385,11 +362,8 @@
             if (e.key === 'ArrowDown') {
                 if (active.classList.contains('tab-item')) {
                     e.preventDefault();
-                    if (lastFocusedEpisode) lastFocusedEpisode.focus(); 
-                    else {
-                        const firstEp = document.getElementById('episodes-list').querySelector('.card');
-                        if (firstEp) firstEp.focus(); 
-                    }
+                    const firstEp = document.getElementById('episodes-list').querySelector('.card');
+                    if (firstEp) { firstEp.focus(); firstEp.scrollIntoView({block: 'center'}); }
                     return;
                 }
                 const currentBlock = active.closest('.category-block');
@@ -413,8 +387,8 @@
 
         document.addEventListener('focus', function(e) {
             if (e.target.classList.contains('card')) {
-                // בדיקה: האם אנחנו בבית?
                 if (document.getElementById('content-view').style.display === 'none') {
+                    // --- בית ---
                     e.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
                     const id = e.target.getAttribute('data-id');
                     let item = seriesData.find(s => s.id === id) || seriesData.find(s => s.episodes && s.episodes.some(ep => ep.driveId === id));
@@ -426,30 +400,39 @@
                         heroTitle.innerText = item.title;
                         
                         if (item.category === 'ילדים') {
-                            heroTitle.classList.add('text-gradient-kids');
+                            heroTitle.className = 'hero-title text-gradient-kids';
                         } else {
-                            heroTitle.classList.remove('text-gradient-kids');
+                            heroTitle.className = 'hero-title';
                         }
                         
                         document.getElementById('hero-desc').innerText = item.description || "";
                     }
                 } else {
-                    // --- אנחנו בתוך דף סדרה (Overlay) ---
-                    // שמירת הפרק האחרון לפוקוס
-                    lastFocusedEpisode = e.target;
+                    // --- דף סדרה (Overlay) ---
                     e.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
                     
-                    // --- שינוי התקציר דינמית לפי פרק ---
+                    // --- עדכון תקציר לפי פרק ---
                     const epId = e.target.getAttribute('data-id');
-                    // מוצאים את הסדרה הנוכחית
-                    // הנחה: הסדרה פתוחה כבר, אז אפשר למצוא אותה לפי הפרק
-                    let parentSeries = seriesData.find(s => s.episodes && s.episodes.some(ep => ep.driveId === epId));
-                    if (parentSeries) {
-                        let episode = parentSeries.episodes.find(ep => ep.driveId === epId);
-                        if (episode) {
-                            // מעדכנים את הטקסט למעלה
-                            document.getElementById('content-desc').innerText = `תקציר פרק ${episode.number}: ${episode.description || parentSeries.description}`;
+                    // מוצאים את הסדרה (אנחנו יודעים שהיא פתוחה)
+                    // טריק: נשתמש ב-savedElement כדי לדעת מאיפה באנו, או נחפש שוב
+                    // חיפוש גלובלי מהיר:
+                    let parentSeries = null;
+                    let foundEpisode = null;
+                    
+                    for(let s of seriesData) {
+                        if(s.episodes) {
+                            let ep = s.episodes.find(x => x.driveId === epId);
+                            if(ep) {
+                                parentSeries = s;
+                                foundEpisode = ep;
+                                break;
+                            }
                         }
+                    }
+                    
+                    if (parentSeries && foundEpisode) {
+                        // אם יש תיאור לפרק - תציג אותו. אם לא, תציג את תיאור הסדרה.
+                        document.getElementById('content-desc').innerText = foundEpisode.desc || parentSeries.description;
                     }
                 }
             }
@@ -475,7 +458,6 @@
 
         function renderHome() {
             document.getElementById('content-view').style.display = 'none';
-            
             const home = document.getElementById('home-view');
             if (home.innerHTML.trim() !== '') {
                 document.querySelector('.top-section').style.display = 'block';
@@ -515,13 +497,10 @@
             const detailView = document.getElementById('content-view');
             detailView.style.display = 'block';
             
-            // מילוי הנתונים ב-Overlay
             document.getElementById('content-hero-bg').style.backgroundImage = `url('${item.image}')`;
             
             const titleEl = document.getElementById('content-title');
             titleEl.innerText = item.title;
-            
-            // כותרת ירוקה
             if (item.category === 'ילדים') {
                 titleEl.className = 'content-title text-gradient-kids';
             } else {
@@ -531,12 +510,16 @@
             document.getElementById('content-meta').innerText = `${item.genre || item.category} ${item.type === 'series' ? ' | עונה 1' : ''}`;
             document.getElementById('content-desc').innerText = item.description || "";
 
+            const tabsContainer = document.getElementById('tabs-strip');
             const episodesList = document.getElementById('episodes-list');
-            episodesList.innerHTML = ''; // ניקוי
+            episodesList.innerHTML = ''; 
 
+            // --- הפרדה בין סרט לסדרה ---
             if (item.type !== 'movie' && item.category !== 'סרטים') {
-                // סדרה - הצגת פרקים
-                document.querySelector('.episodes-section').style.display = 'flex';
+                // סדרה: מציגים טאב עונות ופרקים
+                tabsContainer.style.display = 'flex';
+                tabsContainer.innerHTML = `<div class="tab-item active" tabindex="0">עונות</div>`;
+                
                 let html = '<div class="row">';
                 html += item.episodes.map(ep => `
                     <div class="card series" tabindex="0" data-id="${ep.driveId}" onclick="playHD('${ep.driveId}')">
@@ -547,17 +530,14 @@
                 html += '</div>';
                 episodesList.innerHTML = html;
             } else {
-                // סרט
-                document.querySelector('.episodes-section').style.display = 'flex';
+                // סרט: מסתירים טאבים, מציגים רק כפתור ניגון
+                tabsContainer.style.display = 'none';
                 episodesList.innerHTML = `<div style="padding: 50px;"><button class="login-btn" tabindex="0" onclick="playHD('${item.driveId}')">▶ נגן סרט</button></div>`;
             }
 
             setTimeout(() => { 
                 const first = episodesList.querySelector('.card') || episodesList.querySelector('.login-btn');
-                if(first) {
-                    first.focus();
-                    lastFocusedEpisode = first; // אתחול פוקוס ראשוני
-                }
+                if(first) first.focus(); 
             }, 200);
         }
 
@@ -606,7 +586,7 @@
                 if (document.getElementById('content-view').style.display === 'block') {
                     if(currentPlayingId) {
                         setTimeout(() => {
-                            let el = document.querySelector(`[data-id="${currentPlayingId}"]`);
+                            let el = document.getElementById('content-view').querySelector(`[data-id="${currentPlayingId}"]`);
                             if(el) { el.focus(); el.scrollIntoView({block: 'center', inline: 'center'}); }
                             else { const btn = document.querySelector('.login-btn'); if(btn) btn.focus(); }
                         }, 100);
