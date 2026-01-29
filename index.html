@@ -6,6 +6,10 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@100;300;400;500;700;900&display=swap" rel="stylesheet">
+
     <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth-compat.js"></script>
     <style>
@@ -13,7 +17,8 @@
         * { -webkit-tap-highlight-color: transparent !important; outline: none !important; }
         
         body { 
-            background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; 
+            background: var(--bg); color: white; 
+            font-family: 'Heebo', sans-serif; /* שינוי לפונט החדש */
             margin: 0; padding: 0; width: 100vw; height: 100vh; 
             overflow: hidden; display: flex; position: fixed; inset: 0;
         }
@@ -182,7 +187,7 @@
         firebase.initializeApp(firebaseConfig);
 
         let currentProfile = null;
-        let savedElement = null; // כאן נשמור את הכפתור שלחצנו עליו
+        let savedElement = null; 
         let currentPlayingId = null; 
 
         const profilesData = [
@@ -209,7 +214,6 @@
         }
 
         function showSearch() {
-            // בחיפוש אנחנו עדיין משתמשים במנגנון הישן (החלפה)
             const home = document.getElementById('home-view');
             document.querySelector('.top-section').style.display = 'none';
             home.innerHTML = `<div class="search-container"><input type="text" id="search-input" class="search-input" placeholder="מה בא לך לראות?" oninput="runSearch(this.value)"><div id="search-results"></div></div>`;
@@ -231,16 +235,24 @@
                 return; 
             }
             if (!active) return;
-            if (e.key === 'Enter' && (active.classList.contains('card') || active.classList.contains('nav-item') || active.classList.contains('profile-box') || active.classList.contains('login-btn'))) { e.preventDefault(); active.click(); return; }
+            if (e.key === 'Enter' && (active.classList.contains('card') || active.classList.contains('nav-item') || active.classList.contains('profile-box') || active.classList.contains('login-btn') || active.classList.contains('tab-item'))) { e.preventDefault(); active.click(); return; }
             if (e.key === 'ArrowRight' && active.classList.contains('card')) {
                 e.preventDefault(); const prevCard = active.previousElementSibling;
                 if (prevCard && prevCard.classList.contains('card')) prevCard.focus(); else document.querySelector('.nav-item').focus();
             }
+            if (e.key === 'ArrowRight' && active.classList.contains('tab-item')) {
+                e.preventDefault();
+            }
             if (e.key === 'ArrowLeft') {
                 if (active.classList.contains('nav-item')) {
                     e.preventDefault();
-                    const firstCard = document.querySelector('.card');
-                    if (firstCard) firstCard.focus();
+                    if (savedElement && document.getElementById('content-view').style.display === 'none') savedElement.focus(); 
+                    else { const c = document.querySelector('.card'); if(c) c.focus(); }
+                    return;
+                }
+                if (active.classList.contains('tab-item')) {
+                    e.preventDefault(); 
+                    document.querySelector('.nav-item').focus();
                     return;
                 }
                 if (active.classList.contains('card')) { const nextCard = active.nextElementSibling; if (nextCard && nextCard.classList.contains('card')) { e.preventDefault(); nextCard.focus(); } }
@@ -286,7 +298,6 @@
 
         document.addEventListener('focus', function(e) {
             if (e.target.classList.contains('card')) {
-                // רק אם חלון התוכן סגור, משנים את תמונת הרקע
                 if (document.getElementById('content-view').style.display === 'none') {
                     e.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
                     const id = e.target.getAttribute('data-id');
@@ -333,18 +344,15 @@
             return `<div class="category-block"><div class="category-title">${title}</div><div class="row">${cardsHtml}</div></div>`;
         }
 
-        // --- השינוי המרכזי: שיטת השכבות (Overlay) ---
         function openContent(id) {
             let item = seriesData.find(x => x.id === id);
             if (!item) { const history = getHistory(); item = history.find(h => h.id === id); }
             if (!item) return;
             
-            // 1. שומרים את הכרטיס שהיינו עליו
             savedElement = document.activeElement;
             
             addToHistory(item);
             
-            // 2. פותחים את השכבה מעל (בלי למחוק את הרקע)
             const detailView = document.getElementById('content-view');
             detailView.style.display = 'block';
             
@@ -399,15 +407,12 @@
         }
 
         window.handleBackPress = function() {
-            // יציאה מוידאו
             if(document.getElementById('video-container').style.display === 'block') {
                 document.getElementById('video-container').innerHTML = '';
                 document.getElementById('video-container').style.display = 'none';
                 document.getElementById('loader-overlay').style.display = 'none';
-                
                 window.hpDone = false; 
                 
-                // בודקים אם יש שכבת תוכן פתוחה מתחת לוידאו
                 if (document.getElementById('content-view').style.display === 'block') {
                     if(currentPlayingId) {
                         setTimeout(() => { 
@@ -422,11 +427,8 @@
                 return;
             }
             
-            // יציאה משכבת התוכן חזרה לבית
             if (document.getElementById('content-view').style.display === 'block') {
                 document.getElementById('content-view').style.display = 'none';
-                
-                // והכי חשוב: מחזירים את הפוקוס לאלמנט ששמרנו!
                 if (savedElement) {
                     savedElement.focus();
                     savedElement.scrollIntoView({block: 'center', inline: 'center'});
