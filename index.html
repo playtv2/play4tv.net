@@ -28,7 +28,7 @@
             width: var(--sidebar-width); background: #000; 
             display: flex; flex-direction: column; padding: 15px 5px; 
             border-left: 1px solid #222; height: 100%; 
-            z-index: 6000; /* Sidebar תמיד עליון */
+            z-index: 6000; 
             transition: width 0.3s ease; flex-shrink: 0; 
             overflow: hidden; white-space: nowrap;
         }
@@ -56,6 +56,7 @@
         .hero-text { position: absolute; bottom: 20px; right: 50px; left: 50px; z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; }
         
         .hero-title { font-size: 60px; font-weight: 700; margin-bottom: 10px; text-shadow: 2px 2px 15px black; line-height: 1; color: white; }
+        
         .text-gradient-kids {
             background: linear-gradient(to left, #6bf299, #1e8f58);
             -webkit-background-clip: text;
@@ -63,9 +64,10 @@
             display: inline-block;
             filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.9)); 
         }
+
         .hero-desc { font-size: 20px; color: #ddd; line-height: 1.3; text-shadow: 1px 1px 5px black; max-width: 60%; max-height: 80px; overflow: hidden; font-weight: 300; }
 
-        /* Bottom Section */
+        /* Scroll Area */
         .bottom-section { 
             height: 45%; flex-grow: 1; width: 100%; background: #000000; 
             overflow-y: auto; overflow-x: hidden; 
@@ -114,30 +116,28 @@
         #content-view {
             position: fixed;
             top: 0; bottom: 0; left: 0;
-            right: var(--sidebar-width); /* השארת מקום לתפריט */
+            right: var(--sidebar-width); 
             background: #000;
             z-index: 5000;
-            overflow-y: hidden; /* ביטול גלילה כללית */
+            overflow-y: auto;
             display: none;
+            padding: 0;
         }
 
         .content-hero {
-            position: absolute; top: 0; left: 0; right: 0; height: 60%;
-            background-size: cover; background-position: center top; z-index: 1;
+            height: 60vh; width: 100%; position: relative;
+            background-size: cover; background-position: center top;
         }
         .content-hero::after {
             content: ''; position: absolute; inset: 0;
             background: linear-gradient(to bottom, transparent 0%, #000 95%);
         }
-        .content-details { 
-            position: absolute; top: 15%; right: 50px; width: 50%; z-index: 2; text-align: right;
-        }
+        .content-details { position: absolute; bottom: 10px; right: 50px; left: 50px; z-index: 2; }
         
         .content-title { font-size: 70px; font-weight: 700; margin: 0; line-height: 1; color: white; }
         .meta-tags { font-size: 20px; color: #aaa; margin-top: 10px; font-weight: 400; }
         .desc-area { font-size: 22px; color: #ddd; margin-top: 15px; line-height: 1.4; font-weight: 300; max-height: 150px; overflow: hidden; }
 
-        /* כפתור נגן סרט (למעלה) */
         .play-movie-btn {
             margin-top: 20px;
             background: var(--red); color: white; border: none; 
@@ -146,9 +146,8 @@
         }
         .play-movie-btn:focus { transform: scale(1.1); box-shadow: 0 0 15px var(--red); outline: none; }
 
-        /* אזור הפרקים */
         .episodes-section {
-            position: absolute; bottom: 0; left: 0; right: 0; height: 40%;
+            position: absolute; bottom: 0; left: 0; right: 0; height: 40%; 
             padding: 0 50px; display: flex; flex-direction: column; justify-content: flex-end; z-index: 3;
         }
 
@@ -283,6 +282,7 @@
         function showSearch() {
             document.getElementById('content-view').style.display = 'none';
             const home = document.getElementById('home-view');
+            // הסתרת דף הבית רק לזמן החיפוש
             document.querySelector('.top-section').style.display = 'none';
             home.innerHTML = `<div class="search-container"><input type="text" id="search-input" class="search-input" placeholder="מה בא לך לראות?" oninput="runSearch(this.value)"><div id="search-results"></div></div>`;
             setTimeout(() => document.getElementById('search-input').focus(), 100);
@@ -299,25 +299,17 @@
         window.addEventListener('keydown', function(e) {
             const active = document.activeElement;
             
-            // --- תיקון אגרסיבי: חזרה מהתפריט (שמאלה) לתוכן ---
             if (e.key === 'ArrowLeft' && active.classList.contains('nav-item')) {
                 e.preventDefault();
-                // האם אנחנו בתוך דף סדרה?
                 if (document.getElementById('content-view').style.display === 'block') {
-                    // נסה לחזור לכפתור סרט או לפרק אחרון
-                    const btn = document.querySelector('.play-movie-btn');
-                    if (btn && document.body.contains(btn)) {
-                        btn.focus();
-                        return;
+                    // חוזרים לסדרה
+                    if (savedElement && document.body.contains(savedElement)) savedElement.focus();
+                    else {
+                        const first = document.querySelector('.card.series') || document.querySelector('.play-movie-btn');
+                        if(first) first.focus();
                     }
-                    if (savedElement && document.body.contains(savedElement)) {
-                        savedElement.focus();
-                        return;
-                    }
-                    const firstEp = document.querySelector('.card.series');
-                    if (firstEp) firstEp.focus();
                 } else {
-                    // אנחנו בבית
+                    // חוזרים לבית (והוא לא מאופס!)
                     const firstCard = document.querySelector('.card');
                     if (firstCard) firstCard.focus();
                 }
@@ -409,10 +401,10 @@
             if (e.target.classList.contains('card')) {
                 if (document.getElementById('content-view').style.display === 'none') {
                     // --- בית ---
+                    // חשוב: אנחנו לא עושים כאן כלום שמשנה את ה-HTML של הבית!
                     e.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
                     const id = e.target.getAttribute('data-id');
                     let item = seriesData.find(s => s.id === id) || seriesData.find(s => s.episodes && s.episodes.some(ep => ep.driveId === id));
-                    if (!item) { const history = getHistory(); item = history.find(h => h.id === id); }
                     
                     if (item && document.querySelector('.top-section').style.display !== 'none') {
                         document.getElementById('hero-bg').style.backgroundImage = `url('${item.image}')`;
@@ -427,15 +419,13 @@
                         document.getElementById('hero-desc').innerText = item.description || "";
                     }
                 } else {
-                    // --- דף סדרה (Overlay) ---
+                    // --- Overlay ---
                     savedElement = e.target; 
                     e.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
                     
-                    // עדכון תקציר לפי פרק
                     const epId = e.target.getAttribute('data-id');
                     let parentSeries = null;
                     let foundEpisode = null;
-                    
                     for(let s of seriesData) {
                         if(s.episodes) {
                             let ep = s.episodes.find(x => x.driveId === epId);
@@ -467,6 +457,7 @@
         function enterApp() { 
             document.getElementById('content-view').style.display = 'none';
             switchScreen('home'); 
+            // פה קוראים ל-renderHome, אבל הוא חכם ולא יאפס אם לא צריך
             renderHome(); 
         }
         
@@ -474,10 +465,11 @@
         function getHistory() { if (!currentProfile) return []; return JSON.parse(localStorage.getItem(`history_${currentProfile.n}`) || "[]"); }
 
         function renderHome() {
-            // לא סוגרים את ה-Overlay אוטומטית כאן, כדי לא לאפס אותו אם הוא פתוח
+            // התיקון הגדול: אם כבר יש תוכן בבית, אל תיגע בו!
             const home = document.getElementById('home-view');
             if (home.innerHTML.trim() !== '') {
                 document.querySelector('.top-section').style.display = 'block';
+                // לא נוגעים בגלילה!
                 return;
             }
 
@@ -508,6 +500,7 @@
             if (!item) { const history = getHistory(); item = history.find(h => h.id === id); }
             if (!item) return;
             
+            // שומרים את הכפתור בבית שלחצנו עליו
             savedElement = document.activeElement; 
             addToHistory(item);
             
@@ -550,18 +543,17 @@
                 
                 setTimeout(() => { 
                     const first = episodesList.querySelector('.card');
-                    if(first) { first.focus(); savedElement = first; } 
+                    if(first) { first.focus(); } 
                 }, 200);
 
             } else {
-                // סרט - כפתור למעלה
                 episodesSection.style.display = 'none';
                 movieActionArea.style.display = 'block';
                 movieActionArea.innerHTML = `<button class="play-movie-btn" onclick="playHD('${item.driveId}')">▶ נגן סרט</button>`;
                 
                 setTimeout(() => { 
                     const btn = movieActionArea.querySelector('.play-movie-btn');
-                    if(btn) { btn.focus(); savedElement = btn; }
+                    if(btn) { btn.focus(); }
                 }, 200);
             }
         }
@@ -602,7 +594,6 @@
         }
 
         window.handleBackPress = function() {
-            // יציאה מוידאו
             if(document.getElementById('video-container').style.display === 'block') {
                 document.getElementById('video-container').innerHTML = '';
                 document.getElementById('video-container').style.display = 'none';
@@ -623,22 +614,21 @@
                 return;
             }
             
-            // יציאה מחיפוש
+            // חזרה מחיפוש -> בונה מחדש את הבית כי החיפוש דרס אותו
             if (document.getElementById('search-input')) {
+                document.getElementById('home-view').innerHTML = ''; // איפוס כדי שייבנה מחדש
                 enterApp();
                 return;
             }
 
-            // יציאה מדף סדרה (Overlay)
+            // יציאה מסדרה -> חזרה לבית (בלי ריענון!)
             if (document.getElementById('content-view').style.display === 'block') {
                 document.getElementById('content-view').style.display = 'none';
-                // חוזרים לאלמנט ששמרנו בבית (בלי לרענן!)
-                if (savedElement && document.getElementById('home-view').contains(savedElement)) {
+                
+                // הנה הקסם שחסר מקודם:
+                if (savedElement) {
                     savedElement.focus();
-                    savedElement.scrollIntoView({block: 'center', inline: 'center'});
-                } else {
-                    const homeCard = document.querySelector('.card');
-                    if(homeCard) homeCard.focus();
+                    // אנחנו לא קוראים ל-renderHome ולא מאפסים כלום!
                 }
                 return;
             }
