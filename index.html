@@ -54,7 +54,16 @@
         .hero-bg { position: absolute; inset: 0; background-size: cover; background-position: top center; transition: background-image 0.4s ease-out; }
         .hero-bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, #000000 5%, rgba(0,0,0,0.6) 50%, transparent 100%); }
         .hero-text { position: absolute; bottom: 20px; right: 50px; left: 50px; z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; }
-        .hero-title { font-size: 60px; font-weight: 800; margin-bottom: 10px; text-shadow: 2px 2px 15px black; line-height: 1; }
+        
+        /* כותרת ראשית - עובי בינוני (700) */
+        .hero-title { 
+            font-size: 60px; 
+            font-weight: 700; /* פחות עבה מ-900 */
+            margin-bottom: 10px; 
+            text-shadow: 2px 2px 15px black; 
+            line-height: 1; 
+        }
+        
         .hero-desc { font-size: 20px; color: #ddd; line-height: 1.3; text-shadow: 1px 1px 5px black; max-width: 60%; max-height: 80px; overflow: hidden; }
 
         /* Scroll Area - Home View */
@@ -67,7 +76,14 @@
         .bottom-section::-webkit-scrollbar { display: none; }
 
         .category-block { margin-bottom: 5px; padding-right: 40px; display: block; }
-        .category-title { font-size: 18px; margin-bottom: 0px; font-weight: bold; color: #aaa; }
+        
+        /* כותרות קטגוריה - דק (300) */
+        .category-title { 
+            font-size: 20px; 
+            margin-bottom: 0px; 
+            font-weight: 300; /* דק */
+            color: #ddd; /* צבע מעט בהיר יותר שיראה טוב בדק */
+        }
         
         .row { 
             display: flex; gap: 15px; 
@@ -187,7 +203,7 @@
         firebase.initializeApp(firebaseConfig);
 
         let currentProfile = null;
-        let savedElement = null; 
+        let savedElement = null; // כאן נשמור את הכפתור שלחצנו עליו
         let currentPlayingId = null; 
 
         const profilesData = [
@@ -240,19 +256,11 @@
                 e.preventDefault(); const prevCard = active.previousElementSibling;
                 if (prevCard && prevCard.classList.contains('card')) prevCard.focus(); else document.querySelector('.nav-item').focus();
             }
-            if (e.key === 'ArrowRight' && active.classList.contains('tab-item')) {
-                e.preventDefault();
-            }
             if (e.key === 'ArrowLeft') {
                 if (active.classList.contains('nav-item')) {
                     e.preventDefault();
-                    if (savedElement && document.getElementById('content-view').style.display === 'none') savedElement.focus(); 
+                    if (savedElement) savedElement.focus();
                     else { const c = document.querySelector('.card'); if(c) c.focus(); }
-                    return;
-                }
-                if (active.classList.contains('tab-item')) {
-                    e.preventDefault(); 
-                    document.querySelector('.nav-item').focus();
                     return;
                 }
                 if (active.classList.contains('card')) { const nextCard = active.nextElementSibling; if (nextCard && nextCard.classList.contains('card')) { e.preventDefault(); nextCard.focus(); } }
@@ -298,6 +306,7 @@
 
         document.addEventListener('focus', function(e) {
             if (e.target.classList.contains('card')) {
+                // רק אם ה-Overlay סגור
                 if (document.getElementById('content-view').style.display === 'none') {
                     e.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
                     const id = e.target.getAttribute('data-id');
@@ -314,7 +323,13 @@
 
         function login() { firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider()); }
         function loadProfiles() { document.getElementById('profile-list').innerHTML = profilesData.map(p => `<div class="profile-box" tabindex="0" onclick="selectProfile('${p.n}')"><div class="profile-img" style="background-image: url('${p.i}')"></div><span class="profile-name">${p.n}</span></div>`).join(''); setTimeout(() => document.querySelector('.profile-box').focus(), 500); }
-        function selectProfile(name) { currentProfile = profilesData.find(p => p.n === name); updateSidebar(); enterApp(); }
+        function selectProfile(name) { 
+            currentProfile = profilesData.find(p => p.n === name); 
+            // איפוס מלא של הבית במעבר פרופיל
+            document.getElementById('home-view').innerHTML = '';
+            updateSidebar(); 
+            enterApp(); 
+        }
         function enterApp() { switchScreen('home'); renderHome(); }
         
         function addToHistory(item) { if (!currentProfile) return; const key = `history_${currentProfile.n}`; let h = JSON.parse(localStorage.getItem(key) || "[]"); h = h.filter(x => x.id !== item.id); h.unshift(item); if(h.length > 10) h.pop(); localStorage.setItem(key, JSON.stringify(h)); }
@@ -322,6 +337,12 @@
 
         function renderHome() {
             const home = document.getElementById('home-view');
+            // אם כבר יש תוכן, לא בונים מחדש
+            if (home.innerHTML.trim() !== '') {
+                document.querySelector('.top-section').style.display = 'block';
+                return;
+            }
+
             document.querySelector('.top-section').style.display = 'block';
             home.innerHTML = '';
             const history = getHistory();
@@ -344,31 +365,68 @@
             return `<div class="category-block"><div class="category-title">${title}</div><div class="row">${cardsHtml}</div></div>`;
         }
 
+        // --- Overlay: פתיחת השכבה המעוצבת ---
         function openContent(id) {
             let item = seriesData.find(x => x.id === id);
             if (!item) { const history = getHistory(); item = history.find(h => h.id === id); }
             if (!item) return;
             
+            // 1. שומרים את הכפתור הנוכחי
             savedElement = document.activeElement;
-            
             addToHistory(item);
             
+            // 2. פותחים שכבה
             const detailView = document.getElementById('content-view');
             detailView.style.display = 'block';
             
-            let html = '';
-            if (item.type === 'movie' || item.category === 'סרטים') {
-                html = `<div style="min-height:80vh; display:flex; flex-direction:column; justify-content:center; background: linear-gradient(to right, black, transparent), url('${item.image}') no-repeat center/cover; padding:60px;">
-                    <h1 style="font-size:50px; margin-bottom:15px; text-shadow: 2px 2px 10px black;">${item.title}</h1><p style="max-width:600px; font-size:18px; margin-bottom:25px; text-shadow: 1px 1px 5px black;">${item.description}</p>
-                    <button class="login-btn" tabindex="0" onclick="playHD('${item.driveId}')">▶ נגן סרט</button></div>`;
+            const isKids = item.category === 'ילדים';
+            const titleClass = isKids ? 'title-kids' : 'title-regular';
+            
+            let html = `
+                <div class="content-hero" style="background-image: url('${item.image}')">
+                    <div class="content-details">
+                        <h1 class="${titleClass}">${item.title}</h1>
+                        <div class="meta-tags">
+                            <span>${item.genre || item.category}</span>
+                            ${item.type === 'series' ? ' | עונה 1' : ''}
+                        </div>
+                        <p class="desc-area">${item.description || ''}</p>
+                    </div>
+                </div>
+            `;
+
+            if (item.type !== 'movie' && item.category !== 'סרטים') {
+                html += `
+                    <div class="tabs-strip">
+                        <div class="tab-item">עונות</div>
+                        <div class="tab-item active">${item.title} - הפרקים - חדש</div>
+                        <div class="tab-item">מאחורי הקלעים</div>
+                    </div>
+                    <div class="episodes-area">
+                        <div class="row" style="padding: 0;">
+                            ${item.episodes.map(ep => `
+                                <div class="card series" tabindex="0" data-id="${ep.driveId}" onclick="playHD('${ep.driveId}')">
+                                    <img src="${ep.image}" style="height:100%;">
+                                    <div class="card-title-overlay">פרק ${ep.number}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
             } else {
-                html = `<div><div style="margin-bottom: 30px;"><h1 style="font-size:50px; margin-bottom:15px;">${item.title}</h1><p style="max-width:700px; color:#aaa; font-size: 18px;">${item.description}</p></div>
-                    <div class="category-title">פרקים</div><div class="row" style="padding-bottom:20px;">
-                        ${item.episodes.map(ep => `<div class="card series" tabindex="0" data-id="${ep.driveId}" onclick="playHD('${ep.driveId}')"><img src="${ep.image}" style="height:100%;"><div class="card-title-overlay">פרק ${ep.number}</div></div>`).join('')}
-                    </div></div>`;
+                html += `
+                    <div style="padding: 50px;">
+                        <button class="login-btn" tabindex="0" onclick="playHD('${item.driveId}')">▶ נגן סרט</button>
+                    </div>
+                `;
             }
+
             detailView.innerHTML = html;
-            setTimeout(() => { const b=detailView.querySelector('.login-btn')||detailView.querySelector('.card'); if(b)b.focus(); }, 200);
+            
+            setTimeout(() => { 
+                const first = detailView.querySelector('.card') || detailView.querySelector('.login-btn');
+                if(first) first.focus(); 
+            }, 200);
         }
 
         function playHD(id) {
@@ -407,6 +465,7 @@
         }
 
         window.handleBackPress = function() {
+            // סגירת וידאו
             if(document.getElementById('video-container').style.display === 'block') {
                 document.getElementById('video-container').innerHTML = '';
                 document.getElementById('video-container').style.display = 'none';
@@ -415,8 +474,8 @@
                 
                 if (document.getElementById('content-view').style.display === 'block') {
                     if(currentPlayingId) {
-                        setTimeout(() => { 
-                            let el = document.querySelector(`[data-id="${currentPlayingId}"]`);
+                        setTimeout(() => {
+                            let el = document.getElementById('content-view').querySelector(`[data-id="${currentPlayingId}"]`);
                             if(el) { el.focus(); el.scrollIntoView({block: 'center', inline: 'center'}); }
                             else { const btn = document.querySelector('.login-btn'); if(btn) btn.focus(); }
                         }, 100);
@@ -427,11 +486,14 @@
                 return;
             }
             
+            // סגירת ה-Overlay וחזרה למקום (הקסם)
             if (document.getElementById('content-view').style.display === 'block') {
                 document.getElementById('content-view').style.display = 'none';
+                
+                // חוזרים בדיוק לאיפה שהיינו!
                 if (savedElement) {
                     savedElement.focus();
-                    savedElement.scrollIntoView({block: 'center', inline: 'center'});
+                    // לא צריך scrollIntoView כי הדף מעולם לא זז!
                 }
                 return;
             }
@@ -457,7 +519,7 @@
                 document.getElementById('app').style.display = 'flex';
                 document.querySelector('.top-section').style.display = 'block';
                 document.querySelector('.bottom-section').style.display = 'block';
-                setTimeout(() => { const c=document.querySelector('.card'); if(c)c.focus(); }, 500);
+                renderHome();
             }
         }
     </script>
