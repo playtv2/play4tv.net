@@ -110,7 +110,7 @@
         .card-title-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); padding: 5px; text-align: center; font-size: 11px; opacity: 0; transition: 0.2s; color: white; border-bottom-left-radius: 4px; border-bottom-right-radius: 4px; }
         .card:focus .card-title-overlay { opacity: 1; }
 
-        /* --- Overlay (שכבה צפה - עיצוב מתוקן) --- */
+        /* --- Overlay --- */
         #content-view {
             position: fixed;
             top: 0; bottom: 0; left: 0;
@@ -123,23 +123,21 @@
         }
 
         .content-hero {
-            position: absolute; 
-            top: 0; left: 0; right: 0; 
-            height: 65%; /* גובה התמונה */
-            background-size: cover; background-position: center top; 
-            z-index: 1;
+            height: 60vh; width: 100%; position: relative;
+            background-size: cover; background-position: center top;
         }
+        /* רקע כהה יותר כדי שהטקסט למעלה יבלוט */
         .content-hero::after {
             content: ''; position: absolute; inset: 0;
-            background: linear-gradient(to bottom, transparent 0%, #000 90%);
+            background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 40%, #000 95%);
         }
         
-        /* מיקום הכותרת והתקציר - למעלה! */
+        /* --- התיקון שביקשת: הזזת הטקסט למעלה --- */
         .content-details { 
             position: absolute; 
-            top: 10%; /* מרווח מלמעלה */
+            top: 10%; /* עכשיו זה למעלה! */
             right: 50px; 
-            width: 50%; /* חצי רוחב */
+            width: 50%; /* שלא יימרח על כל המסך */
             z-index: 2; 
             text-align: right;
         }
@@ -156,14 +154,9 @@
         }
         .play-movie-btn:focus { transform: scale(1.1); box-shadow: 0 0 15px var(--red); outline: none; }
 
-        /* אזור הפרקים - יושב למטה */
         .episodes-section {
-            position: absolute; 
-            bottom: 0; left: 0; right: 0; 
-            height: 35%; /* גובה אזור הפרקים */
-            padding: 0 50px; 
-            display: flex; flex-direction: column; justify-content: flex-end; 
-            z-index: 3;
+            position: absolute; bottom: 0; left: 0; right: 0; height: 40%; 
+            padding: 0 50px; display: flex; flex-direction: column; justify-content: flex-end; z-index: 3;
         }
 
         .tabs-strip {
@@ -505,7 +498,6 @@
             if (!item) { const history = getHistory(); item = history.find(h => h.id === id); }
             if (!item) return;
             
-            // המפתח: שמירת הכרטיס הספציפי שעליו לחצנו (כולל הקטגוריה שלו)
             savedElement = document.activeElement; 
             addToHistory(item);
             
@@ -548,7 +540,7 @@
                 
                 setTimeout(() => { 
                     const first = episodesList.querySelector('.card');
-                    if(first) { first.focus(); } 
+                    if(first) { first.focus(); savedElement = first; } 
                 }, 200);
 
             } else {
@@ -558,7 +550,7 @@
                 
                 setTimeout(() => { 
                     const btn = movieActionArea.querySelector('.play-movie-btn');
-                    if(btn) { btn.focus(); }
+                    if(btn) { btn.focus(); savedElement = btn; }
                 }, 200);
             }
         }
@@ -608,7 +600,7 @@
                 if (document.getElementById('content-view').style.display === 'block') {
                     if(currentPlayingId) {
                         setTimeout(() => {
-                            let el = document.querySelector(`[data-id="${currentPlayingId}"]`);
+                            let el = document.getElementById('content-view').querySelector(`[data-id="${currentPlayingId}"]`);
                             if(el) { el.focus(); el.scrollIntoView({block: 'center', inline: 'center'}); }
                             else { const btn = document.querySelector('.play-movie-btn'); if(btn) btn.focus(); }
                         }, 100);
@@ -624,9 +616,8 @@
             // יציאה מסדרה לבית
             if (document.getElementById('content-view').style.display === 'block') {
                 document.getElementById('content-view').style.display = 'none';
-                
-                // --- התיקון המוחלט לחזרה למיקום ---
-                if (savedElement && document.body.contains(savedElement)) {
+                // חוזרים לאלמנט ששמרנו בבית (בלי לרענן!)
+                if (savedElement && document.getElementById('home-view').contains(savedElement)) {
                     savedElement.focus();
                     savedElement.scrollIntoView({block: 'center', inline: 'center'});
                 } else {
