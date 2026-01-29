@@ -110,7 +110,7 @@
         .card-title-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); padding: 5px; text-align: center; font-size: 11px; opacity: 0; transition: 0.2s; color: white; border-bottom-left-radius: 4px; border-bottom-right-radius: 4px; }
         .card:focus .card-title-overlay { opacity: 1; }
 
-        /* --- Overlay --- */
+        /* --- Overlay (שכבה צפה - עיצוב מתוקן) --- */
         #content-view {
             position: fixed;
             top: 0; bottom: 0; left: 0;
@@ -123,14 +123,26 @@
         }
 
         .content-hero {
-            height: 60vh; width: 100%; position: relative;
-            background-size: cover; background-position: center top;
+            position: absolute; 
+            top: 0; left: 0; right: 0; 
+            height: 65%; /* גובה התמונה */
+            background-size: cover; background-position: center top; 
+            z-index: 1;
         }
         .content-hero::after {
             content: ''; position: absolute; inset: 0;
-            background: linear-gradient(to bottom, transparent 0%, #000 95%);
+            background: linear-gradient(to bottom, transparent 0%, #000 90%);
         }
-        .content-details { position: absolute; bottom: 10px; right: 50px; left: 50px; z-index: 2; }
+        
+        /* מיקום הכותרת והתקציר - למעלה! */
+        .content-details { 
+            position: absolute; 
+            top: 10%; /* מרווח מלמעלה */
+            right: 50px; 
+            width: 50%; /* חצי רוחב */
+            z-index: 2; 
+            text-align: right;
+        }
         
         .content-title { font-size: 70px; font-weight: 700; margin: 0; line-height: 1; color: white; }
         .meta-tags { font-size: 20px; color: #aaa; margin-top: 10px; font-weight: 400; }
@@ -144,9 +156,14 @@
         }
         .play-movie-btn:focus { transform: scale(1.1); box-shadow: 0 0 15px var(--red); outline: none; }
 
+        /* אזור הפרקים - יושב למטה */
         .episodes-section {
-            position: absolute; bottom: 0; left: 0; right: 0; height: 40%; 
-            padding: 0 50px; display: flex; flex-direction: column; justify-content: flex-end; z-index: 3;
+            position: absolute; 
+            bottom: 0; left: 0; right: 0; 
+            height: 35%; /* גובה אזור הפרקים */
+            padding: 0 50px; 
+            display: flex; flex-direction: column; justify-content: flex-end; 
+            z-index: 3;
         }
 
         .tabs-strip {
@@ -299,8 +316,8 @@
             if (e.key === 'ArrowLeft' && active.classList.contains('nav-item')) {
                 e.preventDefault();
                 if (document.getElementById('content-view').style.display === 'block') {
-                    if (lastFocusedEpisode && document.body.contains(lastFocusedEpisode)) {
-                        lastFocusedEpisode.focus();
+                    if (savedElement && document.body.contains(savedElement)) {
+                        savedElement.focus();
                     } else {
                         const first = document.querySelector('.card.series') || document.querySelector('.play-movie-btn');
                         if(first) first.focus();
@@ -410,7 +427,7 @@
                     }
                 } else {
                     // --- Overlay ---
-                    lastFocusedEpisode = e.target;
+                    savedElement = e.target; 
                     e.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
                     
                     const epId = e.target.getAttribute('data-id');
@@ -432,7 +449,7 @@
                     }
                 }
             } else if (e.target.classList.contains('play-movie-btn')) {
-                lastFocusedEpisode = e.target;
+                savedElement = e.target;
             }
         }, true);
 
@@ -488,7 +505,7 @@
             if (!item) { const history = getHistory(); item = history.find(h => h.id === id); }
             if (!item) return;
             
-            // המפתח לתיקון: שמירת הכרטיס הספציפי שעליו לחצנו
+            // המפתח: שמירת הכרטיס הספציפי שעליו לחצנו (כולל הקטגוריה שלו)
             savedElement = document.activeElement; 
             addToHistory(item);
             
@@ -531,7 +548,7 @@
                 
                 setTimeout(() => { 
                     const first = episodesList.querySelector('.card');
-                    if(first) { first.focus(); lastFocusedEpisode = first; } 
+                    if(first) { first.focus(); } 
                 }, 200);
 
             } else {
@@ -541,7 +558,7 @@
                 
                 setTimeout(() => { 
                     const btn = movieActionArea.querySelector('.play-movie-btn');
-                    if(btn) { btn.focus(); lastFocusedEpisode = btn; }
+                    if(btn) { btn.focus(); }
                 }, 200);
             }
         }
@@ -591,7 +608,7 @@
                 if (document.getElementById('content-view').style.display === 'block') {
                     if(currentPlayingId) {
                         setTimeout(() => {
-                            let el = document.getElementById('content-view').querySelector(`[data-id="${currentPlayingId}"]`);
+                            let el = document.querySelector(`[data-id="${currentPlayingId}"]`);
                             if(el) { el.focus(); el.scrollIntoView({block: 'center', inline: 'center'}); }
                             else { const btn = document.querySelector('.play-movie-btn'); if(btn) btn.focus(); }
                         }, 100);
@@ -608,9 +625,7 @@
             if (document.getElementById('content-view').style.display === 'block') {
                 document.getElementById('content-view').style.display = 'none';
                 
-                // התיקון האולטימטיבי:
-                // אם יש אלמנט שמור והוא עדיין קיים בדף הבית (הוא תמיד קיים כי לא ריעננו)
-                // תחזור אליו!
+                // --- התיקון המוחלט לחזרה למיקום ---
                 if (savedElement && document.body.contains(savedElement)) {
                     savedElement.focus();
                     savedElement.scrollIntoView({block: 'center', inline: 'center'});
