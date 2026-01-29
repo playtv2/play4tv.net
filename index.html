@@ -13,40 +13,19 @@
     <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth-compat.js"></script>
     <style>
-        :root { --red: #ff0055; --bg: #000000; --sidebar-width: 70px; --sidebar-expanded: 220px; }
+        :root { --red: #ff0055; --bg: #000000; }
         * { -webkit-tap-highlight-color: transparent !important; outline: none !important; }
         
         body { 
             background: var(--bg); color: white; font-family: 'Heebo', sans-serif;
             margin: 0; padding: 0; width: 100vw; height: 100vh; 
             overflow: hidden; display: flex; position: fixed; inset: 0;
+            padding-right: 80dp; /* מקום לתפריט ה-Native בצד ימין */
         }
         *:focus { outline: none; }
         
-        /* Sidebar */
-        .sidebar { 
-            width: var(--sidebar-width); background: #000; 
-            display: flex; flex-direction: column; padding: 15px 5px; 
-            border-left: 1px solid #222; height: 100%; 
-            z-index: 6000; 
-            transition: width 0.3s ease; flex-shrink: 0; 
-            overflow: hidden; white-space: nowrap;
-        }
-        .sidebar:focus-within, .sidebar:hover { width: var(--sidebar-expanded); }
+        /* אין יותר Sidebar CSS כאן! */
         
-        .logo { 
-            width: 100%; height: 60px; 
-            background-size: contain; background-repeat: no-repeat; background-position: center; 
-            margin-bottom: 20px; margin-top: 20px;
-            background-image: url('./images/logo.png'); 
-        }
-        
-        .nav-item { padding: 12px; font-size: 16px; border-radius: 8px; margin-bottom: 5px; cursor: pointer; display: flex; align-items: center; color: #888; transition: 0.2s; }
-        .nav-icon { font-size: 22px; min-width: 40px; text-align: center; }
-        .nav-text { opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; margin-right: 10px; font-weight: 600; }
-        .sidebar:focus-within .nav-text, .sidebar:hover .nav-text { opacity: 1; visibility: visible; }
-        .nav-item:focus { background: var(--red); color: white; transform: scale(1.05); }
-
         /* Layout */
         .main-content { flex: 1; height: 100vh; display: flex; flex-direction: column; position: relative; background: #000; overflow: hidden; }
 
@@ -56,7 +35,6 @@
         .hero-text { position: absolute; bottom: 20px; right: 50px; left: 50px; z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; }
         
         .hero-title { font-size: 60px; font-weight: 700; margin-bottom: 10px; text-shadow: 2px 2px 15px black; line-height: 1; color: white; }
-        
         .text-gradient-kids {
             background: linear-gradient(to left, #6bf299, #1e8f58);
             -webkit-background-clip: text;
@@ -64,7 +42,6 @@
             display: inline-block;
             filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.9)); 
         }
-        
         .hero-desc { font-size: 20px; color: #ddd; line-height: 1.3; text-shadow: 1px 1px 5px black; max-width: 60%; max-height: 80px; overflow: hidden; font-weight: 300; }
 
         /* Bottom Section */
@@ -116,7 +93,7 @@
         #content-view {
             position: fixed;
             top: 0; bottom: 0; left: 0;
-            right: var(--sidebar-width); 
+            right: 0; /* לוקח הכל, הריפוד מגיע מה-Body */
             background: #000;
             z-index: 5000;
             overflow-y: hidden;
@@ -125,24 +102,16 @@
         }
 
         .content-hero {
-            height: 60vh; width: 100%; position: relative;
-            background-size: cover; background-position: center top;
+            position: absolute; top: 0; left: 0; right: 0; height: 60%;
+            background-size: cover; background-position: center top; z-index: 1;
         }
-        
-        /* הכהינו קצת את הרקע למעלה כדי שהטקסט יהיה קריא */
         .content-hero::after {
             content: ''; position: absolute; inset: 0;
             background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 40%, #000 95%);
         }
         
-        /* --- זה השינוי: הזזת הטקסט למעלה --- */
         .content-details { 
-            position: absolute; 
-            top: 10%; /* היה bottom: 10px, עכשיו זה למעלה */
-            right: 50px; 
-            width: 50%; /* חצי רוחב כדי לא לתפוס את כל המסך */
-            z-index: 2; 
-            text-align: right;
+            position: absolute; top: 10%; right: 50px; width: 50%; z-index: 2; text-align: right;
         }
         
         .content-title { font-size: 70px; font-weight: 700; margin: 0; line-height: 1; color: white; }
@@ -221,11 +190,6 @@
         <div class="profile-container" id="profile-list"></div>
     </div>
 
-    <div class="sidebar screen" id="sidebar">
-        <div class="logo"></div>
-        <div id="dynamic-nav"></div>
-    </div>
-
     <div class="main-content screen" id="app">
         <div class="top-section">
             <div id="hero-bg" class="hero-bg"></div>
@@ -282,14 +246,7 @@
             if (user && user.email === "nitaylayish298@gmail.com") { switchScreen('profiles'); loadProfiles(); } else { switchScreen('auth'); }
         });
 
-        function updateSidebar() {
-            const nav = document.getElementById('dynamic-nav');
-            let html = `<div class="nav-item" tabindex="0" onclick="showSearch()"><span class="nav-icon">🔍</span><span class="nav-text">חיפוש</span></div>
-                        <div class="nav-item" tabindex="0" onclick="renderHome()"><span class="nav-icon">🏠</span><span class="nav-text">ראשי</span></div>`;
-            html += `<div class="nav-item" tabindex="0" style="margin-top:auto;" onclick="switchScreen('profiles')"><span class="nav-icon">🔄</span><span class="nav-text">החלף פרופיל</span></div>`;
-            nav.innerHTML = html;
-        }
-
+        // פונקציות שהאפליקציה ב-Native קוראת להן
         function showSearch() {
             document.getElementById('content-view').style.display = 'none';
             const home = document.getElementById('home-view');
@@ -297,7 +254,13 @@
             home.innerHTML = `<div class="search-container"><input type="text" id="search-input" class="search-input" placeholder="מה בא לך לראות?" oninput="runSearch(this.value)"><div id="search-results"></div></div>`;
             setTimeout(() => document.getElementById('search-input').focus(), 100);
         }
-
+        
+        function enterApp() { 
+            document.getElementById('content-view').style.display = 'none';
+            switchScreen('home'); 
+            renderHome(); 
+        }
+        
         function runSearch(query) {
             const container = document.getElementById('search-results');
             if (!query || query.length < 2) { container.innerHTML = ''; return; }
@@ -306,25 +269,10 @@
             container.innerHTML = results.length > 0 ? renderRow(`תוצאות עבור "${query}"`, results) : `<div style="padding: 20px; color: #777;">לא נמצאו תוצאות...</div>`;
         }
 
+        // לוגיקה לניווט במקלדת - נשארת כאן כי ה-Native רק מעביר את הלחיצות ל-WebView
         window.addEventListener('keydown', function(e) {
             const active = document.activeElement;
             
-            if (e.key === 'ArrowLeft' && active.classList.contains('nav-item')) {
-                e.preventDefault();
-                if (document.getElementById('content-view').style.display === 'block') {
-                    if (savedElement && document.body.contains(savedElement)) {
-                        savedElement.focus();
-                    } else {
-                        const first = document.querySelector('.card.series') || document.querySelector('.play-movie-btn');
-                        if(first) first.focus();
-                    }
-                } else {
-                    const firstCard = document.querySelector('.card');
-                    if (firstCard) firstCard.focus();
-                }
-                return;
-            }
-
             if (active.id === 'search-input') {
                 if (e.key === 'Escape') { window.handleBackPress(); return; }
                 if (e.key === 'ArrowDown') { e.preventDefault(); const firstCard = document.querySelector('.card'); if (firstCard) firstCard.focus(); }
@@ -336,10 +284,13 @@
             
             if (e.key === 'ArrowRight' && active.classList.contains('card')) {
                 e.preventDefault(); const prevCard = active.previousElementSibling;
-                if (prevCard && prevCard.classList.contains('card')) prevCard.focus(); else document.querySelector('.nav-item').focus();
+                if (prevCard && prevCard.classList.contains('card')) prevCard.focus(); else {
+                     // כשהמשתמש לוחץ ימינה בסוף השורה -> תן ל-Native לטפל בזה (להעביר פוקוס לתפריט)
+                     // אנחנו לא מונעים את האירוע, הוא יבעבע למעלה ל-Android
+                }
             }
             if (e.key === 'ArrowRight' && (active.classList.contains('play-movie-btn') || active.classList.contains('tab-item'))) {
-                e.preventDefault(); document.querySelector('.nav-item').focus();
+                // תן לאנדרואיד לטפל
             }
             
             if (e.key === 'ArrowLeft') {
@@ -423,7 +374,7 @@
                     }
                 } else {
                     // --- Overlay ---
-                    lastFocusedEpisode = e.target;
+                    savedElement = e.target; 
                     e.target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
                     
                     const epId = e.target.getAttribute('data-id');
@@ -445,23 +396,15 @@
                     }
                 }
             } else if (e.target.classList.contains('play-movie-btn')) {
-                lastFocusedEpisode = e.target;
+                savedElement = e.target;
             }
         }, true);
 
-        function login() { firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider()); }
         function loadProfiles() { document.getElementById('profile-list').innerHTML = profilesData.map(p => `<div class="profile-box" tabindex="0" onclick="selectProfile('${p.n}')"><div class="profile-img" style="background-image: url('${p.i}')"></div><span class="profile-name">${p.n}</span></div>`).join(''); setTimeout(() => document.querySelector('.profile-box').focus(), 500); }
         function selectProfile(name) { 
             currentProfile = profilesData.find(p => p.n === name); 
             document.getElementById('home-view').innerHTML = ''; 
-            updateSidebar(); 
             enterApp(); 
-        }
-        
-        function enterApp() { 
-            document.getElementById('content-view').style.display = 'none';
-            switchScreen('home'); 
-            renderHome(); 
         }
         
         function addToHistory(item) { if (!currentProfile) return; const key = `history_${currentProfile.n}`; let h = JSON.parse(localStorage.getItem(key) || "[]"); h = h.filter(x => x.id !== item.id); h.unshift(item); if(h.length > 10) h.pop(); localStorage.setItem(key, JSON.stringify(h)); }
@@ -501,7 +444,6 @@
             if (!item) { const history = getHistory(); item = history.find(h => h.id === id); }
             if (!item) return;
             
-            // המפתח לתיקון: שמירת הכרטיס הספציפי שעליו לחצנו
             savedElement = document.activeElement; 
             addToHistory(item);
             
@@ -544,7 +486,7 @@
                 
                 setTimeout(() => { 
                     const first = episodesList.querySelector('.card');
-                    if(first) { first.focus(); lastFocusedEpisode = first; } 
+                    if(first) { first.focus(); } 
                 }, 200);
 
             } else {
@@ -554,7 +496,7 @@
                 
                 setTimeout(() => { 
                     const btn = movieActionArea.querySelector('.play-movie-btn');
-                    if(btn) { btn.focus(); lastFocusedEpisode = btn; }
+                    if(btn) { btn.focus(); }
                 }, 200);
             }
         }
@@ -624,7 +566,7 @@
                 // התיקון האולטימטיבי:
                 // אם יש אלמנט שמור והוא עדיין קיים בדף הבית (הוא תמיד קיים כי לא ריעננו)
                 // תחזור אליו!
-                if (savedElement && document.body.contains(savedElement)) {
+                if (savedElement && document.getElementById('home-view').contains(savedElement)) {
                     savedElement.focus();
                     savedElement.scrollIntoView({block: 'center', inline: 'center'});
                 } else {
@@ -650,7 +592,7 @@
             if (name === 'auth') document.getElementById('auth-screen').style.display = 'flex';
             if (name === 'profiles') document.getElementById('profile-screen').style.display = 'flex';
             if (name === 'home') {
-                document.getElementById('sidebar').style.display = 'flex';
+                document.getElementById('sidebar').style.display = 'none'; // הסתרת sidebar בקוד הישן
                 document.getElementById('app').style.display = 'flex';
                 document.querySelector('.top-section').style.display = 'block';
                 document.querySelector('.bottom-section').style.display = 'block';
