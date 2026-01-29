@@ -28,7 +28,7 @@
             width: var(--sidebar-width); background: #000; 
             display: flex; flex-direction: column; padding: 15px 5px; 
             border-left: 1px solid #222; height: 100%; 
-            z-index: 6000; /* מעל הכל כדי שיראו אותו תמיד */
+            z-index: 6000; /* Sidebar תמיד מעל הכל */
             transition: width 0.3s ease; flex-shrink: 0; 
             overflow: hidden; white-space: nowrap;
         }
@@ -60,6 +60,16 @@
             font-size: 60px; font-weight: 700; margin-bottom: 10px; 
             text-shadow: 2px 2px 15px black; line-height: 1; color: white; 
         }
+        
+        /* המחלקה המיוחדת לכותרת ירוקה - זהה בשני המקומות */
+        .text-gradient-kids {
+            background: linear-gradient(to left, #6bf299, #1e8f58);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+            filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.9)); 
+        }
+
         .hero-desc { font-size: 20px; color: #ddd; line-height: 1.3; text-shadow: 1px 1px 5px black; max-width: 60%; max-height: 80px; overflow: hidden; font-weight: 300; }
 
         /* Scroll Area */
@@ -108,12 +118,11 @@
         .card-title-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); padding: 5px; text-align: center; font-size: 11px; opacity: 0; transition: 0.2s; color: white; border-bottom-left-radius: 4px; border-bottom-right-radius: 4px; }
         .card:focus .card-title-overlay { opacity: 1; }
 
-        /* --- התיקון החשוב: Overlay מוזז שמאלה --- */
+        /* --- Overlay - דף סדרה --- */
         #content-view {
             position: fixed;
             top: 0; bottom: 0; left: 0;
-            /* התיקון: במקום להיצמד לימין (0), אנחנו נותנים מרווח לתפריט */
-            right: var(--sidebar-width); 
+            right: var(--sidebar-width); /* לא מסתיר תפריט */
             background: #000;
             z-index: 5000; /* מתחת לתפריט (6000) אבל מעל הבית */
             overflow-y: auto;
@@ -131,34 +140,30 @@
         }
         .content-details { position: absolute; bottom: 10px; right: 50px; left: 50px; z-index: 2; }
         
-        /* מחלקה לכותרת ירוקה הדרגתית */
-        .text-gradient-kids {
-            background: linear-gradient(to left, #6bf299, #1e8f58);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            display: inline-block;
-            filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.9));
-        }
-        
+        /* כותרת פנימית */
         .content-title { font-size: 70px; font-weight: 700; margin: 0; line-height: 1; color: white; }
+        
         .meta-tags { font-size: 20px; color: #aaa; margin-top: 10px; font-weight: 400; }
         .desc-area { font-size: 22px; color: #ddd; margin-top: 15px; max-width: 60%; line-height: 1.4; font-weight: 300; }
 
-        /* טאבים */
+        /* --- תיקון: טאבים מורמים למעלה --- */
         .tabs-strip {
-            display: flex; gap: 30px; margin-top: 30px; margin-right: 50px; margin-bottom: 20px;
+            display: flex; gap: 30px; 
+            margin-top: 20px; 
+            margin-right: 50px; 
+            margin-bottom: 40px; /* מרווח גדול יותר מלמטה כדי לא להסתיר את הפרקים */
             font-size: 22px; font-weight: 700; color: #666;
         }
         .tab-item { cursor: pointer; transition: 0.2s; border-bottom: 3px solid transparent; padding-bottom: 5px; }
         .tab-item.active { color: #fff; border-bottom-color: #ff0055; }
         .tab-item:focus { color: #fff; border-bottom-color: #ff0055; outline: none; transform: scale(1.1); }
         
-        /* פרקים */
+        /* --- תיקון: ריפוד לפרקים כדי שלא יחתכו --- */
         .episodes-area { padding: 0 50px 50px 50px; }
         .episodes-area .row { 
-            padding-top: 50px; 
-            padding-bottom: 50px; 
-            margin-top: -30px; 
+            padding-top: 50px; /* מקום לפוקוס לגדול למעלה */
+            padding-bottom: 50px; /* מקום לפוקוס לגדול למטה */
+            margin-top: 0; /* ביטלתי את ה-Negative Margin שהעלה את הפרקים על הטאבים */
         }
 
         #video-container { position: fixed; inset: 0; background: #000; z-index: 60000; display: none; }
@@ -259,7 +264,11 @@
             nav.innerHTML = html;
         }
 
+        // --- תיקון: סגירת Overlay בעת פתיחת חיפוש ---
         function showSearch() {
+            // סוגר את דף הסדרה אם הוא פתוח
+            document.getElementById('content-view').style.display = 'none';
+            
             const home = document.getElementById('home-view');
             document.querySelector('.top-section').style.display = 'none';
             home.innerHTML = `<div class="search-container"><input type="text" id="search-input" class="search-input" placeholder="מה בא לך לראות?" oninput="runSearch(this.value)"><div id="search-results"></div></div>`;
@@ -271,7 +280,6 @@
             if (!query || query.length < 2) { container.innerHTML = ''; return; }
             let allowedCats = currentProfile.type === 'kids' ? ['ילדים'] : ['סדרות', 'סרטים'];
             
-            // --- תיקון: חיפוש בכותרת בלבד ---
             const results = seriesData.filter(s => allowedCats.includes(s.category) && s.title.includes(query));
             
             container.innerHTML = results.length > 0 ? renderRow(`תוצאות עבור "${query}"`, results) : `<div style="padding: 20px; color: #777;">לא נמצאו תוצאות...</div>`;
@@ -396,12 +404,17 @@
             updateSidebar(); 
             enterApp(); 
         }
+        
+        // --- תיקון: חזרה לבית סוגרת גם היא את ה-Overlay ---
         function enterApp() { switchScreen('home'); renderHome(); }
         
         function addToHistory(item) { if (!currentProfile) return; const key = `history_${currentProfile.n}`; let h = JSON.parse(localStorage.getItem(key) || "[]"); h = h.filter(x => x.id !== item.id); h.unshift(item); if(h.length > 10) h.pop(); localStorage.setItem(key, JSON.stringify(h)); }
         function getHistory() { if (!currentProfile) return []; return JSON.parse(localStorage.getItem(`history_${currentProfile.n}`) || "[]"); }
 
         function renderHome() {
+            // סגירה כפויה של Overlay ליתר ביטחון
+            document.getElementById('content-view').style.display = 'none';
+            
             const home = document.getElementById('home-view');
             if (home.innerHTML.trim() !== '') {
                 document.querySelector('.top-section').style.display = 'block';
